@@ -1,0 +1,9 @@
+node_modules
+public/dist
+dist
+secrets/*
+db
+logs
+package-lock.json
+utils/tx.json
+utils/tx.csv

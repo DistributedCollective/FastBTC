@@ -1,0 +1,43 @@
+{
+  "name": "Fast-Btc-Relay",
+  "private": true,
+  "version": "2.0.0",
+  "description": "Relay Btc deposits to RBtc",
+  "scripts": {
+    "start": "nodemon --config nodemon.json start.js testnet",
+    "genAdminMainnet": "node -r esm utils/wordseed.js mainnet",
+    "genAdminTestnet": "node -r esm utils/wordseed.js testnet",
+    "withdrawBtcMainnet": "node -r esm utils/withdrawBtc.js mainnet",
+    "withdrawBtcTestnet": "node -r esm utils/withdrawBtc.js testnet",
+    "withdrawRskMainnet": "node -r esm utils/withdrawRsk.js mainnet",
+    "withdrawRskTestnet": "node -r esm utils/withdrawRsk.js testnet",
+    "build-client": "npx webpack --config ./webpack.config.js && cp src/index.html dist/index.html",
+    "watch-client": "webpack --watch --config ./webpack.config.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@node-rpc/client": "^2.3.1",
+    "axios": "^0.21.0",
+    "bip39": "^3.0.2",
+    "bitcoinjs-lib": "^5.2.0",
+    "bitcore-lib": "^8.23.1",
+    "configstore": "^5.0.1",
+    "esm": "^3.2.25",
+    "json2csv": "^5.0.5",
+    "lodash": "^4.17.20",
+    "node-fetch": "^2.6.1",
+    "pm2-server-monitor": "^1.0.0",
+    "qr-encode": "^0.3.0",
+    "rpc-client": "^1.0.1",
+    "socket.io": "^2.3.0",
+    "sqlite3": "^5.0.0",
+    "telegraf": "^3.38.0",
+    "web3": "^1.2.11"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "^6.1.1",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12"
+  }
+}

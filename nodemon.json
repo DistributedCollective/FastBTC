@@ -1,0 +1,19 @@
+{
+    "restartable": "rs",
+    "ignore": [
+      ".git",
+      "node_modules/**/node_modules",
+      "*.json"
+    ],
+    "verbose": true,
+    "execMap": {
+      "js": "node -r esm"
+    },
+    "watch": [
+      "controller/",
+      "models/",
+      "utils/"
+    ],
+    "ext": "js"
+  }
+  

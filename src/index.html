@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.0/angular-csp.min.css" integrity="sha512-nptw3cPhphu13Dy21CXMS1ceuSy2yxpKswAfZ7bAAE2Lvh8rHXhQFOjU+sSnw4B+mEoQmKFLKOj8lmXKVk3gow==" crossorigin="anonymous" />
+  <title>Fast-Btc-relay</title>
+</head>
+
+
+<script type="text/ng-template" id="loading.html">
+  <span>
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin:auto;background:#fff;display:block;height:25px; width: 60px" viewBox="0 0 100 55" preserveAspectRatio="xMidYMid">
+      <path fill="none" stroke="#07abcc" stroke-width="6" stroke-dasharray="42.76482137044271 42.76482137044271" d="M24.3 30C11.4 30 5 43.3 5 50s6.4 20 19.3 20c19.3 0 32.1-40 51.4-40 C88.6 30 95 43.3 95 50s-6.4 20-19.3 20C56.4 70 43.6 30 24.3 30z" stroke-linecap="round" style="transform:scale(0.9) translateY(-25px);transform-origin:50px 50px">
+        <animate attributeName="stroke-dashoffset" repeatCount="indefinite" dur="1s" keyTimes="0;1" values="0;256.58892822265625"></animate>
+      </path>
+    </svg>
+  </span>
+</script>
+
+
+<body ng-controller="appCtrl as ctrl">
+  <h1 class="text-center" style="margin-top: 50px">Welcome to Fast-BTC-Relay</h1>
+
+  <div class="container">
+    <div class="ng-hide" ng-show="ctrl.user != null">
+      <div class="row">
+        <label class="col-3">Your Rsk address: </label>
+        <div class="col-6">
+          <a href="https://explorer.rsk.co/address/{{ctrl.user.web3adr}}" target="_blank">{{ctrl.user.web3adr}}</a>
+        </div>
+      </div>
+      <div class="row">
+        <label class="col-3">BTC deposit address: </label>
+        <div class="col-6">
+          <a href="https://live.blockcypher.com/btc/address/{{ctrl.user.btcadr}}" target="_blank">{{ctrl.user.btcadr}}</a>
+          <div id="qrCode" style="margin-top:20px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ng-hide" ng-show="ctrl.user != null" style="margin-top: 20px">
+      <div id="step1" style="overflow: hidden">
+        <h2><strong>Step 1.</strong></h2>
+        <p>Transfer Btc to your deposit address. Please consider: </p>
+        <h4>
+            Min deposit amount: {{ctrl.amountInfo.min}} BTC <br/>
+            Max deposit amount: {{ctrl.amountInfo.max}} BTC <br/>
+        </h4>
+        <div ng-if="ctrl.depositTx == null" style="display: inline-flex;align-items: center;">
+          Waiting for deposit
+          <span>
+            <ng-include src="'loading.html'"></ng-include>
+          </span>
+        </div>
+
+        <div ng-if="ctrl.depositTx != null">
+          <p>
+            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle-fill" fill="green" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+            </svg>
+            Deposited transaction: <a href="https://live.blockcypher.com/btc/tx/{{ctrl.depositTx.txHash}}" target="_blank">{{ctrl.depositTx.txHash}}</a><br/>
+            Amount: {{ctrl.depositTx.value}} BTC
+            <p>
+              <span style="float: left">Status: {{ctrl.depositTx.status}}</span>
+              <ng-include ng-if="ctrl.depositTx.status == 'pending'" src="'loading.html'" style="float: left"></ng-include>
+            </p>
+          </p>
+        </div>
+      </div>
+
+      <div id="step2" ng-show="ctrl.depositTx != null && ctrl.depositTx.status == 'confirmed'">
+        <h2>Step 2.</h2>
+        <div ng-if="ctrl.transferTx == null" style="display: inline-flex;align-items: center;">
+          Waiting for transfer to your RSK address
+          <span>
+            <ng-include src="'loading.html'"></ng-include>
+          </span>
+        </div>
+
+        <div ng-if="ctrl.transferTx != null">
+          <p>
+            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle-fill" fill="green" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+            </svg>
+            Tranfered transaction: <a href="https://explorer.rsk.co/tx/{{ctrl.transferTx.txHash}}" target="_blank">{{ctrl.transferTx.txHash}}</a><br/>
+            Amount: {{ctrl.transferTx.value}} rBTC
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-danger ng-hide" ng-show="ctrl.error" role="alert">{{ctrl.error}}</div>
+
+    <div ng-show="ctrl.showLoading" style="height: 50px;">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin:auto;background:#fff;display:block;height:100%" width="98px" height="40px" viewBox="0 0 100 55" preserveAspectRatio="xMidYMid">
+        <path fill="none" stroke="#07abcc" stroke-width="6" stroke-dasharray="42.76482137044271 42.76482137044271" d="M24.3 30C11.4 30 5 43.3 5 50s6.4 20 19.3 20c19.3 0 32.1-40 51.4-40 C88.6 30 95 43.3 95 50s-6.4 20-19.3 20C56.4 70 43.6 30 24.3 30z" stroke-linecap="round" style="transform:scale(0.9) translateY(-25px);transform-origin:50px 50px">
+          <animate attributeName="stroke-dashoffset" repeatCount="indefinite" dur="1s" keyTimes="0;1" values="0;256.58892822265625"></animate>
+        </path>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.0/angular.min.js" integrity="sha512-jiG+LwJB0bmXdn4byKzWH6whPpnLy1pnGA/p3VCXFLk4IJ/Ftfcb22katPTapt35Q6kwrlnRheK6UPOIdJhYTA==" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+    integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+    crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+    integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+    crossorigin="anonymous"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="main.js"></script>
+</body>
+
+</html>
