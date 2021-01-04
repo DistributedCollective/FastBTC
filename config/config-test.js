@@ -18,7 +18,8 @@ export default {
     toleranceMin: 3,
     infoBot: telegram.infoBotToken,
     errorBot: telegram.errorBotToken,
-    sendTelegramNotifications: false,
+    sendTelegramNotifications: true,
+    telegramGroupId: 1352461392,
     cryptoCompareKey: apiKey,
     pricePollingTime: 5*60*1000, //poll Btc price every 5 minutes
     contractAddress: "0xcC099752238b1932587bf5793Afeb7d80D04F6e1".toLowerCase(),

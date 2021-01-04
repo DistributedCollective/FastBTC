@@ -46,12 +46,11 @@ export default {
   
 walletSigs.main.js for the multisigs hd wallet  
   
-
 export default {
-    myWordSeed: "12-words",
     pubKeys: [
         "pub-key1",
-        "pub-key2"
+        "pub-key2",
+        "pub-key3"
     ]
 }
 
@@ -61,7 +60,7 @@ and cryptocompare.js for btc price polling
 
 export const apiKey = "...";
 
-5. Set the block number of Btc test or mainnet on config/store.json from which polling should start
+5. Set the block number of Btc test- or mainnet on config/store.json from which polling should start
 {
 	"lastBlockNumber": 1897463
 }

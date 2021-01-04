@@ -1,11 +1,11 @@
 {
   "apps": [
     {
-      "name": "Sovryn fast-btc-relay",
+      "name": "Sovryn fast-btcV2",
       "script": "./start.js",
       "watch": false,
       "node_args": "-r esm",
-      "args": "mainnet",
+      "args": "testnet",
       "treekill": false,
       "out_file": "./logs/out.log",
       "error_file": "./logs/err.log",

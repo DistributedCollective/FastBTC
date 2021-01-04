@@ -218,11 +218,11 @@ class MainController {
     }
 
     sendInfoNotification(msg) {
-        if (conf.sendTelegramNotifications) this.infoBot.sendMessage(-1001308978723, msg);
+        if (conf.sendTelegramNotifications) this.infoBot.sendMessage(conf.telegramGroupId, msg);
     }
 
     sendErrorNotification(msg) {
-        if (conf.sendTelegramNotifications) this.errorBot.sendMessage(-1001308978723, msg);
+        if (conf.sendTelegramNotifications) this.errorBot.sendMessage(conf.telegramGroupId, msg);
     }
 
     onPendingDeposit(userLabel, tx) {
