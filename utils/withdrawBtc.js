@@ -42,10 +42,11 @@ async function withdraw() {
             if (users && users.length > 0) {
 
                 for (const user of users) {
-                    await checkWithdrawUser(user, hdAccount);
+                    const res = await checkWithdrawUser(user, hdAccount);
                 }
             } else {
                 reachEnd = true;
+                console.log("Withdraw done")
             }
         }
 

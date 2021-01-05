@@ -38,7 +38,7 @@ class RskCtrl {
         let transferValueSatoshi = Number(amount) - 10000; //(conf.commissionPercent * 1e8 / this.lastPrice);
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));
 
-        const bal = await this.getBalanceSats(this.from);
+        const bal = await this.getBalanceSats(conf.contractAddress);
         if (bal < amount) {
             console.error("Not enough balance left on the wallet "+this.from+" bal = "+bal);
             return { "error": "Not enough balance left. Please contact the admin support@sovryn.app" };
