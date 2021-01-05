@@ -12,17 +12,6 @@ import BitcoinNodeWrapper from "../utils/bitcoinNodeWrapper";
 
 class BitcoinCtrl {
     async init() {
-        //const mySeed = await bip39.mnemonicToSeed(config.walletSigs.myWordSeed);
-        //const root = bip32.fromSeed(mySeed, this.network);
-        //const account = root.derivePath(this.derivationPath);
-        //console.log("-----------");
-        //console.log(account.neutered().toBase58())
-        //this.myKey = root;
-        this.pubKeys = [
-            //account.neutered().toBase58(),
-            ...config.walletSigs.pubKeys
-        ];
-        console.log(this.pubKeys);
         // this.api = new BlockChairWrapper(config.blockChairKey, this.isMainNet);
         this.api = new BitcoinNodeWrapper(config.node);
         this.storage = new ConfigStore( 'store', null, {
@@ -45,7 +34,7 @@ class BitcoinCtrl {
     }
 
     async createAddress(index) {
-        const publicKeys = this.pubKeys.map(key => {
+        const publicKeys = config.walletSigs.pubKeys.map(key => {
             const node = bip32.fromBase58(key, this.network);
             const child = node.derive(0).derive(index);
             return child.publicKey;
@@ -65,7 +54,7 @@ class BitcoinCtrl {
     }
 
     async checkAddress(index, createdDate) {
-        const publicKeys = this.pubKeys.map(key => {
+        const publicKeys = config.walletSigs.pubKeys.map(key => {
             const node = bip32.fromBase58(key, this.network);
             const child = node.derive(0).derive(index);
             return child.publicKey;

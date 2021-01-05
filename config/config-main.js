@@ -19,6 +19,7 @@ export default {
     infoBot: telegram.infoBotToken,
     errorBot: telegram.errorBotToken,
     sendTelegramNotifications: true,
+    telegramGroupId: -1001308978723,
     cryptoCompareKey: apiKey,
     pricePollingTime: 3*1000*60, //poll Btc price every 3 minutes
     walletSigs: walletSigs,
