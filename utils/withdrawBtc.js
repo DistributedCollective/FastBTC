@@ -45,6 +45,7 @@ async function withdraw() {
                 }
             } else {
                 reachEnd = true;
+                console.log("Withdraw done")
             }
         }
 
@@ -102,7 +103,7 @@ async function checkWithdrawUser(user, hdAccount) {
 }
 
 async function getPaymentAdr(index) {
-    const publicKeys = bitcoinCtrl.pubKeys.map(key => {
+    const publicKeys = config.walletSigs.pubKeys.map(key => {
         const node = bip32.fromBase58(key, bitcoinCtrl.network);
         const child = node.derive(0).derive(index);
         return child.publicKey;
