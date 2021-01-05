@@ -13,8 +13,8 @@ console.log("Withdraw on "+config.env+ " network");
 console.log("Bitcoin network set to");
 console.log(bitcoinCtrl.network);
 
-
 withdraw();
+
 
 
 async function withdraw() {
@@ -66,7 +66,7 @@ async function checkWithdrawUser(user, hdAccount) {
             ECPair.fromWIF(myChild.toWIF(), bitcoinCtrl.network),
             ECPair.fromWIF(partnerChild.toWIF(), bitcoinCtrl.network)
         ];
-
+console.log(userPayment.address+"  "+user.btcadr)
         if (userPayment.address !== user.btcadr) {
             throw "Wrong derived address for " + user.btcadr + " -> " + userPayment.address;
         }
@@ -83,6 +83,7 @@ async function checkWithdrawUser(user, hdAccount) {
                         address: receiverAddress,
                         value: Math.round(bal - fee)
                     });
+                    //console.log(psbt.data["inputs"]);
 
                 keys.forEach(key => psbt.signAllInputs(key));
 
@@ -103,7 +104,7 @@ async function checkWithdrawUser(user, hdAccount) {
 }
 
 async function getPaymentAdr(index) {
-    const publicKeys = bitcoinCtrl.pubKeys.map(key => {
+    const publicKeys = config.walletSigs.pubKeys.map(key => {
         const node = bip32.fromBase58(key, bitcoinCtrl.network);
         const child = node.derive(0).derive(index);
         return child.publicKey;

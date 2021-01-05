@@ -1,4 +1,3 @@
-import * as bip39 from 'bip39';
 import {bip32, networks, payments} from 'bitcoinjs-lib';
 import {default as ConfigStore} from 'configstore';
 import path from 'path';
