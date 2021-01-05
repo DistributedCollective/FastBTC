@@ -83,7 +83,7 @@ export default class BaseModel {
             const where = _.keys(criteria).map(k => {
                 const val = criteria[k];
 
-                if (val != null && val.length != null) {
+                if (val != null && typeof val === 'object' && val.length != null) {
                     const list = val.map(el => typeof el === 'string' ? `'${el}'` : el).join(',');
                     delete criteria[k];
                     return k + ' IN(' + list + ')';

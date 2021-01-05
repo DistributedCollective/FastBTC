@@ -26,6 +26,7 @@ class MainController {
         await dbCtrl.initDb(conf.dbName);
         await bitcoinCtrl.init();
         await rskCtrl.init();
+        
         this.getDeposits();
         this._pollBTCPrice();
 
@@ -40,6 +41,7 @@ class MainController {
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.getTxAmount.apply(this, [...args]));
+            socket.on('getDeposits', (...args) => this.getDbDeposits.apply(this, [...args]));
         });
     }
 
@@ -157,6 +159,15 @@ class MainController {
             console.log("Processing "+res.length+ " deposits");
             for (let d of res) await p.processDeposits(d);
         });
+    }
+
+    async getDbDeposits(cb) {
+        try {
+            const list = await dbCtrl.getAllDeposits();
+            cb(list || []);
+        } catch (e) {
+            console.error(e);
+        }
     }
 
 

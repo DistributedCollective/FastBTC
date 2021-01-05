@@ -236,6 +236,12 @@ class DbCtrl {
             txHash: txHashList
         });
     }
+
+    async getAllDeposits() {
+        return this.transactionRepository.find({
+            type: 'deposit'
+        })
+    }
 }
 
 export default new DbCtrl();
