@@ -13,7 +13,6 @@ console.log("Withdraw on "+config.env+ " network");
 console.log("Bitcoin network set to");
 console.log(bitcoinCtrl.network);
 
-
 withdraw();
 
 
@@ -42,7 +41,7 @@ async function withdraw() {
             if (users && users.length > 0) {
 
                 for (const user of users) {
-                    await checkWithdrawUser(user, hdAccount);
+                    const res = await checkWithdrawUser(user, hdAccount);
                 }
             } else {
                 reachEnd = true;

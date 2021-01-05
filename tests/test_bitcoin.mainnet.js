@@ -10,14 +10,15 @@ describe("BitcoinCtrl Mainnet", async () => {
         await bitcoinCtrl.init(config);
     });
 
-    let address = "";
+    let address = "";  
 
-    /*
+    
     it("get block height", async () => {
        const block = await bitcoinCtrl.api.getLastBlock();
+       console.log(block);
        assert(block > 0);
     });
-
+/*
     it("should create a btc address", async () => {
         address = await bitcoinCtrl.createAddress(0);
         console.log(address)
@@ -34,11 +35,11 @@ describe("BitcoinCtrl Mainnet", async () => {
 
         assert(detail && detail.transfers && detail.transfers.length >0);
     });*/
-
+/*
     it("should return all deposits in block number for users in db", async () => {
        const tx = await bitcoinCtrl.getTxOnBlock(661474);
        console.log(tx);
 
        assert(tx && tx[0] && tx[0].address === address);
-    });
+    });*/
 });

@@ -1,9 +1,9 @@
 import conf from '../config/config';
 import rskCtrl from '../controller/rskCtrl';
 
-
-const v =  "0.1"; // btc
+const v =  "0.05269"; // btc
 const receiver = "";
+
 const from = {
     adr: conf.account.adr,
     pKey: conf.account.pKey

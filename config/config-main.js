@@ -13,7 +13,7 @@ export default {
     rskNode: "https://mainnet.sovryn.app/rpc",
     commissionPercent: 1,
     minAmount: 100000, //sats, = 0.001 btc
-    maxAmountInUsd: 300,
+    maxAmountInUsd: 3000,
     toleranceMax: 30,
     toleranceMin: 3,
     infoBot: telegram.infoBotToken,
