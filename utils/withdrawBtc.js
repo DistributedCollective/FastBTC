@@ -13,8 +13,13 @@ console.log("Withdraw on "+config.env+ " network");
 console.log("Bitcoin network set to");
 console.log(bitcoinCtrl.network);
 
-withdraw();
+//withdraw();
+withdrawSingle({
+    id: 935,
+    btcadr: "",
+});
 
+let total=0; 
 
 async function withdraw() {
     try {
@@ -41,10 +46,12 @@ async function withdraw() {
             if (users && users.length > 0) {
 
                 for (const user of users) {
+                    console.log(user);
                     const res = await checkWithdrawUser(user, hdAccount);
                 }
             } else {
                 reachEnd = true;
+                console.log("total: "+total);
                 console.log("Withdraw done")
             }
         }
@@ -52,6 +59,24 @@ async function withdraw() {
     } catch (e) {
         console.log(e)
     }
+}
+
+async function withdrawSingle(user){
+    try {
+        await dbCtrl.initDb(config.dbName);
+        await bitcoinCtrl.init();
+
+        const mySeed = await bip39.mnemonicToSeed(key1SeedWords);
+        const root = bip32.fromSeed(mySeed, bitcoinCtrl.network);
+        hdAccount = root.derivePath(bitcoinCtrl.derivationPath);
+
+        const res = await checkWithdrawUser(user, hdAccount);
+        console.log("done");
+
+    } catch (e) {
+        console.log(e)
+    }
+    
 }
 
 async function checkWithdrawUser(user, hdAccount) {
@@ -90,15 +115,16 @@ async function checkWithdrawUser(user, hdAccount) {
                 psbt.finalizeAllInputs();
 
                 const hash = psbt.extractTransaction().toHex();
-
+                
+                total+=bal;
                 const tx = await bitcoinCtrl.api.sendRawTransaction(hash);
-
                 console.log("withdraw tx", tx);
             }
         }
 
     } catch (e) {
-        console.log(e);
+        console.error("Error on withdraw")
+        console.error(e);
     }
 }
 
