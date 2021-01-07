@@ -89,7 +89,7 @@ class AppCtrl {
     initQRCode(btcAddress) {
         console.log("init qr code");
         this.$timeout(() => {
-            var dataURI = qr(btcAddress, {type: 6, size: 6, level: 'H'})
+            var dataURI = qr(btcAddress, {type: 6, size: 6, level: 'Q'})
             //If using in browsers:
             var img = new Image()
             img.src = dataURI

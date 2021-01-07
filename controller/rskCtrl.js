@@ -35,7 +35,7 @@ class RskCtrl {
         if(!btcPrice.error) this.lastPrice=btcPrice;
 
         console.log("Current Btc price "+this.lastPrice);
-        let transferValueSatoshi = Number(amount) - 10000; //(conf.commissionPercent * 1e8 / this.lastPrice);
+        let transferValueSatoshi = Number(amount) - conf.commission;
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));
 
         const bal = await this.getBalanceSats(conf.contractAddress);

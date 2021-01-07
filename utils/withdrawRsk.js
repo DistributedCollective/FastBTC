@@ -10,6 +10,7 @@ const from = {
 }
 withdraw(v, receiver);
 
+
 async function withdraw(val, to) {
     console.log("init rsk");
     await rskCtrl.init();
@@ -23,4 +24,16 @@ async function withdraw(val, to) {
         gas: 100000
     });
     console.log(receipt);
+    return true;
 }
+
+async function withdrawList(){
+    for(let i of list){
+        console.log(i)
+        let res=await withdraw(i[1],i[0]);
+    }
+}
+
+const list=["adr","val-in-btc"];
+
+//withdrawList();

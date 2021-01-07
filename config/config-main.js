@@ -11,7 +11,7 @@ export default {
     appName: "Fast-btc-relay",
     dbName: "fastbtcrelay_main",
     rskNode: "https://mainnet.sovryn.app/rpc",
-    commissionPercent: 1,
+    commission: 12000, //in sats
     minAmount: 100000, //sats, = 0.001 btc
     maxAmountInUsd: 3000,
     toleranceMax: 30,

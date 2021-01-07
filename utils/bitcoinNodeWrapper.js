@@ -68,7 +68,7 @@ export default class BitcoinNodeWrapper {
             const utxoResult = await this.call('listunspent', [0, 9999999, adrList]);
             let addresses = [];
             console.log("utxo");
-             console.log(utxoResult);
+            console.log(utxoResult);
 
             (utxoResult || []).forEach(tx => {
                 let adrDetail = addresses.find(adr => adr.address == tx.address);
@@ -172,6 +172,7 @@ export default class BitcoinNodeWrapper {
                 }];
 
                 const res = await this.call('importmulti', [req, {rescan: false}]);
+                return res && res.success === true;
             }
 
             return true;

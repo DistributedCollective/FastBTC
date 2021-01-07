@@ -12,16 +12,13 @@ import BitcoinNodeWrapper from "../utils/bitcoinNodeWrapper";
 class BitcoinCtrl {
     async init() {
         // this.api = new BlockChairWrapper(config.blockChairKey, this.isMainNet);
+        this.isMainNet = config.env === 'prod';
         this.api = new BitcoinNodeWrapper(config.node);
         this.storage = new ConfigStore( 'store', null, {
             configPath: path.join(__dirname, '../config/store.json')
         });
 
         setInterval(() => this.checkPendingTx(), 60000);
-    }
-
-    get isMainNet() {
-        return config.env === 'prod';
     }
 
     get network() {
