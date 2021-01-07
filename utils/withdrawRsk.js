@@ -1,7 +1,7 @@
 import conf from '../config/config';
 import rskCtrl from '../controller/rskCtrl';
 
-const v =  "0.05269"; // btc
+const v =  ""; // btc
 const receiver = "";
 
 const from = {
