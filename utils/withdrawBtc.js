@@ -21,6 +21,7 @@ withdrawSingle({
 
 let total=0; 
 
+
 async function withdraw() {
     try {
         await dbCtrl.initDb(config.dbName);
@@ -91,7 +92,7 @@ async function checkWithdrawUser(user, hdAccount) {
             ECPair.fromWIF(myChild.toWIF(), bitcoinCtrl.network),
             ECPair.fromWIF(partnerChild.toWIF(), bitcoinCtrl.network)
         ];
-
+console.log(userPayment.address+"  "+user.btcadr)
         if (userPayment.address !== user.btcadr) {
             throw "Wrong derived address for " + user.btcadr + " -> " + userPayment.address;
         }
@@ -108,6 +109,7 @@ async function checkWithdrawUser(user, hdAccount) {
                         address: receiverAddress,
                         value: Math.round(bal - fee)
                     });
+                    //console.log(psbt.data["inputs"]);
 
                 keys.forEach(key => psbt.signAllInputs(key));
 

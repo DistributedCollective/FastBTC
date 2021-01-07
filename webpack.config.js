@@ -3,10 +3,10 @@ const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   mode: 'development',
-  entry: [
-    './src/initweb3.js',
-    './src/main.js'
-  ],
+  entry: {
+    main: ['./src/initweb3.js', './src/main.js'],
+    db: ['./src/db.js']
+  },
   devtool: 'inline-source-map',
   plugins: [
     new CopyPlugin({
@@ -15,11 +15,15 @@ module.exports = {
           from: 'src/index.html',
           to: ''
         },
+        {
+          from: 'src/db.html',
+          to: ''
+        },
       ],
     }),
   ],
   output: {
-    filename: 'main.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
   },
 };

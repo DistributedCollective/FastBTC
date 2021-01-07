@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.0/angular-csp.min.css" integrity="sha512-nptw3cPhphu13Dy21CXMS1ceuSy2yxpKswAfZ7bAAE2Lvh8rHXhQFOjU+sSnw4B+mEoQmKFLKOj8lmXKVk3gow==" crossorigin="anonymous" />
+    <title>Fast-Btc Database Viewer</title>
+</head>
+
+<body ng-controller="dbCtrl as ctrl">
+<h1 class="text-center" style="margin-top: 50px">Deposit Database</h1>
+
+<div class="container">
+
+    <p style="margin-bottom: 20px; font-size: 110%; font-weight: bold">
+        <label>Total BTC: {{ctrl.total.btc}}</label><br/>
+        <label>Total USD: {{ctrl.total.usd}}</label><br/>
+    </p>
+
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>User label</th>
+            <th>Tx hash</th>
+            <th>Value BTC</th>
+            <th>Value USD</th>
+            <th>Created date</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="item in ctrl.data">
+            <td>{{item.id}}</td>
+            <td>{{item.userAdrLabel}}</td>
+            <td>
+                <span title="{{item.txHash}}" style="display: inline-block;max-width: 300px;text-overflow: ellipsis;overflow: hidden">
+                    <a href="https://live.blockcypher.com/btc/tx/{{item.txHash}}" target="_blank">
+                        {{item.txHash}}
+                    </a>
+                </span>
+            </td>
+            <td>{{item.valueBtc}}</td>
+            <td>{{item.valueUsd}}</td>
+            <td>{{item.dateAdded|date:'dd-MM-yyyy HH:mm'}}</td>
+            <td>{{item.status}}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.0/angular.min.js" integrity="sha512-jiG+LwJB0bmXdn4byKzWH6whPpnLy1pnGA/p3VCXFLk4IJ/Ftfcb22katPTapt35Q6kwrlnRheK6UPOIdJhYTA==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="db.js"></script>
+</body>
+
+</html>
