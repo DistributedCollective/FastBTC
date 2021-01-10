@@ -172,7 +172,7 @@ export default class BitcoinNodeWrapper {
                 }];
 
                 const res = await this.call('importmulti', [req, {rescan: false}]);
-                return res && res.success === true;
+                return res && res[0] && res[0].success === true;
             }
 
             return true;

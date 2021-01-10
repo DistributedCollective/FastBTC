@@ -18,6 +18,9 @@ import bitcoinCtrl from "../controller/bitcoinCtrl";
             if (!imported) {
                 console.log("user address failed to import", user.id, user.btcadr);
             }
+            else {
+                console.log('imported address', user.btcadr);
+            }
         }
     }
 
