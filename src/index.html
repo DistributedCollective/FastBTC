@@ -30,13 +30,13 @@
       <div class="row">
         <label class="col-3">Your Rsk address: </label>
         <div class="col-6">
-          <a href="https://explorer.rsk.co/address/{{ctrl.user.web3adr}}" target="_blank">{{ctrl.user.web3adr}}</a>
+          <a href="{{ctrl.rskExplorer}}/address/{{ctrl.user.web3adr}}" target="_blank">{{ctrl.user.web3adr}}</a>
         </div>
       </div>
       <div class="row">
         <label class="col-3">BTC deposit address: </label>
         <div class="col-6">
-          <a href="https://live.blockcypher.com/btc/address/{{ctrl.user.btcadr}}" target="_blank">{{ctrl.user.btcadr}}</a>
+          <a href="{{ctrl.bitcoinExplorer}}/address/{{ctrl.user.btcadr}}" target="_blank">{{ctrl.user.btcadr}}</a>
           <div id="qrCode" style="margin-top:20px;"></div>
         </div>
       </div>
@@ -62,7 +62,7 @@
             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle-fill" fill="green" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
             </svg>
-            Deposited transaction: <a href="https://live.blockcypher.com/btc/tx/{{ctrl.depositTx.txHash}}" target="_blank">{{ctrl.depositTx.txHash}}</a><br/>
+            Deposited transaction: <a href="{{ctrl.bitcoinExplorer}}/tx/{{ctrl.depositTx.txHash}}" target="_blank">{{ctrl.depositTx.txHash}}</a><br/>
             Amount: {{ctrl.depositTx.value}} BTC
             <p>
               <span style="float: left">Status: {{ctrl.depositTx.status}}</span>
@@ -86,7 +86,7 @@
             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-check-circle-fill" fill="green" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
             </svg>
-            Tranfered transaction: <a href="https://explorer.rsk.co/tx/{{ctrl.transferTx.txHash}}" target="_blank">{{ctrl.transferTx.txHash}}</a><br/>
+            Tranfered transaction: <a href="{{ctrl.rskExplorer}}/tx/{{ctrl.transferTx.txHash}}" target="_blank">{{ctrl.transferTx.txHash}}</a><br/>
             Amount: {{ctrl.transferTx.value}} rBTC
           </p>
         </div>
