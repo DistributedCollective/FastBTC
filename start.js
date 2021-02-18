@@ -2,7 +2,6 @@
 * Relays Btc to Rbtc. 
 */
 import conf from './config/config';
-const monitor = require('pm2-server-monitor');
 const express= require('express');
 const app = express();
 const http = require('http').createServer(app);
@@ -11,11 +10,6 @@ const mCtrl = new MainController();
 import apiKey from './secrets/apiKey';
 
 
-
-monitor({
-    name: conf.appName,
-    port: conf.healthMonitorPort
-});
 
 console.log("Hola. Starting the Fast-Btc-relay on "+conf.env);
        

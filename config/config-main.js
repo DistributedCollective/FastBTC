@@ -7,7 +7,6 @@ import accounts from "../secrets/accounts";
 export default {
     env: "prod", 
     serverPort: 3007,
-    healthMonitorPort: 17, //->3017
     appName: "FastBtcV3",
     dbName: "fastbtcv3_main",
     rskNode: "https://mainnet.sovryn.app/rpc",

@@ -1,6 +1,8 @@
 /**
  * App 
  */
+
+ /*
 const { origin, pathname } = new URL('https://testnet.sovryn.app/genesis/');
 console.log(origin);
 console.log(pathname)
@@ -9,7 +11,9 @@ console.log(pathname)
 const socket = io(origin, {
     reconnectionDelayMax: 10000,
     path: pathname && pathname !== '/' ? pathname : '',
-})
+})*/
+
+const socket=io();
 
 class AppCtrl {
     constructor ($scope, $timeout) {
