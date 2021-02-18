@@ -137,9 +137,7 @@ class BitcoinCtrl {
             if (added == null && user != null) {
                 console.log("user %s has a deposit, tx %s, value %s", user.btcadr, txId, value);
 
-                const btcPrice = await U.getBTCPrice();
-                const valUsd = value * btcPrice / 1e8;
-                await dbCtrl.addDeposit(user.label, txId, value, valUsd, false);
+                await dbCtrl.addDeposit(user.label, txId, value, false);
 
                 if (this.onPendingDepositHandler) {
                     this.onPendingDepositHandler(user.label, {
@@ -168,8 +166,7 @@ class BitcoinCtrl {
                     label: user.label,
                     txHash: txId,
                     conf: confirmations,
-                    val: value,
-                    usd: Number(value) * btcPrice / 1e8
+                    val: value
                 });
             }
 

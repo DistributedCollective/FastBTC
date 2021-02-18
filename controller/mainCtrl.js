@@ -186,7 +186,7 @@ class MainController {
         this.sendInfoNotification("New Btc deposit arrived. " + JSON.stringify(d));
 
         if (depositFound == null) {
-            const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, d.usd, true);
+            const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, true);
 
             if (!resDb) return console.error("Error adding deposit to db");
         }
@@ -209,7 +209,7 @@ class MainController {
             return;
         }
 
-        await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val, d.usd);
+        await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val);
 
         console.log("Successfully sent " + d.val + " to " + user.web3adr);
         console.log(resTx);

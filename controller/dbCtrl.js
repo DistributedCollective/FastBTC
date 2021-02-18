@@ -152,13 +152,12 @@ class DbCtrl {
         }
     }
 
-    async addDeposit(userAdrLabel, txHash, valueBtc, valueUsd, isConfirmed = false) {
+    async addDeposit(userAdrLabel, txHash, valueBtc, isConfirmed = false) {
         try {
             return await this.transactionRepository.insertDepositTx({
                 userAdrLabel,
                 txHash,
                 valueBtc,
-                valueUsd,
                 status: isConfirmed ? 'confirmed' : 'pending'
             });
         } catch (e) {
@@ -183,7 +182,7 @@ class DbCtrl {
     }
 
     getDepositHistory(userWeb3Adr) {
-        const sql = "select user.id, web3adr, btcadr, valueUsd, valueBtc, type, transactions.dateAdded, transactions.txHash, status"
+        const sql = "select user.id, web3adr, btcadr, valueBtc, type, transactions.dateAdded, transactions.txHash, status"
         + " from user cross join transactions on user.label = transactions.userAdrLabel "
         +"AND web3adr = '"+userWeb3Adr+"';";
        
@@ -250,13 +249,12 @@ class DbCtrl {
         }
     }
 
-    async addTransferTx(userAdrLabel, txHash, valueBtc, valueUsd) {
+    async addTransferTx(userAdrLabel, txHash, valueBtc) {
         try {
             return await this.transactionRepository.insertTransferTx({
                 userAdrLabel,
                 txHash,
                 valueBtc,
-                valueUsd,
                 status: 'confirmed'
             });
         } catch (e) {
