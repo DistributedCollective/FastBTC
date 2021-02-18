@@ -8,7 +8,6 @@
 const TelegramBot = require('telegraf/telegram');
 const SocketIO = require('socket.io');
 import conf from '../config/config';
-import Web3 from 'web3';
 import dbCtrl from './dbCtrl';
 import rskCtrl from './rskCtrl';
 import Util from '../utils/helper';
@@ -19,7 +18,6 @@ class MainController {
     async start(server) {
         this.infoBot = new TelegramBot(conf.infoBot);
         this.errorBot = new TelegramBot(conf.errorBot);
-        this.web3 = new Web3(conf.rskNode);
         this.connectingSockets = {}; //object of {[label]: socketId}
 
         this.initSocket(server);
@@ -27,10 +25,8 @@ class MainController {
         await bitcoinCtrl.init();
         await rskCtrl.init();
         
-        this.getDeposits();
-        this._pollBTCPrice();
-
-        bitcoinCtrl.onPendingDeposit(this.onPendingDeposit.bind(this));
+        bitcoinCtrl.setPendingDepositHandler(this.onPendingDeposit.bind(this));
+        bitcoinCtrl.setTxDepositedHandler(this.processDeposits.bind(this));
     }
 
     initSocket(app) {
@@ -42,31 +38,11 @@ class MainController {
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.getTxAmount.apply(this, [...args]));
             socket.on('getDeposits', (...args) => this.getDbDeposits.apply(this, [...args]));
+            socket.on('getTransfers', (...args) => this.getTransfers.apply(this, [...args]));
         });
     }
 
-    _pollBTCPrice() {
-        const p = this;
-
-        setInterval(async () => {
-            try {
-                const price = await Util.getBTCPrice();
-
-                if (price != null) {
-                    for (let userLabel of Object.keys(p.connectingSockets)) {
-                        p.emitToUserSocket(userLabel, 'txAmount', {
-                            max: Number((conf.maxAmountInUsd / price).toFixed(8)),
-                            min: Number((conf.minAmount / 1e8).toFixed(8))
-                        });
-                    }
-                }
-            } catch (e) {
-                console.error("error getting btc price")
-                console.error(e);
-            }
-
-        }, conf.pricePollingTime);
-    }
+   
 
     /**
      * Loads a users btc address or creates a new user entry in the database
@@ -79,33 +55,40 @@ class MainController {
                 return cb({error: "Address is empty"});
             }
 
-            const user = await dbCtrl.getUserByAddress(address);
 
+            let user = await dbCtrl.getUserByAddress(address);
+            
+            if (user == null) user = await this.addNewUser(address);
+            
             if (user != null) {
-                this.connectingSockets[user.label] = socket.id;
-                await bitcoinCtrl.checkAddress(user.id, new Date(user.dateAdded));
-                return cb(null, user);
-            }
-
-            const newLabel = await Util.getRandomString(16);
-            const nextUserIndex = await dbCtrl.getNextUserId();
-            const btcAdr = await bitcoinCtrl.createAddress(nextUserIndex);
-
-            if (btcAdr) {
-                const newUser = await dbCtrl.addUser(address, btcAdr, newLabel);
-                this.connectingSockets[newUser.label] = socket.id;
-
-                cb(null, newUser);
+                this.connectingSockets[user.label] = socket.id;      
             } else {
-                console.error("Error creating btc deposit address for user " + address);
-                cb({error: "Can not get new BTC deposit address"});
+                return cb({error: "Cannot add the user to the database. Try again later."});
             }
+
+            if(user.btcadr != null && user.btcadr != ''){
+                await bitcoinCtrl.checkAddress(user.id, user.label, new Date(user.dateAdded)); 
+            } else {
+                const btcAdr = await bitcoinCtrl.createAddress(user.id, user.label);
+                if (btcAdr) {
+                    await dbCtrl.userRepository.update({id: user.id}, {btcadr: btcAdr});
+                    user = await dbCtrl.getUserByAddress(address);
+                } else {
+                    console.error("Error creating btc deposit address for user " + address);
+                    return cb({error: "Can not get new BTC deposit address"});
+                }
+            }
+            
+            console.log("returning user");
+            console.log(user);
+            return cb(null, user);
 
         } catch (e) {
             console.error(e);
             cb({error: "Server error. Please contact the admin community@sovryn.app"});
         }
     }
+
 
     /**
      * Loads all deposits from user
@@ -126,6 +109,20 @@ class MainController {
         }
     }
 
+    /**
+     * create a DB entry for a new user
+     * @param {*} address the user's RSK address
+     */
+    async addNewUser(address) {
+        try {
+            const newLabel = await Util.getRandomString(16);
+            return await dbCtrl.addUser(address, '', newLabel);
+        } catch (e) {
+            return Promise.reject(e);
+        }
+    }
+
+
 
 
     /**
@@ -136,34 +133,38 @@ class MainController {
      */
     async getTxAmount(cb) {
         try {
-            const price = await Util.getBTCPrice();
-
-            if (price != null) {
-                cb({
-                    max: Number((conf.maxAmountInUsd / price).toFixed(8)),
-                    min: Number((conf.minAmount / 1e8).toFixed(8))
-                });
-            }
+            cb({
+                max: Number((conf.maxAmount / 1e8).toFixed(8)),
+                min: Number((conf.minAmount / 1e8).toFixed(8))
+            });
         } catch (e) {
             console.log(e);
         }
     }
 
-    /**
-     * Callback is called in a small intervall. It returns a list of last incoming btc deposits.
-     * After checking if the transaction is not yet added in the datase it sends the corresponding amount to the rsk address.
-     */
-    async getDeposits() {
-        const p = this;
-        bitcoinCtrl.getAllTxWrapper(async res => {
-            console.log("Processing "+res.length+ " deposits");
-            for (let d of res) await p.processDeposits(d);
-        });
-    }
 
     async getDbDeposits(cb) {
         try {
             const list = await dbCtrl.getAllDeposits();
+            cb(list || []);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async getTotalDeposits(cb) {
+        try {
+          const total = await dbCtrl.getSumDeposited();
+          cb(total);
+        } catch (e) {
+          console.error(e);
+          cb({error: "Something's wrong"})
+        }
+      }
+
+    async getTransfers(cb) {
+        try {
+            const list = await dbCtrl.getAllTransfers();
             cb(list || []);
         } catch (e) {
             console.error(e);
@@ -246,3 +247,22 @@ class MainController {
 }
 
 export default MainController;
+
+
+
+
+
+
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+

@@ -1,9 +1,8 @@
-import {bip32, networks, payments} from 'bitcoinjs-lib';
-import {default as ConfigStore} from 'configstore';
+import { bip32, networks, payments } from 'bitcoinjs-lib';
+import { default as ConfigStore } from 'configstore';
+import config from '../config/config';
 import path from 'path';
 import * as _ from 'lodash';
-import config from '../config/config';
-//import BlockChairWrapper from '../utils/blockChairWrapper';
 import dbCtrl from "./dbCtrl";
 import U from '../utils/helper';
 import BitcoinNodeWrapper from "../utils/bitcoinNodeWrapper";
@@ -11,187 +10,177 @@ import BitcoinNodeWrapper from "../utils/bitcoinNodeWrapper";
 
 class BitcoinCtrl {
     async init() {
-        // this.api = new BlockChairWrapper(config.blockChairKey, this.isMainNet);
         this.isMainNet = config.env === 'prod';
+        this.pubKeys = config.walletSigs.pubKeys;
+        this.cosigners = config.walletSigs.cosigners;
+        this.thresholdConfirmations = config.thresholdConfirmations;
         this.api = new BitcoinNodeWrapper(config.node);
-        this.storage = new ConfigStore( 'store', null, {
+        this.storage = new ConfigStore('store', null, {
             configPath: path.join(__dirname, '../config/store.json')
         });
-
-        setInterval(() => this.checkPendingTx(), 60000);
+        this.network = this.isMainNet ? networks.bitcoin : networks.testnet;
+        this.checkDepositTxs().catch(console.error);
     }
 
-    get network() {
-        return this.isMainNet ? networks.bitcoin : networks.testnet;
-    }
 
-    get derivationPath() {
-        return this.isMainNet ? "m/49'/0'/0'" : "m/49'/1'/0'";
-    }
-
-    async createAddress(index) {
-        const publicKeys = config.walletSigs.pubKeys.map(key => {
+    getDerivedPubKeys(index) {
+        let publicKeys = this.pubKeys.map(key => {
             const node = bip32.fromBase58(key, this.network);
             const child = node.derive(0).derive(index);
-            return child.publicKey;
+            return child.publicKey.toString('hex');
         });
+        publicKeys.sort();
+        publicKeys = publicKeys.map(k => Buffer.from(k, 'hex'));
+        return publicKeys;
+    }
 
-        const payment = payments.p2wsh({
+    async createAddress(index, label) {
+        const publicKeys = this.getDerivedPubKeys(index);
+
+        const payment = payments.p2sh({
             network: this.network,
             redeem: payments.p2ms({
-                m: 2,
+                m: this.cosigners,
                 pubkeys: publicKeys,
                 network: this.network
             })
         });
-        await this.api.importAddress([payment]);
+        payment.label = label;
+        await this.api.importNewAddress([payment]);
 
         return payment.address;
     }
 
-    async checkAddress(index, createdDate) {
-        const publicKeys = config.walletSigs.pubKeys.map(key => {
-            const node = bip32.fromBase58(key, this.network);
-            const child = node.derive(0).derive(index);
-            return child.publicKey;
-        });
+    async checkAddress(index, label, createdDate, rescan = false) {
+        const publicKeys = this.getDerivedPubKeys(index);
 
-        const payment = payments.p2wsh({
+        const payment = payments.p2sh({
             network: this.network,
             redeem: payments.p2ms({
-                m: 2,
+                m: this.cosigners,
                 pubkeys: publicKeys,
                 network: this.network
             })
         });
 
-        return await this.api.checkImportAddress(payment, createdDate);
+        return await this.api.checkImportAddress(payment, label, createdDate, rescan);
     }
 
-    async getAllTxWrapper(cb) {
-        while (true) {
-            const storedBlock = this.storage.get('lastBlockNumber');
-            const curBlockOnNet = await this.api.getLastBlock();
-            console.log("Processing block "+curBlockOnNet);
 
-            if (curBlockOnNet > storedBlock) {
-                console.log("Behind %s blocks", curBlockOnNet - storedBlock);
-                for (let block = storedBlock+1; block <= curBlockOnNet; block++) {
-                    try {
-                        let tx = await this.getTxOnBlock(block);
-
-                        if (tx && tx.length > 0) {
-                            const exists = await dbCtrl.findTx(tx.map(t => t.txHash));
-                            if (exists && exists.length > 0) {
-                                tx = tx.filter(t => {
-                                   return exists.find(t1 => t1.status === 'confirmed' && t1.txHash === t.txHash) == null;
-                                });
-                            }
-
-                            cb(tx);
-                        }
-                    } catch (e) {}
-                    this.storage.all = {
-                        lastBlockNumber: block
-                    };
-
-                    await U.wasteTime(10);
-                }
-            }
-
-            await U.wasteTime(60*3);
-        }
-    }
-
-    async getTxOnBlock(blockNumber) {
+    /**
+     * Check deposit transactions for all user addresses in DB.
+     * It gets incoming transactions from the node by user label. If tx has 0 confirmations, add a pending tx to db
+     * Otherwise check it is confirmed when has more than [thresholdConfirmations] confirmations
+     */
+    async checkDepositTxs() {
+        console.log("Checking deposits")
         try {
-            console.log("# Checking block #%s", blockNumber);
-            const addresses = await this.api.getBlockChangedAddresses(blockNumber);
+            let currentOffset = 0, checkSize = 20, completed = false;
 
-            if (addresses == null || addresses.length === 0) return [];
+            while (!completed) {
+                const addrLabels = await dbCtrl.getUserLabels(currentOffset, checkSize);
 
-            const users = await dbCtrl.findUsersByAdrList(addresses);
-            let txList = [];
-            console.log("block has %s adr changes, %s users on db", addresses.length, users.length);
+                if (addrLabels && addrLabels.length > 0) {
+                    console.log(addrLabels.length + " users");
+                    for (let adrLabel of addrLabels) {
+                        const txList = await this.api.listReceivedTxsByLabel(adrLabel, 9999);
 
-            if (users && users.length > 0) {
-                const userAddresses = _.uniq(users.map(u => u.btcadr));
-                const addressDetails = await this.api.getAddressDetail(userAddresses, blockNumber);
-                const btcPrice = await U.getBTCPrice();
+                        // console.log("Address label %s has %s tx", adrLabel, (txList||[]).length);
 
-                (addressDetails || []).forEach(adrDetail => {
-                    const user = users.find(u => u.btcadr === adrDetail.address);
+                        for (const tx of (txList || [])) {
+                            const confirmations = tx && tx.confirmations;
 
-                    if (user) {
-                        (adrDetail.transfers || []).forEach(tx => {
-                            if (tx.isReceive && tx.confirmation > 0) {
-                                txList.push({
-                                    address: user.btcadr,
-                                    label: user.label,
-                                    txHash: tx.txHash,
-                                    conf: tx.confirmation,
-                                    val: tx.value,
-                                    usd: Number(tx.value) * btcPrice/1e8
+                            if (confirmations === 0) {
+                                await this.addPendingDepositTx({
+                                    address: tx.address,
+                                    value: tx.value,
+                                    txId: tx.txId,
+                                    label: adrLabel
                                 });
-                            }
-                        });
-                    }
-                });
-
-            }
-
-            return txList;
-        } catch (e) {
-            console.error("error getting tx on block")
-            console.error(e);
-            return [];
-        }
-    }
-
-    async checkPendingTx() {
-        try {
-            const txList = await this.api.getMemPoolTxs();
-
-            if (txList && txList.length > 0) {
-                const btcPrice = await U.getBTCPrice();
-                // console.log("Pending tx", txList.length);
-
-                for (let tx of txList) {
-                    const addresses = tx.out.map(o => o.address);
-                    const users = await dbCtrl.findUsersByAdrList(addresses);
-
-                    if (users && users.length > 0) {
-                        const depositedUser = users[0];
-                        const out = tx.out.find(o => o.address === depositedUser.btcadr);
-                        const value = out.value || 0;
-                        const valUsd = value * btcPrice/1e8;
-                        const added = await dbCtrl.getDeposit(tx.txId);
-
-                        if (added == null) {
-                            console.log("user %s has a deposit, tx %s, value %s", depositedUser.btcadr, tx.txId, value);
-
-                            await dbCtrl.addDeposit(depositedUser.label, tx.txId, value, valUsd);
-
-                            if (this.onPendingDepositHandler) {
-                                this.onPendingDepositHandler(depositedUser.label, {
-                                    txHash: tx.txId,
-                                    value: value,
-                                    status: 'pending'
+                            } else if (confirmations >= this.thresholdConfirmations) {
+                                await this.depositTxConfirmed({
+                                    address: tx.address,
+                                    value: tx.value,
+                                    txId: tx.txId,
+                                    confirmations: confirmations,
+                                    label: adrLabel
                                 });
                             }
                         }
                     }
+                } else {
+                    completed = true;
                 }
+
+                currentOffset += checkSize;
+                await U.wasteTime(1);
+            }
+
+            if (completed) {
+                await U.wasteTime(20);
+                this.checkDepositTxs().catch(console.error);
             }
 
         } catch (e) {
-            console.error("error checking pending tx");
             console.error(e);
         }
     }
 
-    onPendingDeposit(handler) {
+    setPendingDepositHandler(handler) {
         this.onPendingDepositHandler = handler;
+    }
+
+    setTxDepositedHandler(handler) {
+        this.onTxDepositedHandler = handler;
+    }
+
+    async addPendingDepositTx({ address, value, txId, label }) {
+        try {
+            const added = await dbCtrl.getDeposit(txId, label);
+            const user = await dbCtrl.getUserByBtcAddress(address);
+
+            if (added == null && user != null) {
+                console.log("user %s has a deposit, tx %s, value %s", user.btcadr, txId, value);
+
+                const btcPrice = await U.getBTCPrice();
+                const valUsd = value * btcPrice / 1e8;
+                await dbCtrl.addDeposit(user.label, txId, value, valUsd, false);
+
+                if (this.onPendingDepositHandler) {
+                    this.onPendingDepositHandler(user.label, {
+                        txHash: txId,
+                        value: value,
+                        status: 'pending'
+                    });
+                }
+            }
+
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async depositTxConfirmed({ address, value, txId, confirmations, label }) {
+        try {
+            const user = await dbCtrl.getUserByBtcAddress(address);
+            const confirmedInDB = await dbCtrl.getDeposit(txId, label);
+
+            if (user != null && this.onTxDepositedHandler && (confirmedInDB == null || confirmedInDB.status !== 'confirmed')) {
+                const btcPrice = await U.getBTCPrice();
+
+                this.onTxDepositedHandler({
+                    address: user.btcadr,
+                    label: user.label,
+                    txHash: txId,
+                    conf: confirmations,
+                    val: value,
+                    usd: Number(value) * btcPrice / 1e8
+                });
+            }
+
+        } catch (e) {
+            console.error(e);
+        }
     }
 }
 

@@ -51,4 +51,8 @@ export default class User extends BaseModel {
     find(criteria, options = {}) {
         return super.find(criteria, options);
     }
+
+    findByAddress(address) {
+        return super.get(`SELECT * FROM ${this.table} WHERE web3adr = ? COLLATE NOCASE`, [address]);
+    }
 }

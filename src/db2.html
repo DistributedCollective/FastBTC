@@ -11,13 +11,13 @@
 </head>
 
 <body ng-controller="dbCtrl as ctrl">
-<h1 class="text-center" style="margin-top: 50px">Deposit Database</h1>
+<h1 class="text-center" style="margin-top: 50px">Transfer Database</h1>
 
 <div class="container">
 
     <p style="margin-bottom: 20px; font-size: 110%; font-weight: bold">
-        <label>Total BTC: {{ctrl.total.btc}}</label><br/>
-        <label>Total USD: {{ctrl.total.usd}}</label><br/>
+        <label>Total SOV: {{ctrl.totalTransfer.btc}}</label><br/>
+        <label>Total USD: {{ctrl.totalTransfer.usd}}</label><br/>
     </p>
 
     <table class="table table-bordered">
@@ -26,14 +26,14 @@
             <th>ID</th>
             <th>User label</th>
             <th>Tx hash</th>
-            <th>Value BTC</th>
+            <th>Value SOV</th>
             <th>Value USD</th>
             <th>Created date</th>
             <th>Status</th>
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="item in ctrl.data">
+        <tr ng-repeat="item in ctrl.transfers">
             <td>{{item.id}}</td>
             <td>{{item.userAdrLabel}}</td>
             <td>

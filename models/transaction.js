@@ -7,7 +7,6 @@ export default class Transaction extends BaseModel {
             userAdrLabel text,
             txHash text UNIQUE,
             valueBtc INTEGER,
-            valueUsd INTEGER,
             dateAdded datetime,
             status text,
             type text 
@@ -44,5 +43,15 @@ export default class Transaction extends BaseModel {
             dateAdded: new Date(),
             status: status
         });
+    }
+
+    async sumDeposited() {
+        try {
+            const res = await this.get(`SELECT type, SUM(valueBtc) total FROM ${this.table} WHERE type = 'deposit' GROUP BY type`);
+            return res && res.total || 0;
+        } catch (e) {
+            console.error(e);
+            return 0;
+        }
     }
 }

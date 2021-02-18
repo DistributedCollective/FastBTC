@@ -67,8 +67,8 @@ export default class BitcoinNodeWrapper {
         try {
             const utxoResult = await this.call('listunspent', [0, 9999999, adrList]);
             let addresses = [];
-            console.log("utxo");
-            console.log(utxoResult);
+            //console.log("utxo");
+            //console.log(utxoResult);
 
             (utxoResult || []).forEach(tx => {
                 let adrDetail = addresses.find(adr => adr.address == tx.address);
@@ -114,10 +114,22 @@ export default class BitcoinNodeWrapper {
             const res = await this.call("gettransaction", [txId, true]);
 
             if (res) {
+
+                const vout = (res.details || []).map(el => {
+                    return {
+                        value: Number(el.amount) * 1e8,
+                        address: el.address,
+                        vout: el.vout
+                    }
+                })
+
                 return {
                     hex: res.hex,
-                    decoded: res
+                    confirmations: res.confirmations,
+                    value: Number(res.amount) * 1e8,
+                    vout: vout
                 };
+
             }
         } catch (e) {
             console.error("error getting rawtx")
@@ -134,14 +146,16 @@ export default class BitcoinNodeWrapper {
      * @param {Array<Payment>} paymentAddressList
      * @returns {Promise<void>}
      */
-    async importAddress(paymentAddressList) {
+    async importNewAddress(paymentAddressList) {
         try {
             const req = paymentAddressList.map(payment => {
                 return {
                     scriptPubKey: {address: payment.address},
                     timestamp: "now",
-                    witnessscript: payment.redeem.output.toString('hex'),
-                    watchonly: true
+                    //witnessscript: payment.redeem.output.toString('hex'),
+                    redeemscript: payment.redeem.output.toString('hex'),
+                    watchonly: true,
+                    label: payment.label
                 };
             });
 
@@ -159,7 +173,7 @@ export default class BitcoinNodeWrapper {
      * @param {Payment} payment
      * @param {Date} createdDate
      */
-    async checkImportAddress(payment, createdDate) {
+    async checkImportAddress(payment, label, createdDate, rescan = false) {
         try {
             const addressInfo = await this.call('getaddressinfo', [payment.address]);
 
@@ -167,13 +181,20 @@ export default class BitcoinNodeWrapper {
                 const req = [{
                     scriptPubKey: {address: payment.address},
                     timestamp: createdDate.getTime(),
-                    witnessscript: payment.redeem.output.toString('hex'),
-                    watchonly: true
+                    redeemscript: payment.redeem.output.toString('hex'),
+                    watchonly: true,
+                    label: label
                 }];
 
-                const res = await this.call('importmulti', [req, {rescan: false}]);
+                const res = await this.call('importmulti', [req, {rescan: rescan === true}]);
+
                 return res && res[0] && res[0].success === true;
             }
+
+            if (addressInfo && (addressInfo.labels || []).indexOf(label) < 0) {
+                await this.call('setlabel', [payment.address, label]);
+            }
+
 
             return true;
         } catch (e) {
@@ -190,7 +211,18 @@ export default class BitcoinNodeWrapper {
             if (mempoolTxIds && mempoolTxIds.length > 0) {
                 for (let i = 0; i < mempoolTxIds.length; i++) {
                     //console.log("array length: "+mempoolTxIds.length+" index "+i+" id: "+mempoolTxIds[i]);
-                    const tx = await this.call('getrawtransaction', [mempoolTxIds[i], true]);
+                    //const tx = await this.call('getrawtransaction', [mempoolTxIds[i], true]);
+
+
+                    let tx;
+
+                    try {
+                        tx = await this.call('getrawtransaction', [mempoolTxIds[i], true]);
+                    } catch (e) {
+                        //console.error("cant get raw tx");
+                        //console.error(e);
+                    }
+
 
                     if (tx && tx.txid) {
                         const out = (tx.vout || []).map(out => {
@@ -219,5 +251,30 @@ export default class BitcoinNodeWrapper {
             return [];
         }
     }
+
+    async listReceivedTxsByLabel(label, count = 100) {
+        try {
+            const txList = await this.call('listtransactions', [label, count, 0, true]);
+
+            const received = (txList || []).map(tx => {
+                if (tx && tx.category === 'receive') {
+                    return {
+                        txId: tx.txid,
+                        blockNumber: tx.blockheight,
+                        address: tx.address,
+                        value: Number(tx.amount) * 1e8,
+                        confirmations: tx.confirmations
+                    };
+                }
+            })
+
+            return received.filter(tx => tx != null);
+
+        } catch (e) {
+            console.error(e);
+            return [];
+        }
+    }
+
 }
 

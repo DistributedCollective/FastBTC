@@ -1,8 +1,15 @@
 /**
  * App 
  */
-const socket = io();
-var qr = require('qr-encode')
+const { origin, pathname } = new URL('https://testnet.sovryn.app/genesis/');
+console.log(origin);
+console.log(pathname)
+
+
+const socket = io(origin, {
+    reconnectionDelayMax: 10000,
+    path: pathname && pathname !== '/' ? pathname : '',
+})
 
 class AppCtrl {
     constructor ($scope, $timeout) {
@@ -25,7 +32,10 @@ class AppCtrl {
         this.amountInfo = {
             min: 0.001,
             max: 0.002
-        }
+        };
+      
+        this.error = false;
+        this.explorer = "https://explorer.rsk.co/tx/"; 
     }
 
     static get $inject() {
@@ -34,6 +44,7 @@ class AppCtrl {
 
     start() {
         let adr = window.acc;
+        this.address = adr;
 
         this.showLoading = true;
         socket.emit("getDepositAddress", adr, (err, res) => {
@@ -66,6 +77,15 @@ class AppCtrl {
         });
 
         socket.on('txAmount', (info) => this.showTxAmountInfo(info));
+
+    }
+
+    showMessage(msg, isError = true) {
+        this.$timeout(() => {
+            this.error = isError;
+            this.message = msg;
+            this.showLoading = false;
+        });
     }
 
     showError(msg) {
@@ -79,6 +99,7 @@ class AppCtrl {
         this.initQRCode(user.btcadr);
     }
 
+   
     showTxAmountInfo(amount) {
         if (amount && amount.min != null && amount.max != null) {
             this.amountInfo = amount;
@@ -86,17 +107,7 @@ class AppCtrl {
         }
     }
 
-    initQRCode(btcAddress) {
-        console.log("init qr code");
-        this.$timeout(() => {
-            var dataURI = qr(btcAddress, {type: 6, size: 6, level: 'Q'})
-            //If using in browsers:
-            var img = new Image()
-            img.src = dataURI
-            document.getElementById('qrCode').appendChild(img)
 
-        }, 50);
-    }
 }
 
 angular.module('app', [])
