@@ -46,9 +46,8 @@ class DbCtrl {
 
     async getUserByAddress(adr) {
         try {
-            const user = await this.userRepository.findOne({
-                web3adr: adr
-            });
+            const user = await this.userRepository.findByAddress(adr);
+
 
             if (user) {
                 console.log("user found");
@@ -89,6 +88,42 @@ class DbCtrl {
         }
     }
 
+    async getUserByLabel(label) {
+        try {
+            return await this.userRepository.findOne({
+                label: label
+            });
+        } catch (e) {
+            console.log(e);
+            return null;
+        }
+    }
+
+    async addUser(web3adr, btcadr, label, email) {
+        try {
+            return await this.userRepository.insert({
+                web3adr,
+                btcadr,
+                label,
+                email,
+            });
+        } catch (e) {
+            console.log(e);
+            return null;
+        }
+    }
+
+    async updateUser(userId, {name, email}) {
+        try {
+            await this.userRepository.update({id: userId}, {name: name, email: email});
+
+            return await this.userRepository.findOne({id: userId});
+        } catch (e) {
+            console.log(e);
+            return null;
+        }
+    }
+
     async getNextUserId() {
         try {
             const users = await this.userRepository.find({}, {
@@ -102,6 +137,7 @@ class DbCtrl {
             return Promise.reject(e);
         }
     }
+
 
     async findUsersByAdrList(addresses) {
         try {
@@ -131,12 +167,15 @@ class DbCtrl {
         }
     }
     
-    async getDeposit(txHash) {
+    async getDeposit(txHash, label = '') {
         try {
-            return await this.transactionRepository.findOne({
+            const criteria = {
                 txHash: txHash,
                 type: "deposit"
-            });
+            };
+            if (label) criteria['userAdrLabel'] = label;
+
+            return await this.transactionRepository.findOne(criteria);
         } catch (e) {
             console.log(e);
             return null;
@@ -226,6 +265,17 @@ class DbCtrl {
         }
     }
 
+    async getUserLabels(skip = 0, size = 10) {
+        try {
+            const users = await this.userRepository.find({}, {offset: skip, limit: size});
+
+            return (users || []).map(u => u.label);
+        } catch (e) {
+            console.log(e);
+            return [];
+        }
+    }
+
     /**
      *
      * @param { string[] } txHashList
@@ -242,6 +292,17 @@ class DbCtrl {
             type: 'deposit'
         })
     }
+
+    async getAllTransfers() {
+        return this.transactionRepository.find({
+            type: 'transfer'
+        })
+    }
+
+    async getSumDeposited() {
+        return await this.transactionRepository.sumDeposited();
+    }
+
 }
 
 export default new DbCtrl();

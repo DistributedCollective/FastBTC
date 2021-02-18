@@ -1,7 +1,5 @@
 import { bip32, networks, payments } from 'bitcoinjs-lib';
-import { default as ConfigStore } from 'configstore';
 import config from '../config/config';
-import path from 'path';
 import * as _ from 'lodash';
 import dbCtrl from "./dbCtrl";
 import U from '../utils/helper';
@@ -15,9 +13,6 @@ class BitcoinCtrl {
         this.cosigners = config.walletSigs.cosigners;
         this.thresholdConfirmations = config.thresholdConfirmations;
         this.api = new BitcoinNodeWrapper(config.node);
-        this.storage = new ConfigStore('store', null, {
-            configPath: path.join(__dirname, '../config/store.json')
-        });
         this.network = this.isMainNet ? networks.bitcoin : networks.testnet;
         this.checkDepositTxs().catch(console.error);
     }

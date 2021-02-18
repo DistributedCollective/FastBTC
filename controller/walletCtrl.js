@@ -3,7 +3,6 @@
  */
 import conf from '../config/config';
 import U from '../utils/helper';
-import owner from '../secrets/owner';
 
 class WalletManager {
     /**
@@ -19,7 +18,6 @@ class WalletManager {
                 pending: 0
             });
         }
-        web3.eth.accounts.wallet.add(owner.pKey);
     }
     
     /**
