@@ -14,6 +14,8 @@ const socket = io(origin, {
 })*/
 
 const socket=io();
+var qr = require('qr-encode');
+
 
 class AppCtrl {
     constructor ($scope, $timeout) {
@@ -103,6 +105,17 @@ class AppCtrl {
         this.initQRCode(user.btcadr);
     }
 
+    initQRCode(btcAddress) {
+        console.log("init qr code");
+        this.$timeout(() => {
+            var dataURI = qr(btcAddress, {type: 6, size: 6, level: 'Q'})
+            //If using in browsers:
+            var img = new Image()
+            img.src = dataURI
+            document.getElementById('qrCode').appendChild(img)
+
+        }, 50);
+    }
    
     showTxAmountInfo(amount) {
         if (amount && amount.min != null && amount.max != null) {
