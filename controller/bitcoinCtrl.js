@@ -30,6 +30,7 @@ class BitcoinCtrl {
     }
 
     async createAddress(index, label) {
+        console.log("create public key for "+index+" "+label);
         const publicKeys = this.getDerivedPubKeys(index);
 
         const payment = payments.p2sh({

@@ -99,6 +99,17 @@ class DbCtrl {
         }
     }
 
+    async getUserByBtcAddress(adr) {
+        try {
+            return await this.userRepository.findOne({
+                btcadr: adr
+            });
+        } catch (e) {
+            console.log(e);
+            return null;
+        }
+    }
+
     async addUser(web3adr, btcadr, label, email) {
         try {
             return await this.userRepository.insert({

@@ -5,7 +5,7 @@ import accounts from "../secrets/accounts";
 
 
 export default {
-    env: "prod", 
+    env: "test", 
     serverPort: 3007,
     appName: "FastBtcV3",
     dbName: "fastbtcv3_test",
