@@ -10,14 +10,12 @@ class WalletManager {
      * @param {*} web3 the web3 instance used by zhe rskCtrl
      */
     init(web3){
-        this.wallets=[];
-        for(let account of conf.accounts){
-            web3.eth.accounts.wallet.add(account.pKey);
-            this.wallets.push({
-                address: account.adr,
-                pending: 0
-            });
-        }
+        this.wallet={};
+        web3.eth.accounts.wallet.add(conf.account.pKey);
+        this.wallet = {
+            address: conf.account.adr,
+            pending: 0
+        };
     }
     
     /**
@@ -27,11 +25,9 @@ class WalletManager {
     async getFreeWallet(timeout){
         const stopAt = Date.now() + timeout;
         while (Date.now() < stopAt){
-            for (let wallet of this.wallets){
-                if(wallet.pending < 4){
-                    wallet.pending++;
-                    return wallet.address;
-                }
+            if(this.wallet.pending < 4){
+                this.wallet.pending++;
+                return this.wallet.address;
             }
             await U.wasteTime(5);
         }
@@ -44,11 +40,9 @@ class WalletManager {
      * @param {*} wallet 
      */
     decreasePending(walletAddress){
-        for (let wallet of this.wallets){
-            if(wallet.address == walletAddress){
-                wallet.pending--;
-                return true;
-            }
+        if(this.wallet.address == walletAddress){
+            this.wallet.pending--;
+            return true;
         }
         
         console.error("could not decrease the pending tx count for non-existing wallet address: "+walletAddress);
