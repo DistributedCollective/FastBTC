@@ -14,17 +14,19 @@ describe('Rsk controller', async () => {
         });
         
         it('should refuse to send the amount because it exceeds the limits', async () => {
-            const adr = conf.wallet.adr;
-            const val = (conf.maxAmountInUsd+1)*1e8/10000;
-            const res = await rskCtrl.sendRsk(val, adr);
+            const adr = conf.account.adr;
+            // const val = (conf.maxAmountInUsd+1)*1e8/10000;
+            const val = (conf.maxAmount+1)*1e8/10000;
+            const res = await rskCtrl.sendRbtc(val, adr);
             if(res.error) console.log(res.error);
             assert(res.error.indexOf("send between")!=-1);
         });       
         
         it('should refuse to send the amount because it exceeds the wallet balance', async () => {
-            const adr = conf.wallet.adr;
-            const val = (conf.maxAmountInUsd*1000000)*1e8;
-            const res = await rskCtrl.sendRsk(val, adr);
+            const adr = conf.account.adr;
+            //const val = (conf.maxAmountInUsd*1000000)*1e8;
+            const val = (conf.maxAmount*1000000)*1e8;
+            const res = await rskCtrl.sendRbtc(val, adr);
             if(res.error) console.log(res.error);
             assert(res.error.indexOf("balance")!=-1);
         });  
@@ -33,14 +35,14 @@ describe('Rsk controller', async () => {
         it('should send 0.0015 rbtc to itself', async () => {
             let val = 0.0015; // btc
             val = val/0.00000001; //satoshi
-            const adr = conf.wallet.adr;
-            const res = await rskCtrl.sendRsk(val, adr);
+            const adr = conf.account.adr;
+            const res = await rskCtrl.sendRbtc(val, adr);
             console.log(res);
             assert(res.txHash);
         });
 
-        it.only('should init a transaction in the multisig', async () => {
-            let val = rskCtrl.web3.utils.toWei("1", "ether"); // eth
+        it('should init a transaction in the multisig', async () => {
+            const val = rskCtrl.web3.utils.toWei("1", "ether"); // eth
             const receipt = await rskCtrl.transferFromMultisig(val, conf.account.adr)
             console.log(receipt);
             assert(receipt);
