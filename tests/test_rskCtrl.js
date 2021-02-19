@@ -5,6 +5,7 @@
 const assert = require('assert');
 import conf from '../config/config-test';
 import rskCtrl from '../controller/rskCtrl';
+import { encodeParameters, etherUnsigned } from '../utils/ethereum';
 
 describe('Rsk controller', async () => {
     describe('#check', async () => {
@@ -37,6 +38,23 @@ describe('Rsk controller', async () => {
             const res = await rskCtrl.sendRsk(val, adr);
             console.log(res);
             assert(res.txHash);
-        });      
+        });
+
+        it('should init a transaction in the multisig', async () => {
+            let val = 0.0015; // btc
+            val = val/0.00000001; //satoshi
+            const data = encodeParameters(["uint256"], [etherUnsigned(24 * 60 * 60).multipliedBy(2).toFixed()]);
+
+            const res = await rskCtrl.multisig.methods.submitTransaction(conf.contractAddress, val, data);
+            console.log(res);
+            assert(res.txHash);
+        });
+
+        it('should init a transaction in the multisig', async () => {
+            const txHash = "0xd10022ab33a701b896451aad4451a2c89ad1be6e7b7e4950081170ff221b5d7c"
+            const res = await rskCtrl.multisig.methods.confirmTransaction(txHash);
+            console.log(res);
+            assert(true);
+        });
     });
 });
