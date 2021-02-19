@@ -8,6 +8,7 @@ import multisigAbi from '../config/multisigAbi';
 import conf from '../config/config';
 import { Mutex } from 'async-mutex';
 import walletManager from './walletCtrl';
+import U from '../utils/helper';
 
 class RskCtrl {
     init() {
@@ -19,6 +20,7 @@ class RskCtrl {
         this.web3.eth.accounts.wallet.add(conf.account.pKey);
         this.contract = new this.web3.eth.Contract(contractAbi, conf.contractAddress);
         this.multisig = new this.web3.eth.Contract(multisigAbi, conf.multisigAddress);
+        walletManager.init(this.web3);
     }
 
     async getBalanceSats(adr) {
