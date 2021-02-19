@@ -14,7 +14,7 @@ describe('Rsk controller', async () => {
             await rskCtrl.init();
         });
         
-        it('should refuse to send the amount because it exceeds the limits', async () => {
+        it.skip('should refuse to send the amount because it exceeds the limits', async () => {
             const adr = conf.wallet.adr;
             const val = (conf.maxAmountInUsd+1)*1e8/10000;
             const res = await rskCtrl.sendRsk(val, adr);
@@ -22,7 +22,7 @@ describe('Rsk controller', async () => {
             assert(res.error.indexOf("send between")!=-1);
         });       
         
-        it('should refuse to send the amount because it exceeds the wallet balance', async () => {
+        it.skip('should refuse to send the amount because it exceeds the wallet balance', async () => {
             const adr = conf.wallet.adr;
             const val = (conf.maxAmountInUsd*1000000)*1e8;
             const res = await rskCtrl.sendRsk(val, adr);
@@ -31,7 +31,7 @@ describe('Rsk controller', async () => {
         });  
         
         
-        it('should send 0.0015 rbtc to itself', async () => {
+        it.skip('should send 0.0015 rbtc to itself', async () => {
             let val = 0.0015; // btc
             val = val/0.00000001; //satoshi
             const adr = conf.wallet.adr;
@@ -43,9 +43,24 @@ describe('Rsk controller', async () => {
         it('should init a transaction in the multisig', async () => {
             let val = 0.0015; // btc
             val = val/0.00000001; //satoshi
-            const data = encodeParameters(["uint256"], [etherUnsigned(24 * 60 * 60).multipliedBy(2).toFixed()]);
+            const data = rskCtrl.web3.eth.abi.encodeFunctionCall({
+                name: 'withdrawAdmin',
+                type: 'function',
+                inputs: [
+                        {
+                            "internalType": "address payable",
+                            "name": "receiver",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "amount",
+                            "type": "uint256"
+                        }
+                    ]
+            }, [conf.multisigAddress, val]);
 
-            const res = await rskCtrl.multisig.methods.submitTransaction(conf.contractAddress, val, data);
+            const res = await rskCtrl.multisig.methods.submitTransaction(conf.multisigAddress, val, data);
             console.log(res);
             assert(res.txHash);
         });
