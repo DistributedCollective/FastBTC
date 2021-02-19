@@ -13,7 +13,7 @@ describe('Rsk controller', async () => {
             await rskCtrl.init();
         });
         
-        it.skip('should refuse to send the amount because it exceeds the limits', async () => {
+        it('should refuse to send the amount because it exceeds the limits', async () => {
             const adr = conf.wallet.adr;
             const val = (conf.maxAmountInUsd+1)*1e8/10000;
             const res = await rskCtrl.sendRsk(val, adr);
@@ -21,7 +21,7 @@ describe('Rsk controller', async () => {
             assert(res.error.indexOf("send between")!=-1);
         });       
         
-        it.skip('should refuse to send the amount because it exceeds the wallet balance', async () => {
+        it('should refuse to send the amount because it exceeds the wallet balance', async () => {
             const adr = conf.wallet.adr;
             const val = (conf.maxAmountInUsd*1000000)*1e8;
             const res = await rskCtrl.sendRsk(val, adr);
@@ -30,7 +30,7 @@ describe('Rsk controller', async () => {
         });  
         
         
-        it.skip('should send 0.0015 rbtc to itself', async () => {
+        it('should send 0.0015 rbtc to itself', async () => {
             let val = 0.0015; // btc
             val = val/0.00000001; //satoshi
             const adr = conf.wallet.adr;
@@ -39,10 +39,9 @@ describe('Rsk controller', async () => {
             assert(res.txHash);
         });
 
-        it('should init a transaction in the multisig', async () => {
-            let val = 0.0015; // btc
-            val = val/0.00000001; //satoshi
-            const receipt = rskCtrl.transferFromMultisig(val, conf.multisigAddress)
+        it.only('should init a transaction in the multisig', async () => {
+            let val = rskCtrl.web3.utils.toWei("1", "ether"); // eth
+            const receipt = await rskCtrl.transferFromMultisig(val, conf.account.adr)
             console.log(receipt);
             assert(receipt);
         });
