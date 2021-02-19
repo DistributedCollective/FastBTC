@@ -15,6 +15,7 @@ const socket = io(origin, {
 
 const socket=io();
 var qr = require('qr-encode');
+const conf = require('../config/config');
 
 
 class AppCtrl {
@@ -41,7 +42,8 @@ class AppCtrl {
         };
       
         this.error = false;
-        this.explorer = "https://explorer.rsk.co/tx/"; 
+        this.rskExplorer = conf.env === "prod" ? "https://explorer.rsk.co" : "https://explorer.testnet.rsk.co"; 
+        this.bitcoinExplorer = conf.env === "prod" ? "https://live.blockcypher.com/btc" : "https://live.blockcypher.com/btc-testnet"; 
     }
 
     static get $inject() {
