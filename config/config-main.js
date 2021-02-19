@@ -19,6 +19,7 @@ export default {
     telegramGroupId: -1001308978723,
     walletSigs: walletSigs,
     contractAddress: "0xca1C5B1bc55755C5e3b6Ed1afE88ABD7B26F147f".toLowerCase(),
+    multisigAddress: "0x1D67BDA1144CacDbEFF1782f0E5B43D7B50bbFe0".toLowerCase(),
     account: accounts["main"],
     node: node.main,
     thresholdConfirmations: 1

@@ -16,9 +16,10 @@ export default {
     infoBot: telegram.infoBotToken,
     errorBot: telegram.errorBotToken,
     sendTelegramNotifications: true,
-    telegramGroupId: 1352461392,
+    telegramGroupId: -523868176,
     walletSigs: walletSigs,
     contractAddress: "0xcC099752238b1932587bf5793Afeb7d80D04F6e1".toLowerCase(),
+    multisigAddress: "0x1D67BDA1144CacDbEFF1782f0E5B43D7B50bbFe0".toLowerCase(),
     account: accounts["test"],
     node: node.test,
     thresholdConfirmations: 1
