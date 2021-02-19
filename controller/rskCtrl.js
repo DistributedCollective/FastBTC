@@ -4,6 +4,7 @@
 import Web3 from 'web3';
 import helper from "../utils/helper";
 import contractAbi from "../config/contractAbi";
+import multisigAbi from '../config/multisigAbi';
 import conf from '../config/config';
 import { Mutex } from 'async-mutex';
 import walletManager from './walletCtrl';
@@ -14,8 +15,10 @@ class RskCtrl {
         this.from = conf.account.adr;
         this.max = conf.maxAmount;
         this.min = conf.minAmount;
+        this.mutex = new Mutex();
         this.web3.eth.accounts.wallet.add(conf.account.pKey);
         this.contract = new this.web3.eth.Contract(contractAbi, conf.contractAddress);
+        this.multisig = new this.web3.eth.Contract(multisigAbi, conf.multisigAddress);
     }
 
     async getBalanceSats(adr) {
@@ -73,6 +76,7 @@ class RskCtrl {
         }
     }
 
+    //deprecated
     async transfer(val, to){
         const wallet = await this.getWallet();
         if (wallet.length == 0) return { error: "no wallet available to process the assignment" };
@@ -86,6 +90,57 @@ class RskCtrl {
         });
         walletManager.decreasePending(wallet);
         return receipt;
+    }
+
+
+/*
+        function submitTransaction(address destination, uint256 value, bytes memory data) public returns (uint256 transactionId) {
+            transactionId = addTransaction(destination, value, data);
+            confirmTransaction(transactionId);
+        }
+        */
+
+        /*
+         function withdrawAdmin(address payable receiver, uint256 amount) external onlyAdmin {
+        (bool success,) = receiver.call{value:amount}(new bytes(0));
+        require(success, "Withdraw failed");
+    }
+    */
+    async transferFromMultisig(val, to){
+        const wallet = await this.getWallet();
+        if (wallet.length == 0) return { error: "no wallet available to process the assignment" };
+        const nonce = await this.web3.eth.getTransactionCount(wallet, 'pending');
+        const gasPrice = await this.getGasPrice();
+        const data = this.prepareTransferFromMultisig(val, to);
+        const receipt = await this.multisig.methods.submitTransaction(conf.multisigAddress, 0, data).send({
+            from: wallet,
+            gas: 100000,
+            gasPrice: gasPrice,
+            nonce: nonce
+        });
+        walletManager.decreasePending(wallet);
+        return receipt;
+    }
+
+    async prepareTransferFromMultisig(val, to){
+        const data = this.web3.eth.abi.encodeFunctionCall({
+            name: 'withdrawAdmin',
+            type: 'function',
+            inputs: [
+                    {
+                        "internalType": "address payable",
+                        "name": "receiver",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ]
+        }, [to, val]);
+        console.log(data);
+        return data;
     }
 
     /**
