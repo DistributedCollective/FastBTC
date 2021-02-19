@@ -5,7 +5,6 @@
 const assert = require('assert');
 import conf from '../config/config-test';
 import rskCtrl from '../controller/rskCtrl';
-import { encodeParameters, etherUnsigned } from '../utils/ethereum';
 
 describe('Rsk controller', async () => {
     describe('#check', async () => {
@@ -43,26 +42,9 @@ describe('Rsk controller', async () => {
         it('should init a transaction in the multisig', async () => {
             let val = 0.0015; // btc
             val = val/0.00000001; //satoshi
-            const data = rskCtrl.web3.eth.abi.encodeFunctionCall({
-                name: 'withdrawAdmin',
-                type: 'function',
-                inputs: [
-                        {
-                            "internalType": "address payable",
-                            "name": "receiver",
-                            "type": "address"
-                        },
-                        {
-                            "internalType": "uint256",
-                            "name": "amount",
-                            "type": "uint256"
-                        }
-                    ]
-            }, [conf.multisigAddress, val]);
-
-            const res = await rskCtrl.multisig.methods.submitTransaction(conf.multisigAddress, val, data);
-            console.log(res);
-            assert(res.txHash);
+            const receipt = rskCtrl.transferFromMultisig(val, conf.multisigAddress)
+            console.log(receipt);
+            assert(receipt);
         });
 
         it('should init a transaction in the multisig', async () => {
