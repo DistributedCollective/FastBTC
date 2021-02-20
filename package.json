@@ -12,7 +12,8 @@
     "withdrawRskMainnet": "node -r esm utils/withdrawRsk.js mainnet",
     "withdrawRskTestnet": "node -r esm utils/withdrawRsk.js testnet",
     "build-client": "npx webpack --config ./webpack.config.js && cp src/index.html dist/index.html",
-    "watch-client": "webpack --watch --config ./webpack.config.js"
+    "watch-client": "webpack --watch --config ./webpack.config.js",
+    "test-rsk": "mocha -r esm tests/test_rskCtrl.js --timeout 2500000"
   },
   "author": "",
   "license": "ISC",
@@ -27,8 +28,8 @@
     "convert-hex": "^0.1.0",
     "csv-parser": "^3.0.0",
     "csv-writer": "^1.6.0",
-    "esm": "^3.2.25",
     "electrum-mnemonic": "^2.0.0",
+    "esm": "^3.2.25",
     "ethereumjs-util": "^7.0.7",
     "ethereumjs-wallet": "^1.0.1",
     "hdkey": "^2.0.1",
