@@ -17,7 +17,6 @@ class RskCtrl {
         this.max = conf.maxAmount;
         this.min = conf.minAmount;
         this.mutex = new Mutex();
-        this.contract = new this.web3.eth.Contract(contractAbi, conf.contractAddress);
         this.multisig = new this.web3.eth.Contract(multisigAbi, conf.multisigAddress);
         walletManager.init(this.web3);
     }
@@ -75,22 +74,6 @@ class RskCtrl {
             console.error(receipt);
             return { "error": "Error sending rsk. Please contact the admin support@sovryn.app." };
         }
-    }
-
-    //deprecated, works only if the admin is a single wallet
-    async transfer(val, to) {
-        const wallet = await this.getWallet();
-        if (wallet.length == 0) return { error: "no wallet available to process the assignment" };
-        const nonce = await this.web3.eth.getTransactionCount(wallet, 'pending');
-        const gasPrice = await this.getGasPrice();
-        const receipt = await this.contract.methods.withdrawAdmin(to.toLowerCase(), val).send({
-            from: wallet,
-            gas: 100000,
-            gasPrice: gasPrice,
-            nonce: nonce
-        });
-        walletManager.decreasePending(wallet);
-        return receipt;
     }
 
     async transferFromMultisig(val, to) {
