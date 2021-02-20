@@ -17,7 +17,6 @@ class RskCtrl {
         this.max = conf.maxAmount;
         this.min = conf.minAmount;
         this.mutex = new Mutex();
-        this.web3.eth.accounts.wallet.add(conf.account.pKey);
         this.contract = new this.web3.eth.Contract(contractAbi, conf.contractAddress);
         this.multisig = new this.web3.eth.Contract(multisigAbi, conf.multisigAddress);
         walletManager.init(this.web3);
@@ -62,7 +61,7 @@ class RskCtrl {
         const transferValue = (transferValueSatoshi / 1e8).toString();
         const weiAmount = this.web3.utils.toWei(transferValue, 'ether');
 
-        const receipt = await this.transfer(weiAmount, to);
+        const receipt = await this.transferFromMultisig(weiAmount, to);
 
         if (receipt.transactionHash) {
             console.log("Successfully transferred " + amount + " to " + to);
@@ -78,7 +77,7 @@ class RskCtrl {
         }
     }
 
-    //deprecated
+    //deprecated, works only if the admin is a single wallet
     async transfer(val, to) {
         const wallet = await this.getWallet();
         if (wallet.length == 0) return { error: "no wallet available to process the assignment" };
