@@ -94,20 +94,6 @@ class RskCtrl {
         return receipt;
     }
 
-
-    /*
-            function submitTransaction(address destination, uint256 value, bytes memory data) public returns (uint256 transactionId) {
-                transactionId = addTransaction(destination, value, data);
-                confirmTransaction(transactionId);
-            }
-            */
-
-    /*
-     function withdrawAdmin(address payable receiver, uint256 amount) external onlyAdmin {
-    (bool success,) = receiver.call{value:amount}(new bytes(0));
-    require(success, "Withdraw failed");
-}
-*/
     async transferFromMultisig(val, to) {
         console.log("transfer " + val + " to " + to)
         const wallet = await this.getWallet();
@@ -120,9 +106,9 @@ class RskCtrl {
             inputs: [{ "name": "receiver", "type": "address" }, { "name": "amount", "type": "uint256" }]
         }, [to, val]);
 
-        const receipt = await this.multisig.methods.submitTransaction(conf.multisigAddress, 0, data).send({
+        const receipt = await this.multisig.methods.submitTransaction(conf.contractAddress, 0, data).send({
             from: wallet,
-            gas: 100000,
+            gas: 1000000,
             gasPrice: gasPrice,
             nonce: nonce
         });

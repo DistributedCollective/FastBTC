@@ -12,7 +12,7 @@ describe('Rsk controller', async () => {
             console.log("init rsk");
             await rskCtrl.init();
         });
-        
+        /*
         it('should refuse to send the amount because it exceeds the limits', async () => {
             const adr = conf.account.adr;
             // const val = (conf.maxAmountInUsd+1)*1e8/10000;
@@ -39,19 +39,19 @@ describe('Rsk controller', async () => {
             console.log(res);
             assert(res.txHash);
         });
-
+*/
         it('should init a transaction in the multisig', async () => {
-            const val = rskCtrl.web3.utils.toWei("1", "ether"); // eth
+            const val = rskCtrl.web3.utils.toWei("0.0001", "ether"); // eth
             const receipt = await rskCtrl.transferFromMultisig(val, conf.account.adr)
             console.log(receipt);
             assert(receipt);
         });
-
+/*
         it('should init a transaction in the multisig', async () => {
             const txHash = "0xd10022ab33a701b896451aad4451a2c89ad1be6e7b7e4950081170ff221b5d7c"
             const res = await rskCtrl.multisig.methods.confirmTransaction(txHash);
             console.log(res);
             assert(true);
-        });
+        });*/
     });
 });
