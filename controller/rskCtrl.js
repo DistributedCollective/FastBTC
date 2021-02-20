@@ -37,38 +37,38 @@ class RskCtrl {
      * todo: fix min/max amount update
      */
     async sendRbtc(amount, to) {
-        console.log("Trying to send "+amount +" to: "+to);
+        console.log("Trying to send " + amount + " to: " + to);
         const btcPrice = await helper.getBTCPrice();
-        if(!btcPrice.error) this.lastPrice=btcPrice;
+        if (!btcPrice.error) this.lastPrice = btcPrice;
 
-        console.log("Current Btc price "+this.lastPrice);
+        console.log("Current Btc price " + this.lastPrice);
         let transferValueSatoshi = Number(amount) - conf.commission;
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));
 
         const bal = await this.getBalanceSats(conf.contractAddress);
         if (bal < amount) {
-            console.error("Not enough balance left on the wallet "+this.from+" bal = "+bal);
+            console.error("Not enough balance left on the wallet " + this.from + " bal = " + bal);
             return { "error": "Not enough balance left. Please contact the admin support@sovryn.app" };
         }
 
-        const maxAmount = (this.max+conf.toleranceMax) * 1e8 / this.lastPrice;
+        const maxAmount = (this.max + conf.toleranceMax) * 1e8 / this.lastPrice;
 
         if (transferValueSatoshi > maxAmount || transferValueSatoshi < conf.toleranceMin) {
-            console.error(new Date(Date.now())+ "Transfer amount outside limit");
-            console.error("Max amount: "+maxAmount+" transferValue: "+transferValueSatoshi+ ", max: "+this.max+", min: "+this.min);
-            return { "error": "Your transferred amount exceeded the limit. Please send between " + (maxAmount/1e8) + " and " + (this.min/1e8) + " Btc. Contact the admin: support@sovryn.app " };
+            console.error(new Date(Date.now()) + "Transfer amount outside limit");
+            console.error("Max amount: " + maxAmount + " transferValue: " + transferValueSatoshi + ", max: " + this.max + ", min: " + this.min);
+            return { "error": "Your transferred amount exceeded the limit. Please send between " + (maxAmount / 1e8) + " and " + (this.min / 1e8) + " Btc. Contact the admin: support@sovryn.app " };
         }
 
-        const transferValue = (transferValueSatoshi/1e8).toString();
+        const transferValue = (transferValueSatoshi / 1e8).toString();
         const weiAmount = this.web3.utils.toWei(transferValue, 'ether');
 
         const receipt = await this.transfer(weiAmount, to);
-        
+
         if (receipt.transactionHash) {
-            console.log("Successfully transferred "+amount+" to "+to);
+            console.log("Successfully transferred " + amount + " to " + to);
             return {
-              txHash: receipt.transactionHash,
-              value: transferValue
+                txHash: receipt.transactionHash,
+                value: transferValue
             };
         }
         else {
@@ -79,7 +79,7 @@ class RskCtrl {
     }
 
     //deprecated
-    async transfer(val, to){
+    async transfer(val, to) {
         const wallet = await this.getWallet();
         if (wallet.length == 0) return { error: "no wallet available to process the assignment" };
         const nonce = await this.web3.eth.getTransactionCount(wallet, 'pending');
@@ -95,55 +95,43 @@ class RskCtrl {
     }
 
 
-/*
-        function submitTransaction(address destination, uint256 value, bytes memory data) public returns (uint256 transactionId) {
-            transactionId = addTransaction(destination, value, data);
-            confirmTransaction(transactionId);
-        }
-        */
+    /*
+            function submitTransaction(address destination, uint256 value, bytes memory data) public returns (uint256 transactionId) {
+                transactionId = addTransaction(destination, value, data);
+                confirmTransaction(transactionId);
+            }
+            */
 
-        /*
-         function withdrawAdmin(address payable receiver, uint256 amount) external onlyAdmin {
-        (bool success,) = receiver.call{value:amount}(new bytes(0));
-        require(success, "Withdraw failed");
-    }
-    */
-    async transferFromMultisig(val, to){
+    /*
+     function withdrawAdmin(address payable receiver, uint256 amount) external onlyAdmin {
+    (bool success,) = receiver.call{value:amount}(new bytes(0));
+    require(success, "Withdraw failed");
+}
+*/
+    async transferFromMultisig(val, to) {
+        console.log("transfer " + val + " to " + to)
         const wallet = await this.getWallet();
         if (wallet.length == 0) return { error: "no wallet available to process the assignment" };
         const nonce = await this.web3.eth.getTransactionCount(wallet, 'pending');
         const gasPrice = await this.getGasPrice();
-        const data = this.prepareTransferFromMultisig(val, to);
+        const data = this.web3.eth.abi.encodeFunctionCall({
+            name: 'withdrawAdmin',
+            type: 'function',
+            inputs: [{ "name": "receiver", "type": "address" }, { "name": "amount", "type": "uint256" }]
+        }, [to, val]);
+
         const receipt = await this.multisig.methods.submitTransaction(conf.multisigAddress, 0, data).send({
             from: wallet,
             gas: 100000,
             gasPrice: gasPrice,
             nonce: nonce
         });
+
         walletManager.decreasePending(wallet);
         return receipt;
     }
 
-    async prepareTransferFromMultisig(val, to){
-        const data = this.web3.eth.abi.encodeFunctionCall({
-            name: 'withdrawAdmin',
-            type: 'function',
-            inputs: [
-                    {
-                        "internalType": "address payable",
-                        "name": "receiver",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    }
-                ]
-        }, [to, val]);
-        console.log(data);
-        return data;
-    }
+
 
     /**
      * @notice loads a free wallet from the wallet manager 
