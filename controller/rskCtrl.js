@@ -3,7 +3,6 @@
  */
 import Web3 from 'web3';
 import helper from "../utils/helper";
-import contractAbi from "../config/contractAbi";
 import multisigAbi from '../config/multisigAbi';
 import conf from '../config/config';
 import { Mutex } from 'async-mutex';
