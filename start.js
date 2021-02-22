@@ -5,6 +5,7 @@ import conf from './config/config';
 const express= require('express');
 const app = express();
 const http = require('http').createServer(app);
+const io = require('socket.io')(http, { serveClient: false });
 import MainController from './controller/mainCtrl';
 const mCtrl = new MainController();
 import apiKey from './secrets/apiKey';
@@ -38,5 +39,9 @@ http.listen(conf.serverPort, () => {
     console.log('listening on *:'+conf.serverPort);
 });
 
+io.on('connection', (socket) => { 
+    console.info("A client connected")
+    socket.emit('client-connected', { text: 'A client connected!' }) 
+});
 
 mCtrl.start(http);
