@@ -33,7 +33,7 @@ describe('Rsk controller', async () => {
         
         
         it('should send 0.0015 rbtc to itself', async () => {
-            let val = rskCtrl.web3.toWei("0.000015", "Ether");; // btc
+            let val = rskCtrl.web3.utils.toWei("0.000015", "Ether");; // btc
             const adr = conf.account.adr;
             const res = await rskCtrl.sendRbtc(val, adr);
             console.log(res);
