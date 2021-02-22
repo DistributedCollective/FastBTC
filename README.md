@@ -36,16 +36,57 @@ export default {
         pKey: ""
     }
 }
+```
+
+You can also choose to encrypt your wallet. If you do so, remember to add your encryption password when running the start command like so:
+
+```
+npm run start:main yourpassword
+``` 
+`accounts.js` it should then look like:
+
+```sh
+export default {
+    "test": {
+        adr: "0x..."
+        ks: {
+            version: 3,
+            id: '',
+            address: '',
+            crypto: {
+              ciphertext: '',
+              cipherparams: { iv: '' },
+              cipher: '',
+              kdf: '',
+              kdfparams: {
+                dklen: xx,
+                salt: '',
+                n: xxxx,
+                r: x,
+                p: x
+              },
+              mac: ''
+            }
+        }    },
+    "main": {
+        adr: "0x..."
+        ks: {...}
+    }
+}
+```
 
 and telegram.js for telegram notifications on successful deposits/withdraws and errors
 
+```sh
 export default {
     infoBotToken: "...",
     errorBotToken: "..."
 }
+```
   
 walletSigs.main.js for the multisigs hd wallet  
-  
+
+```sh
 export default {
     pubKeys: [
         "pub-key1",
@@ -53,14 +94,18 @@ export default {
         "pub-key3"
     ]
 }
+```
 
 To generate the keys run "npm run [genAdminTestnet | genAdminMainnet]" 3 times. Paste the 12 words from first output to "myWordSeed" and xpub from second output to pub-key1 and xpub from third output to pub-key2. 
 
 and cryptocompare.js for btc price polling
 
+```sh
 export const apiKey = "...";
+```
 
 5. Set the block number of Btc test- or mainnet on config/store.json from which polling should start
+```sh
 {
 	"lastBlockNumber": 1897463
 }
