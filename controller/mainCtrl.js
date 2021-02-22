@@ -11,6 +11,7 @@ import conf from '../config/config';
 import dbCtrl from './dbCtrl';
 import rskCtrl from './rskCtrl';
 import Util from '../utils/helper';
+import telegramBot from '../utils/telegram';
 import bitcoinCtrl from "./bitcoinCtrl";
 
 class MainController {
@@ -182,7 +183,7 @@ class MainController {
 
         console.log("New Btc deposit arrived");
         console.log(d);
-        this.sendInfoNotification("New Btc deposit arrived. " + JSON.stringify(d));
+        if (conf.telegramBot) telegramBot.sendInfoNotification("New Btc deposit arrived. " + JSON.stringify(d));
 
         if (depositFound == null) {
             const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, true);
@@ -217,7 +218,7 @@ class MainController {
             txHash: resTx.txHash,
             value: Number(resTx.value).toFixed(6)
         });
-        this.sendInfoNotification(Number(resTx.value).toFixed(6)+" Rsk transferred to " + user.web3adr);
+        if (conf.telegramBot) telegramBot.sendInfoNotification(Number(resTx.value).toFixed(6)+" Rsk transferred to " + user.web3adr);
     }
 
     emitToUserSocket(userLabel, event, data) {
@@ -226,14 +227,6 @@ class MainController {
             console.log(new Date(Date.now())+", sending message to client", socketId, event, data);
             this.io.to(socketId).emit(event, data, userLabel);
         }
-    }
-
-    sendInfoNotification(msg) {
-        if (conf.telegramBot) this.telegramBot.sendMessage(conf.telegramGroupId, msg);
-    }
-
-    sendErrorNotification(msg) {
-        if (conf.telegramBot) this.telegramBot.sendMessage(conf.telegramGroupId, msg);
     }
 
     onPendingDeposit(userLabel, tx) {

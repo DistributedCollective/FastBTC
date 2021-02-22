@@ -1,9 +1,9 @@
-const TelegramBot = require('telegraf/telegram');
 import { bip32, networks, payments } from 'bitcoinjs-lib';
 import conf from '../config/config';
 import * as _ from 'lodash';
 import dbCtrl from "./dbCtrl";
 import U from '../utils/helper';
+import telegramBot from '../utils/telegram';
 import BitcoinNodeWrapper from "../utils/bitcoinNodeWrapper";
 
 
@@ -11,7 +11,6 @@ class BitcoinCtrl {
     async init() {
         this.isMainNet = conf.env === 'prod';
         this.pubKeys = conf.walletSigs.pubKeys;
-        this.telegramBot = new TelegramBot(conf.telegramBot);
         this.cosigners = conf.walletSigs.cosigners;
         this.thresholdConfirmations = conf.thresholdConfirmations;
         this.api = new BitcoinNodeWrapper(conf.node);
@@ -139,8 +138,7 @@ class BitcoinCtrl {
 
             if (added == null && user != null) {
                 const msg = `user ${user.btcadr} has a deposit, tx ${txId}, value ${(value / 1e8)} BTC`
-                console.log(msg)
-                this.sendInfoNotification(msg);
+                if (conf.telegramBot) telegramBot.sendInfoNotification(msg);
 
                 await dbCtrl.addDeposit(user.label, txId, value, false);
 
@@ -178,16 +176,6 @@ class BitcoinCtrl {
         } catch (e) {
             console.error(e);
         }
-    }
-
-    sendInfoNotification(msg) {
-        console.log('\n INFO NOTIFICATION', msg)
-        if (conf.telegramBot) this.telegramBot.sendMessage(conf.telegramGroupId, msg);
-    }
-
-    sendErrorNotification(msg) {
-        console.log('\n ERROR NOTIFICATION', msg)
-        if (conf.telegramBot) this.telegramBot.sendMessage(conf.telegramGroupId, msg);
     }
 }
 
