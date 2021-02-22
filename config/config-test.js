@@ -1,4 +1,4 @@
-import telegram from '../secrets/telegram';
+import telegramBot from '../secrets/telegram';
 import walletSigs from "../secrets/walletSigs.test";
 import node from '../secrets/btcNode';
 import accounts from "../secrets/accounts";
@@ -13,9 +13,7 @@ export default {
     commission: 10000, //in sats
     minAmount: 100000, //sats, = 0.001 btc
     maxAmount: 1000000, //sats, = 0.1 btc
-    infoBot: telegram.infoBotToken,
-    errorBot: telegram.errorBotToken,
-    sendTelegramNotifications: true,
+    telegramBot: Object.keys(telegramBot).length > 0 ? telegramBot : null,
     telegramGroupId: -523868176,
     walletSigs: walletSigs,
     contractAddress: "0xcC099752238b1932587bf5793Afeb7d80D04F6e1".toLowerCase(),

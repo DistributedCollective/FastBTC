@@ -1,5 +1,6 @@
+const TelegramBot = require('telegraf/telegram');
 import { bip32, networks, payments } from 'bitcoinjs-lib';
-import config from '../config/config';
+import conf from '../config/config';
 import * as _ from 'lodash';
 import dbCtrl from "./dbCtrl";
 import U from '../utils/helper';
@@ -8,11 +9,12 @@ import BitcoinNodeWrapper from "../utils/bitcoinNodeWrapper";
 
 class BitcoinCtrl {
     async init() {
-        this.isMainNet = config.env === 'prod';
-        this.pubKeys = config.walletSigs.pubKeys;
-        this.cosigners = config.walletSigs.cosigners;
-        this.thresholdConfirmations = config.thresholdConfirmations;
-        this.api = new BitcoinNodeWrapper(config.node);
+        this.isMainNet = conf.env === 'prod';
+        this.pubKeys = conf.walletSigs.pubKeys;
+        this.telegramBot = new TelegramBot(conf.telegramBot);
+        this.cosigners = conf.walletSigs.cosigners;
+        this.thresholdConfirmations = conf.thresholdConfirmations;
+        this.api = new BitcoinNodeWrapper(conf.node);
         this.network = this.isMainNet ? networks.bitcoin : networks.testnet;
         this.checkDepositTxs().catch(console.error);
     }
@@ -136,7 +138,9 @@ class BitcoinCtrl {
             const user = await dbCtrl.getUserByBtcAddress(address);
 
             if (added == null && user != null) {
-                console.log("user %s has a deposit, tx %s, value %s", user.btcadr, txId, value);
+                const msg = `user ${user.btcadr} has a deposit, tx ${txId}, value ${(value / 1e8)} BTC`
+                console.log(msg)
+                this.sendInfoNotification(msg);
 
                 await dbCtrl.addDeposit(user.label, txId, value, false);
 
@@ -174,6 +178,16 @@ class BitcoinCtrl {
         } catch (e) {
             console.error(e);
         }
+    }
+
+    sendInfoNotification(msg) {
+        console.log('\n INFO NOTIFICATION', msg)
+        if (conf.telegramBot) this.telegramBot.sendMessage(conf.telegramGroupId, msg);
+    }
+
+    sendErrorNotification(msg) {
+        console.log('\n ERROR NOTIFICATION', msg)
+        if (conf.telegramBot) this.telegramBot.sendMessage(conf.telegramGroupId, msg);
     }
 }
 

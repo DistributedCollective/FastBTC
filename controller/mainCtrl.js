@@ -16,8 +16,7 @@ import bitcoinCtrl from "./bitcoinCtrl";
 class MainController {
 
     async start(server) {
-        this.infoBot = new TelegramBot(conf.infoBot);
-        this.errorBot = new TelegramBot(conf.errorBot);
+        this.telegramBot = new TelegramBot(conf.telegramBot);
         this.connectingSockets = {}; //object of {[label]: socketId}
 
         this.initSocket(server);
@@ -230,11 +229,11 @@ class MainController {
     }
 
     sendInfoNotification(msg) {
-        if (conf.sendTelegramNotifications) this.infoBot.sendMessage(conf.telegramGroupId, msg);
+        if (conf.telegramBot) this.telegramBot.sendMessage(conf.telegramGroupId, msg);
     }
 
     sendErrorNotification(msg) {
-        if (conf.sendTelegramNotifications) this.errorBot.sendMessage(conf.telegramGroupId, msg);
+        if (conf.telegramBot) this.telegramBot.sendMessage(conf.telegramGroupId, msg);
     }
 
     onPendingDeposit(userLabel, tx) {
