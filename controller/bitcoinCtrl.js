@@ -138,7 +138,7 @@ class BitcoinCtrl {
 
             if (added == null && user != null) {
                 const msg = `user ${user.btcadr} has a deposit, tx ${txId}, value ${(value / 1e8)} BTC`
-                if (conf.telegramBot) telegramBot.sendInfoNotification(msg);
+                telegramBot.sendMessage(msg);
 
                 await dbCtrl.addDeposit(user.label, txId, value, false);
 

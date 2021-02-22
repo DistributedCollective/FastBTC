@@ -5,7 +5,6 @@
  */
 
 
-const TelegramBot = require('telegraf/telegram');
 const SocketIO = require('socket.io');
 import conf from '../config/config';
 import dbCtrl from './dbCtrl';
@@ -17,7 +16,6 @@ import bitcoinCtrl from "./bitcoinCtrl";
 class MainController {
 
     async start(server) {
-        this.telegramBot = new TelegramBot(conf.telegramBot);
         this.connectingSockets = {}; //object of {[label]: socketId}
 
         this.initSocket(server);
@@ -181,9 +179,7 @@ class MainController {
             await dbCtrl.confirmDeposit(d.txHash);
         }
 
-        console.log("New Btc deposit arrived");
-        console.log(d);
-        if (conf.telegramBot) telegramBot.sendInfoNotification("New Btc deposit arrived. " + JSON.stringify(d));
+        telegramBot.sendMessage("New BTC deposit arrived: " + JSON.stringify(d));
 
         if (depositFound == null) {
             const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, true);
@@ -218,7 +214,7 @@ class MainController {
             txHash: resTx.txHash,
             value: Number(resTx.value).toFixed(6)
         });
-        if (conf.telegramBot) telegramBot.sendInfoNotification(Number(resTx.value).toFixed(6)+" Rsk transferred to " + user.web3adr);
+        telegramBot.sendMessage(Number(resTx.value).toFixed(6)+" Rsk transferred to " + user.web3adr);
     }
 
     emitToUserSocket(userLabel, event, data) {
