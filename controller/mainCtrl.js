@@ -37,7 +37,8 @@ class MainController {
 
         this.io.on('connection', socket => {
             console.log(new Date(Date.now())+", A consigner connected", socket.id);
-            socket.on('getConsignerIndex', (cb) => this.addCosigner(socket, cb));
+            socket.on('getConsignerIndex', (data, cb) => this.addCosigner(socket, cb));
+            socket.on('getDelay', (data, cb) => this.returnDelay(cb));
             socket.on('disconnect', () => this.removeCosigner(socket));
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
@@ -51,6 +52,10 @@ class MainController {
         console.log("Adding cosigner");
         this.consignersArray.push(socket.id);
         return cb(this.consignersArray.length-1);
+    }
+
+    returnDelay(cb) {
+        return cb(2 * (this.consignersArray.length-1));
     }
 
     removeCosigner(socket){
