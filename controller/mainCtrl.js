@@ -15,6 +15,11 @@ import bitcoinCtrl from "./bitcoinCtrl";
 
 class MainController {
 
+    constructor(){
+        // a consigner is the slave node watching for withdraw requests that need confirmation
+        this.consignersArray = []
+    }
+
     async start(server) {
         this.connectingSockets = {}; //object of {[label]: socketId}
 
@@ -30,25 +35,27 @@ class MainController {
     initSocket(app) {
         this.io = SocketIO(app);
 
-        // a consigner is the slave node watching for withdraw requests that need confirmation
-        let consignersArray = []
-
         this.io.on('connection', socket => {
             console.log(new Date(Date.now())+", A consigner connected", socket.id);
-            socket.on('getConsignerIndex', () => {
-                consignersArray.push(socket.id);
-                socket.emit('receiveConsignerIndex', consignersArray.length-1);
-            });
-            socket.on('disconnection', () => {
-                console.log("Disconnect consigner " + socket.id)
-                consignersArray = consignersArray.filter(index => index !== socket.id);
-            })
+            socket.on('getConsignerIndex', (cb) => this.addCosigner(socket, cb));
+            socket.on('disconnect', () => this.removeCosigner(socket));
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.getTxAmount.apply(this, [...args]));
             socket.on('getDeposits', (...args) => this.getDbDeposits.apply(this, [...args]));
             socket.on('getTransfers', (...args) => this.getTransfers.apply(this, [...args]));
         });
+    }
+
+    addCosigner(socket, cb){
+        console.log("Adding cosigner");
+        this.consignersArray.push(socket.id);
+        return cb(this.consignersArray.length-1);
+    }
+
+    removeCosigner(socket){
+        console.log("Removing cosigner");
+        this.consignersArray = this.consignersArray.filter(index => index !== socket.id);
     }
 
    

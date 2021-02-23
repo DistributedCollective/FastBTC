@@ -1,13 +1,12 @@
 
 
-var socket = require('socket.io-client')('https://testnet.sovryn.app/',{
-    path: '/fastbtc'
-  });
+var socket = require('socket.io-client')('http://localhost:3007');
 
 
 socket.on('connect', function(){
     console.log("connected");
-    getHist();
+    //getHist();
+    getCosignerIndex();
 });
 
 socket.on('disconnect', function(){
@@ -28,6 +27,21 @@ function getHist() {
         console.log(res);
         console.log(res2)
     });
+}
+
+
+function getCosignerIndex(){
+    socket.emit("getConsignerIndex", (res) => {
+        if(res&&res.error) {
+            console.error("Error retrieving history");
+            console.error(res);
+            return;
+        }
+        
+        console.log("response");
+        console.log(res);
+    });
+    
 }
 
 
