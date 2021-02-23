@@ -3,6 +3,7 @@
  */
 import Web3 from 'web3';
 import helper from "../utils/helper";
+import managedWalletAbi from "../config/contractAbi";
 import multisigAbi from '../config/multisigAbi';
 import conf from '../config/config';
 import { Mutex } from 'async-mutex';
@@ -16,6 +17,7 @@ class RskCtrl {
         this.max = conf.maxAmount;
         this.min = conf.minAmount;
         this.mutex = new Mutex();
+        this.contract = new this.web3.eth.Contract(managedWalletAbi, conf.contractAddress);
         this.multisig = new this.web3.eth.Contract(multisigAbi, conf.multisigAddress);
         walletManager.init(this.web3);
     }

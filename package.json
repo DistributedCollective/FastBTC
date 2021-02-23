@@ -4,7 +4,8 @@
   "version": "2.0.0",
   "description": "Relay Btc deposits to RBtc",
   "scripts": {
-    "start": "nodemon --config nodemon.json start.js testnet",
+    "start:test": "nodemon --config nodemon.json start.js testnet",
+    "start:main": "nodemon --config nodemon.json start.js mainnet",
     "genAdminMainnet": "node -r esm utils/wordseed.js mainnet",
     "genAdminTestnet": "node -r esm utils/wordseed.js testnet",
     "withdrawBtcMainnet": "node -r esm utils/withdrawBtc.js mainnet",
@@ -40,7 +41,7 @@
     "pm2-server-monitor": "^1.0.0",
     "qr-encode": "^0.3.0",
     "rpc-client": "^1.0.1",
-    "socket.io": "^2.3.0",
+    "socket.io": "^3.1.1",
     "sqlite3": "^5.0.0",
     "telegraf": "^3.38.0",
     "web3": "^1.2.11"

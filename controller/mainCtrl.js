@@ -5,19 +5,17 @@
  */
 
 
-const TelegramBot = require('telegraf/telegram');
 const SocketIO = require('socket.io');
 import conf from '../config/config';
 import dbCtrl from './dbCtrl';
 import rskCtrl from './rskCtrl';
 import Util from '../utils/helper';
+import telegramBot from '../utils/telegram';
 import bitcoinCtrl from "./bitcoinCtrl";
 
 class MainController {
 
     async start(server) {
-        this.infoBot = new TelegramBot(conf.infoBot);
-        this.errorBot = new TelegramBot(conf.errorBot);
         this.connectingSockets = {}; //object of {[label]: socketId}
 
         this.initSocket(server);
@@ -32,8 +30,19 @@ class MainController {
     initSocket(app) {
         this.io = SocketIO(app);
 
+        // a consigner is the slave node watching for withdraw requests that need confirmation
+        let consignersArray = []
+
         this.io.on('connection', socket => {
-            console.log(new Date(Date.now())+", A user connected", socket.id);
+            console.log(new Date(Date.now())+", A consigner connected", socket.id);
+            socket.on('getConsignerIndex', () => {
+                consignersArray.push(socket.id);
+                socket.emit('receiveConsignerIndex', consignersArray.length-1);
+            });
+            socket.on('disconnection', () => {
+                console.log("Disconnect consigner " + socket.id)
+                consignersArray = consignersArray.filter(index => index !== socket.id);
+            })
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.getTxAmount.apply(this, [...args]));
@@ -181,9 +190,7 @@ class MainController {
             await dbCtrl.confirmDeposit(d.txHash);
         }
 
-        console.log("New Btc deposit arrived");
-        console.log(d);
-        this.sendInfoNotification("New Btc deposit arrived. " + JSON.stringify(d));
+        telegramBot.sendMessage("New BTC deposit arrived: " + JSON.stringify(d));
 
         if (depositFound == null) {
             const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, true);
@@ -218,7 +225,7 @@ class MainController {
             txHash: resTx.txHash,
             value: Number(resTx.value).toFixed(6)
         });
-        this.sendInfoNotification(Number(resTx.value).toFixed(6)+" Rsk transferred to " + user.web3adr);
+        telegramBot.sendMessage(Number(resTx.value).toFixed(6)+" Rsk transferred to " + user.web3adr);
     }
 
     emitToUserSocket(userLabel, event, data) {
@@ -227,14 +234,6 @@ class MainController {
             console.log(new Date(Date.now())+", sending message to client", socketId, event, data);
             this.io.to(socketId).emit(event, data, userLabel);
         }
-    }
-
-    sendInfoNotification(msg) {
-        if (conf.sendTelegramNotifications) this.infoBot.sendMessage(conf.telegramGroupId, msg);
-    }
-
-    sendErrorNotification(msg) {
-        if (conf.sendTelegramNotifications) this.errorBot.sendMessage(conf.telegramGroupId, msg);
     }
 
     onPendingDeposit(userLabel, tx) {

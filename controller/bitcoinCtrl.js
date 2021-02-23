@@ -1,18 +1,19 @@
 import { bip32, networks, payments } from 'bitcoinjs-lib';
-import config from '../config/config';
+import conf from '../config/config';
 import * as _ from 'lodash';
 import dbCtrl from "./dbCtrl";
 import U from '../utils/helper';
+import telegramBot from '../utils/telegram';
 import BitcoinNodeWrapper from "../utils/bitcoinNodeWrapper";
 
 
 class BitcoinCtrl {
     async init() {
-        this.isMainNet = config.env === 'prod';
-        this.pubKeys = config.walletSigs.pubKeys;
-        this.cosigners = config.walletSigs.cosigners;
-        this.thresholdConfirmations = config.thresholdConfirmations;
-        this.api = new BitcoinNodeWrapper(config.node);
+        this.isMainNet = conf.env === 'prod';
+        this.pubKeys = conf.walletSigs.pubKeys;
+        this.cosigners = conf.walletSigs.cosigners;
+        this.thresholdConfirmations = conf.thresholdConfirmations;
+        this.api = new BitcoinNodeWrapper(conf.node);
         this.network = this.isMainNet ? networks.bitcoin : networks.testnet;
         this.checkDepositTxs().catch(console.error);
     }
@@ -136,7 +137,8 @@ class BitcoinCtrl {
             const user = await dbCtrl.getUserByBtcAddress(address);
 
             if (added == null && user != null) {
-                console.log("user %s has a deposit, tx %s, value %s", user.btcadr, txId, value);
+                const msg = `user ${user.btcadr} has a deposit, tx ${txId}, value ${(value / 1e8)} BTC`
+                telegramBot.sendMessage(msg);
 
                 await dbCtrl.addDeposit(user.label, txId, value, false);
 
