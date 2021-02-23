@@ -5,6 +5,7 @@ import dbCtrl from "./dbCtrl";
 import U from '../utils/helper';
 import telegramBot from '../utils/telegram';
 import BitcoinNodeWrapper from "../utils/bitcoinNodeWrapper";
+import MainController from './mainCtrl';
 
 
 class BitcoinCtrl {
@@ -88,6 +89,8 @@ class BitcoinCtrl {
                             const confirmations = tx && tx.confirmations;
 
                             if (confirmations === 0) {
+                                // consigners will verify that the BTC deposit address belong to the multisig
+                                await MainController.letConsignersCheckAdress(tx.address); // don't know if this is the right place for this function
                                 await this.addPendingDepositTx({
                                     address: tx.address,
                                     value: tx.value,

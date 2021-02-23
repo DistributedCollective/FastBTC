@@ -58,7 +58,12 @@ class MainController {
         this.consignersArray = this.consignersArray.filter(index => index !== socket.id);
     }
 
-   
+   async letConsignersCheckAdress(btcAdr) {
+        console.log("Consigners will verify the deposit address")
+        this.io.emit('verifyDeposit', btcAdr, (data) => {
+            console.log("Consigners nodes responded " + data)
+        });
+   }
 
     /**
      * Loads a users btc address or creates a new user entry in the database
