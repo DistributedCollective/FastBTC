@@ -30,8 +30,15 @@ class MainController {
     initSocket(app) {
         this.io = SocketIO(app);
 
+        // a consigner is the slave node watching for withdraw requests that need confirmation
+        const consignersArray = []
+
         this.io.on('connection', socket => {
-            console.log(new Date(Date.now())+", A user connected", socket.id);
+            console.log(new Date(Date.now())+", A consigner connected", socket.id);
+            socket.on('getConsignerIndex', () => {
+                consignersArray.push(socket.id);
+                socket.emit('receiveConsignerIndex', consignersArray.length-1);
+            });
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.getTxAmount.apply(this, [...args]));
