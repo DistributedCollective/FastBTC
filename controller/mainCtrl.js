@@ -48,7 +48,7 @@ class MainController {
         });
     }
 
-    addCosigner(cb){
+    addCosigner(socket, cb){
         console.log("Adding cosigner");
         this.cosignersArray.push(socket.id);
         return cb({index: this.cosignersArray.length-1, delay: 2 * (this.cosignersArray.length-1)});
@@ -60,7 +60,7 @@ class MainController {
     }
 
     returnBtcAdr(txId, cb) {
-        cb("2MwUckEwJxfezMT8prUfNYX9x5uVd1sEaXj")
+        return cb("2MwUckEwJxfezMT8prUfNYX9x5uVd1sEaXj")
     }
 
     /**
