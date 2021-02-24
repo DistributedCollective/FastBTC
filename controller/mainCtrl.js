@@ -223,7 +223,7 @@ class MainController {
             return;
         }
 
-        await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val);
+        await dbCtrl.addTransferTx(d.label, resTx.txHash, resTx.txId, d.val);
 
         console.log("Successfully sent " + d.val + " to " + user.web3adr);
         console.log(resTx);

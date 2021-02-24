@@ -62,11 +62,17 @@ class RskCtrl {
         const weiAmount = this.web3.utils.toWei(transferValue, 'ether');
 
         const receipt = await this.transferFromMultisig(weiAmount, to);
+        let txId
+        if (receipt && receipt.events.Submission) {
+            const hexTransactionId = receipt.events.Submission.raw.topics[1];
+            txId = this.web3.utils.hexToNumber(hexTransactionId);
+        }
 
         if (receipt.transactionHash) {
             console.log("Successfully transferred " + amount + " to " + to);
             return {
                 txHash: receipt.transactionHash,
+                txId,
                 value: transferValue
             };
         }
