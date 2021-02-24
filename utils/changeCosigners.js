@@ -5,11 +5,11 @@ const from ={
     adr: "",
     pKey: ""
 };
-changeConsigner("".toLowerCase(), "".toLowerCase(), "".toLowerCase());
+changeCosigner("".toLowerCase(), "".toLowerCase(), "".toLowerCase());
 
 
-async function changeConsigner(adr, action, adr2) {
-    console.log("Changing Consigner.\n Initializing RSK");
+async function changeCosigner(adr, action, adr2) {
+    console.log("Changing Cosigner.\n Initializing RSK");
     await rskCtrl.init();
 
     const pKey = rskCtrl.web3.eth.accounts.decrypt(from.ks, process.argv[3]).privateKey;

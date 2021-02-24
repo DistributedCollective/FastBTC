@@ -31,7 +31,7 @@ function getHist() {
 
 
 function getCosignerIndex(){
-    socket.emit("getConsignerIndex", (res) => {
+    socket.emit("getCosignerIndex", (res) => {
         if(res&&res.error) {
             console.error("Error retrieving history");
             console.error(res);
