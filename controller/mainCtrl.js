@@ -36,8 +36,9 @@ class MainController {
         this.io = SocketIO(app);
 
         this.io.on('connection', socket => {
-            console.log(new Date(Date.now())+", A cosigner connected", socket.id);
+            console.log(new Date(Date.now())+", A user connected", socket.id);
             socket.on('getCosignerIndexAndDelay', (data, cb) => this.addCosigner(socket, cb));
+            socket.on('getBtcAdr', (data, cb) => this.returnBtcAdr(data, cb));
             socket.on('disconnect', () => this.removeCosigner(socket));
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
@@ -47,7 +48,7 @@ class MainController {
         });
     }
 
-    addCosigner(socket, cb){
+    addCosigner(cb){
         console.log("Adding cosigner");
         this.cosignersArray.push(socket.id);
         return cb({index: this.cosignersArray.length-1, delay: 2 * (this.cosignersArray.length-1)});
@@ -56,6 +57,10 @@ class MainController {
     removeCosigner(socket){
         console.log("Removing cosigner");
         this.cosignersArray = this.cosignersArray.filter(index => index !== socket.id);
+    }
+
+    returnBtcAdr(txId, cb) {
+        cb("2MwUckEwJxfezMT8prUfNYX9x5uVd1sEaXj")
     }
 
    
