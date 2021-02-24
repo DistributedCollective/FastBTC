@@ -63,10 +63,10 @@ class MainController {
         cb("2MwUckEwJxfezMT8prUfNYX9x5uVd1sEaXj")
     }
 
-   async letConsignersCheckAdress(btcAdr) {
-        console.log("Consigners will verify the deposit address")
+   async letCosignersCheckAdress(btcAdr) {
+        console.log("Cosigners will verify the deposit address")
         this.io.emit('verifyDeposit', btcAdr, (data) => {
-            console.log("Consigners nodes responded " + data)
+            console.log("Cosigners nodes responded " + data)
         });
    }
 
