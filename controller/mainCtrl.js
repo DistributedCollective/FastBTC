@@ -16,8 +16,8 @@ import bitcoinCtrl from "./bitcoinCtrl";
 class MainController {
 
     constructor(){
-        // a consigner is the slave node watching for withdraw requests that need confirmation
-        this.consignersArray = []
+        // a cosigner is the slave node watching for withdraw requests that need confirmation
+        this.cosignersArray = []
     }
 
     async start(server) {
@@ -36,8 +36,8 @@ class MainController {
         this.io = SocketIO(app);
 
         this.io.on('connection', socket => {
-            console.log(new Date(Date.now())+", A consigner connected", socket.id);
-            socket.on('getConsignerIndexAndDelay', (data, cb) => this.addCosigner(socket, cb));
+            console.log(new Date(Date.now())+", A cosigner connected", socket.id);
+            socket.on('getCosignerIndexAndDelay', (data, cb) => this.addCosigner(socket, cb));
             socket.on('disconnect', () => this.removeCosigner(socket));
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
@@ -49,13 +49,13 @@ class MainController {
 
     addCosigner(socket, cb){
         console.log("Adding cosigner");
-        this.consignersArray.push(socket.id);
-        return cb({index: this.consignersArray.length-1, delay: 2 * (this.consignersArray.length-1)});
+        this.cosignersArray.push(socket.id);
+        return cb({index: this.cosignersArray.length-1, delay: 2 * (this.cosignersArray.length-1)});
     }
 
     removeCosigner(socket){
         console.log("Removing cosigner");
-        this.consignersArray = this.consignersArray.filter(index => index !== socket.id);
+        this.cosignersArray = this.cosignersArray.filter(index => index !== socket.id);
     }
 
    
