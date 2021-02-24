@@ -25,7 +25,7 @@ class MainController {
 
         this.initSocket(server);
         await dbCtrl.initDb(conf.dbName);
-        await bitcoinCtrl.init();
+        await bitcoinCtrl.init(this.io);
         await rskCtrl.init();
         
         bitcoinCtrl.setPendingDepositHandler(this.onPendingDeposit.bind(this));
@@ -62,13 +62,6 @@ class MainController {
     returnBtcAdr(txId, cb) {
         cb("2MwUckEwJxfezMT8prUfNYX9x5uVd1sEaXj")
     }
-
-   async letCosignersCheckAdress(btcAdr) {
-        console.log("Cosigners will verify the deposit address")
-        this.io.emit('verifyDeposit', btcAdr, (data) => {
-            console.log("Cosigners nodes responded " + data)
-        });
-   }
 
     /**
      * Loads a users btc address or creates a new user entry in the database
