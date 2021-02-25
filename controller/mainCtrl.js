@@ -60,7 +60,7 @@ class MainController {
     }
 
     returnBtcAdr(txId, cb) {
-        cb("2MwUckEwJxfezMT8prUfNYX9x5uVd1sEaXj")
+        return cb("2MwUckEwJxfezMT8prUfNYX9x5uVd1sEaXj")
     }
 
     /**
