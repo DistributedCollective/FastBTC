@@ -23,11 +23,11 @@ class MainController {
     async start(server) {
         this.connectingSockets = {}; //object of {[label]: socketId}
 
-        this.initSocket(server);
         await dbCtrl.initDb(conf.dbName);
         await bitcoinCtrl.init();
         await rskCtrl.init();
-        
+        this.initSocket(server);
+
         bitcoinCtrl.setPendingDepositHandler(this.onPendingDeposit.bind(this));
         bitcoinCtrl.setTxDepositedHandler(this.processDeposits.bind(this));
     }
@@ -38,7 +38,7 @@ class MainController {
         this.io.on('connection', socket => {
             console.log(new Date(Date.now())+", A user connected", socket.id);
             socket.on('getCosignerIndexAndDelay', (data, cb) => this.addCosigner(socket, cb));
-            socket.on('getBtcAdr', (data, cb) => this.returnBtcAdr(data, cb));
+            socket.on('getBtcAdr', async (data, cb) => await this.returnBtcAdr(data, cb));
             socket.on('disconnect', () => this.removeCosigner(socket));
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
@@ -59,8 +59,9 @@ class MainController {
         this.cosignersArray = this.cosignersArray.filter(index => index !== socket.id);
     }
 
-    returnBtcAdr(txId, cb) {
-        return cb(dbCtrl.getUserBtcAdrByTxId(txId)); 
+    async returnBtcAdr(txId, cb) {
+        const btcAdr = await dbCtrl.getUserBtcAdrByTxId(txId); 
+        cb(btcAdr);
     }
 
     /**
