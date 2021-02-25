@@ -275,11 +275,12 @@ class DbCtrl {
         }
     }
 
-    async addTransferTx(userAdrLabel, txHash, valueBtc) {
+    async addTransferTx(userAdrLabel, txHash, txId, valueBtc) {
         try {
             return await this.transactionRepository.insertTransferTx({
                 userAdrLabel,
                 txHash,
+                txId,
                 valueBtc,
                 status: 'confirmed'
             });

@@ -25,7 +25,7 @@ class MainController {
 
         this.initSocket(server);
         await dbCtrl.initDb(conf.dbName);
-        await bitcoinCtrl.init();
+        await bitcoinCtrl.init(this.io);
         await rskCtrl.init();
         
         bitcoinCtrl.setPendingDepositHandler(this.onPendingDeposit.bind(this));
@@ -62,8 +62,6 @@ class MainController {
     returnBtcAdr(txId, cb) {
         cb("2MwUckEwJxfezMT8prUfNYX9x5uVd1sEaXj")
     }
-
-   
 
     /**
      * Loads a users btc address or creates a new user entry in the database
@@ -228,7 +226,7 @@ class MainController {
             return;
         }
 
-        await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val);
+        await dbCtrl.addTransferTx(d.label, resTx.txHash, resTx.txId, d.val);
 
         console.log("Successfully sent " + d.val + " to " + user.web3adr);
         console.log(resTx);
