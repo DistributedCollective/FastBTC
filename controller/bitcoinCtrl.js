@@ -8,14 +8,13 @@ import BitcoinNodeWrapper from "../utils/bitcoinNodeWrapper";
 
 
 class BitcoinCtrl {
-    async init(io) {
+    async init() {
         this.isMainNet = conf.env === 'prod';
         this.pubKeys = conf.walletSigs.pubKeys;
         this.cosigners = conf.walletSigs.cosigners;
         this.thresholdConfirmations = conf.thresholdConfirmations;
         this.api = new BitcoinNodeWrapper(conf.node);
         this.network = this.isMainNet ? networks.bitcoin : networks.testnet;
-        this.io = io;
         this.checkDepositTxs().catch(console.error);
     }
 
@@ -64,17 +63,7 @@ class BitcoinCtrl {
         return await this.api.checkImportAddress(payment, label, createdDate, rescan);
     }
 
-    async letCosignersCheckAdress(btcAdr) {
-        if (this.io) {
-            console.log("Cosigners will verify the deposit address")
-            this.io.emit('verifyDeposit', btcAdr, (data) => {
-                console.log("Cosigners nodes responded " + data)
-                return data;
-            });
-        } else {
-            console.log("IO has not bees set in bitcoinCtrl.\n Cannot send deposit address to cosigners for verification")
-        }
-    }
+
 
     /**
      * Check deposit transactions for all user addresses in DB.
