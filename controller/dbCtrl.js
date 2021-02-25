@@ -290,6 +290,17 @@ class DbCtrl {
         }
     }
 
+    async getUserBtcAdrByTxId(txId) {
+        try {
+            const tx = await this.transactionRepository.getUserBtcAdrByTxId({ txId });
+            const user = await this.getUserByLabel({ label: tx.userAdrLabel });
+            return user.btcadr;
+        } catch (e) {
+            console.log(e);
+            return null;
+        }
+    }
+
     async getUserLabels(skip = 0, size = 10) {
         try {
             const users = await this.userRepository.find({}, {offset: skip, limit: size});
