@@ -1,4 +1,3 @@
-import conf from '../config/config';
 import rskCtrl from '../controller/rskCtrl';
 
 
@@ -10,7 +9,7 @@ changeAdmin("".toLowerCase());
 
 
 async function changeAdmin(adr) {
-    console.log("init rsk");
+    console.log("Changing Admin.\n Initializing RSK");
     await rskCtrl.init();
 
     const pKey = rskCtrl.web3.eth.accounts.decrypt(from.ks, process.argv[3]).privateKey;
