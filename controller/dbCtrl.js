@@ -192,6 +192,21 @@ class DbCtrl {
         }
     }
 
+    async getDepositByTxId(txHash, label = '') {
+        try {
+            const criteria = {
+                txHash: txHash,
+                type: "deposit"
+            };
+            if (label) criteria['userAdrLabel'] = label;
+
+            return await this.transactionRepository.findOne(criteria);
+        } catch (e) {
+            console.log(e);
+            return null;
+        }
+    }
+
     getDepositHistory(userWeb3Adr) {
         const sql = "select user.id, web3adr, btcadr, valueBtc, type, transactions.dateAdded, transactions.txHash, status"
         + " from user cross join transactions on user.label = transactions.userAdrLabel "
