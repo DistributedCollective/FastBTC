@@ -60,7 +60,7 @@ class MainController {
     }
 
     returnBtcAdr(txId, cb) {
-        return cb("2MwUckEwJxfezMT8prUfNYX9x5uVd1sEaXj")
+        return cb(dbCtrl.getUserBtcAdrByTxId(txId)); 
     }
 
     /**

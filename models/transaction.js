@@ -46,6 +46,10 @@ export default class Transaction extends BaseModel {
         });
     }
 
+    getUserBtcAdrByTxId({ txId }) {
+        return super.findOne({ txId })
+    }
+
     async sumDeposited() {
         try {
             const res = await this.get(`SELECT type, SUM(valueBtc) total FROM ${this.table} WHERE type = 'deposit' GROUP BY type`);
