@@ -15,11 +15,6 @@ import bitcoinCtrl from "./bitcoinCtrl";
 
 class MainController {
 
-    constructor(){
-        // a cosigner is the slave node watching for withdraw requests that need confirmation
-        this.cosignersArray = []
-    }
-
     async start(server) {
         this.connectingSockets = {}; //object of {[label]: socketId}
 
@@ -37,9 +32,8 @@ class MainController {
 
         this.io.on('connection', socket => {
             console.log(new Date(Date.now())+", A user connected", socket.id);
-            socket.on('getCosignerIndexAndDelay', (data, cb) => this.addCosigner(socket, cb));
-            socket.on('getBtcAdr', async (data, cb) => await this.returnBtcAdr(data, cb));
-            socket.on('disconnect', () => this.removeCosigner(socket));
+        
+            //users
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.getTxAmount.apply(this, [...args]));
@@ -48,21 +42,8 @@ class MainController {
         });
     }
 
-    addCosigner(socket, cb){
-        console.log("Adding cosigner");
-        this.cosignersArray.push(socket.id);
-        return cb({index: this.cosignersArray.length-1, delay: 2 * (this.cosignersArray.length-1)});
-    }
 
-    removeCosigner(socket){
-        console.log("Removing cosigner");
-        this.cosignersArray = this.cosignersArray.filter(index => index !== socket.id);
-    }
-
-    async returnBtcAdr(txId, cb) {
-        const btcAdr = await dbCtrl.getUserBtcAdrByTxId(txId); 
-        cb(btcAdr);
-    }
+    
 
     /**
      * Loads a users btc address or creates a new user entry in the database
@@ -256,4 +237,4 @@ class MainController {
     }
 }
 
-export default MainController;
+export default new MainController();

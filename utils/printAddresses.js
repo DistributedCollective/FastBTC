@@ -1,15 +1,6 @@
 import {bip32, ECPair, networks, payments, Psbt} from "bitcoinjs-lib";
 import * as bip39 from "bip39";
-
-
-const config = {
-    walletSigs: {
-        pubKeys: [
-            ""
-        ]
-    }
-}
-
+import config from '../config/config';
 
 
 const pubKeys = [
@@ -45,7 +36,7 @@ async function printAddresses(){
     //await dbCtrl.initDb("fastbtcrelay_main");
     //await bitcoinCtrl.init();
      
-    for(let i = 0; i < 130; i++){
+    for(let i = 0; i < 10000; i++){
         const {payment: userPayment} = await getPaymentAdr(i);
         console.log(i+" "+userPayment.address);
     }
