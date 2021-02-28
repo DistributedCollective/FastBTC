@@ -28,7 +28,11 @@ class MainController {
     }
 
     initSocket(app) {
-        this.io = SocketIO(app);
+        this.io = SocketIO(app, {
+            cors: {
+                origin: '*',
+            }
+        });
 
         this.io.on('connection', socket => {
             console.log(new Date(Date.now())+", A user connected", socket.id);
@@ -58,17 +62,17 @@ class MainController {
 
 
             let user = await dbCtrl.getUserByAddress(address);
-            
+
             if (user == null) user = await this.addNewUser(address);
-            
+
             if (user != null) {
-                this.connectingSockets[user.label] = socket.id;      
+                this.connectingSockets[user.label] = socket.id;
             } else {
                 return cb({error: "Cannot add the user to the database. Try again later."});
             }
 
             if(user.btcadr != null && user.btcadr != ''){
-                await bitcoinCtrl.checkAddress(user.id, user.label, new Date(user.dateAdded)); 
+                await bitcoinCtrl.checkAddress(user.id, user.label, new Date(user.dateAdded));
             } else {
                 const btcAdr = await bitcoinCtrl.createAddress(user.id, user.label);
                 if (btcAdr) {
@@ -79,7 +83,7 @@ class MainController {
                     return cb({error: "Can not get new BTC deposit address"});
                 }
             }
-            
+
             console.log("returning user");
             console.log(user);
             return cb(null, user);
