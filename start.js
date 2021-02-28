@@ -1,7 +1,6 @@
 /**
 * Relays Btc to Rbtc. 
 */
-import { SSL_OP_CRYPTOPRO_TLSEXT_BUG } from 'constants';
 import conf from './config/config';
 const express= require('express');
 const app = express();
