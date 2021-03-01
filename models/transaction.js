@@ -46,7 +46,7 @@ export default class Transaction extends BaseModel {
         });
     }
 
-    getUserBtcAdrByTxId({ txId }) {
+    getTransactionByTxId({ txId }) {
         return super.findOne({ txId })
     }
 

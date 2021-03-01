@@ -21,7 +21,7 @@ class SlaveCtrl {
         });*/
         app.post('/getNode', this.authenticate, async (req, res)=> this.returnNode(res));
         app.post('/getCosignerIndexAndDelay', this.authenticate, (req,res) => this.addCosigner(req,res));
-        app.post('/getBtcAdr', this.authenticate, async (req, res)=> await this.returnBtcAdr(req, res));
+        app.post('/getPayment', this.authenticate, async (req, res)=> await this.returnBtcAdr(req, res));
     }
 
 
@@ -71,8 +71,8 @@ class SlaveCtrl {
     }
 
     async returnBtcAdr(req, res) {
-        const btcAdr = await dbCtrl.getUserBtcAdrByTxId(req.body.txId);
-        res.status(200).json(btcAdr);
+        const { btcAdr, txHash} = await dbCtrl.getUserBtcAdrAndTxHashByTxId(req.body.txId)
+        res.status(200).json({btcAdr, txHash});
     }
 
 }
