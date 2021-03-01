@@ -37,6 +37,7 @@ class SlaveCtrl {
     }
 
     verifySignature(msg, signature, address) {
+        const p = this;
         console.log("verify signature");
         const p = this;
         try {
