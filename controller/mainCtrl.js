@@ -3,8 +3,6 @@
  * Starts all other controllers and handles client communication.
  * Processes btc deposits, takes the client rsk address and sends corresponding btc address, informs the client about the relay process status and sends deposit/error notifications to a telegram group
  */
-
-
 const SocketIO = require('socket.io');
 import conf from '../config/config';
 import dbCtrl from './dbCtrl';

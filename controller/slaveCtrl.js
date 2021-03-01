@@ -9,7 +9,7 @@ class SlaveCtrl {
         this.web3 = new Web3(conf.rskNode);
     }
 
-    start(app) {
+    async start(app) {
         await dbCtrl.initDb(conf.dbName);
         /*
         app.get('/getDb', checkAPIKey, (req, res) => {
@@ -19,15 +19,13 @@ class SlaveCtrl {
               if (err) throw(err);
             });
         });*/
-        app.get('/getNode', authenticate, (req, res)=> await this.returnNode(req, res));
-        app.get('/getCosignerIndexAndDelay', authenticate, (req,res) => this.addCosigner(req,res));
-        app.get('/getBtcAdr', authenticate, (req, res)=> await this.returnBtcAdr(req, res));
-        //when disconnect?  
-        //socket.on('disconnect', () => this.removeCosigner(socket));
+        app.get('/getNode', this.authenticate, async (req, res)=> this.returnNode(res));
+        app.get('/getCosignerIndexAndDelay', this.authenticate, (req,res) => this.addCosigner(req,res));
+        app.get('/getBtcAdr', this.authenticate, async (req, res)=> await this.returnBtcAdr(req, res));
     }
 
 
-    async authenticate(req, res, next) {
+    authenticate(req, res, next) {
         console.log("new authentication request");
         console.log(req.body);
 
@@ -56,15 +54,15 @@ class SlaveCtrl {
         }
     }
 
-    returnNode(req, res){
+    returnNode(res){
         res.status(200).json(conf.node);
     }
 
 
     addCosigner(req, res) {
         console.log("Adding cosigner");
-        this.cosignersArray.push(socket.id);
-        return cb({ index: this.cosignersArray.length - 1, delay: 2 * (this.cosignersArray.length - 1) });
+        if(this.cosignersArray.indexOf(req.body.walletAddress)==-1) this.cosignersArray.push(req.body.walletAddress);
+        res.status(200).json({ index: this.cosignersArray.length - 1, delay: 2 * (this.cosignersArray.length - 1) });
     }
 
     removeCosigner(socket) {
@@ -72,9 +70,9 @@ class SlaveCtrl {
         this.cosignersArray = this.cosignersArray.filter(index => index !== socket.id);
     }
 
-    async returnBtcAdr(txId, cb) {
-        const btcAdr = await dbCtrl.getUserBtcAdrByTxId(txId);
-        cb(btcAdr);
+    async returnBtcAdr(req, res) {
+        const btcAdr = await dbCtrl.getUserBtcAdrByTxId(req.body.txId);
+        res.status(200).json(btcAdr);
     }
 
 }
