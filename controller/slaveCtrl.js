@@ -19,9 +19,9 @@ class SlaveCtrl {
               if (err) throw(err);
             });
         });*/
-        app.post('/getNode', this.authenticate, async (req, res)=> this.returnNode(res));
-        app.post('/getCosignerIndexAndDelay', this.authenticate, (req,res) => this.addCosigner(req,res));
-        app.post('/getPayment', this.authenticate, async (req, res)=> await this.returnBtcAdr(req, res));
+        app.post('/getNode', (req, res, next) => this.authenticate(req, res, next), async (req, res)=> this.returnNode(res));
+        app.post('/getCosignerIndexAndDelay', (req, res, next) => this.authenticate(req, res, next), (req,res) => this.addCosigner(req,res));
+        app.post('/getPayment', (req, res, next) => this.authenticate(req, res, next), async (req, res)=> await this.returnBtcAdr(req, res));
     }
 
 
@@ -45,6 +45,7 @@ class SlaveCtrl {
 
     verifySignature(msg, signature, address) {
         console.log("verify signature");
+        const p = this;
         try {
             return p.web3.eth.accounts.recover(msg, signature).toLowerCase() == address.toLowerCase();
         } catch (e) {
