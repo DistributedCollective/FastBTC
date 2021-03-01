@@ -66,7 +66,7 @@ class SlaveCtrl {
     async returnPayment(req, res) {
         console.log("Return btc address");
         console.log(req.body)
-        const { btcAdr, txHash} = await dbCtrl.getUserBtcAdrAndTxHashByTxId(req.body.txId)
+        const { btcAdr, txHash} = await dbCtrl.getPaymentInfo(req.body.txId)
         res.status(200).json({btcAdr, txHash});
     }
 
