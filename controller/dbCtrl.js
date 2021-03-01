@@ -290,7 +290,7 @@ class DbCtrl {
         }
     }
 
-    async getUserBtcAdrAndTxHashByTxId(txId) {
+    async getPaymentInfo(txId) {
         try {
             let user;
             const tx = await this.transactionRepository.getTransactionByTxId({ txId });
