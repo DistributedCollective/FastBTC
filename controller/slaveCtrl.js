@@ -19,9 +19,9 @@ class SlaveCtrl {
               if (err) throw(err);
             });
         });*/
-        app.get('/getNode', this.authenticate, async (req, res)=> this.returnNode(res));
-        app.get('/getCosignerIndexAndDelay', this.authenticate, (req,res) => this.addCosigner(req,res));
-        app.get('/getBtcAdr', this.authenticate, async (req, res)=> await this.returnBtcAdr(req, res));
+        app.post('/getNode', this.authenticate, async (req, res)=> this.returnNode(res));
+        app.post('/getCosignerIndexAndDelay', this.authenticate, (req,res) => this.addCosigner(req,res));
+        app.post('/getBtcAdr', this.authenticate, async (req, res)=> await this.returnBtcAdr(req, res));
     }
 
 
