@@ -12,6 +12,7 @@ import {User, Transaction} from '../models/index';
 class DbCtrl {
 
     async initDb(dbName) {
+        const p=this;
         return new Promise(resolve => {
             const file = path.join(__dirname, '../db/' + dbName + ".db");
             this.db = new sqlite3.Database(file, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
@@ -19,7 +20,7 @@ class DbCtrl {
                     console.error(err.message, file);
                 } else {
                     console.log('Connected to the ' + dbName + ' database.');
-                    this.initRepos().catch(console.log).then(() => resolve());
+                    p.initRepos().catch(console.log).then(() => resolve());
                 }
             });
         });
