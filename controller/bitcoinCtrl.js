@@ -84,13 +84,10 @@ class BitcoinCtrl {
                         const txList = await this.api.listReceivedTxsByLabel(adrLabel, 9999);
 
                         // console.log("Address label %s has %s tx", adrLabel, (txList||[]).length);
-
                         for (const tx of (txList || [])) {
                             const confirmations = tx && tx.confirmations;
 
                             if (confirmations === 0) {
-                                // cosigners will verify that the BTC deposit address belong to the multisig
-                                await this.letCosignersCheckAdress(tx.address); // don't know if this is the right place for this function
                                 await this.addPendingDepositTx({
                                     address: tx.address,
                                     value: tx.value,
