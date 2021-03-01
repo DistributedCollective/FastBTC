@@ -25,16 +25,18 @@ class MainController {
         bitcoinCtrl.setTxDepositedHandler(this.processDeposits.bind(this));
     }
 
-    initSocket(app) {
-        this.io = SocketIO(app, {
+    initSocket(httpServer) {
+
+        this.io = SocketIO(httpServer, {
             cors: {
-                origin: '*',
-            }
+                origin: "*",
+                methods: ["GET", "POST"]
+              }
         });
 
         this.io.on('connection', socket => {
-            console.log(new Date(Date.now())+", A user connected", socket.id);
-        
+            console.log(new Date(Date.now()) + ", A user connected", socket.id);
+
             //users
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
@@ -45,7 +47,7 @@ class MainController {
     }
 
 
-    
+
 
     /**
      * Loads a users btc address or creates a new user entry in the database
@@ -55,7 +57,7 @@ class MainController {
             console.log("User get deposit address", address);
 
             if (address == null || address === '') {
-                return cb({error: "Address is empty"});
+                return cb({ error: "Address is empty" });
             }
 
 
@@ -66,19 +68,19 @@ class MainController {
             if (user != null) {
                 this.connectingSockets[user.label] = socket.id;
             } else {
-                return cb({error: "Cannot add the user to the database. Try again later."});
+                return cb({ error: "Cannot add the user to the database. Try again later." });
             }
 
-            if(user.btcadr != null && user.btcadr != ''){
+            if (user.btcadr != null && user.btcadr != '') {
                 await bitcoinCtrl.checkAddress(user.id, user.label, new Date(user.dateAdded));
             } else {
                 const btcAdr = await bitcoinCtrl.createAddress(user.id, user.label);
                 if (btcAdr) {
-                    await dbCtrl.userRepository.update({id: user.id}, {btcadr: btcAdr});
+                    await dbCtrl.userRepository.update({ id: user.id }, { btcadr: btcAdr });
                     user = await dbCtrl.getUserByAddress(address);
                 } else {
                     console.error("Error creating btc deposit address for user " + address);
-                    return cb({error: "Can not get new BTC deposit address"});
+                    return cb({ error: "Can not get new BTC deposit address" });
                 }
             }
 
@@ -88,7 +90,7 @@ class MainController {
 
         } catch (e) {
             console.error(e);
-            cb({error: "Server error. Please contact the admin community@sovryn.app"});
+            cb({ error: "Server error. Please contact the admin community@sovryn.app" });
         }
     }
 
@@ -100,14 +102,14 @@ class MainController {
         console.log("User get deposit history", address);
 
         if (address == null || address === '') {
-            return cb({error: "Address is empty"});
+            return cb({ error: "Address is empty" });
         }
 
         const hist = await dbCtrl.getDepositHistory(address);
-        if(hist && hist.length>0) {
+        if (hist && hist.length > 0) {
             cb(hist);
         }
-        else{
+        else {
             cb([]);
         }
     }
@@ -157,13 +159,13 @@ class MainController {
 
     async getTotalDeposits(cb) {
         try {
-          const total = await dbCtrl.getSumDeposited();
-          cb(total);
+            const total = await dbCtrl.getSumDeposited();
+            cb(total);
         } catch (e) {
-          console.error(e);
-          cb({error: "Something's wrong"})
+            console.error(e);
+            cb({ error: "Something's wrong" })
         }
-      }
+    }
 
     async getTransfers(cb) {
         try {
@@ -219,13 +221,13 @@ class MainController {
             txHash: resTx.txHash,
             value: Number(resTx.value).toFixed(6)
         });
-        telegramBot.sendMessage(Number(resTx.value).toFixed(6)+" Rsk transferred to " + user.web3adr);
+        telegramBot.sendMessage(Number(resTx.value).toFixed(6) + " Rsk transferred to " + user.web3adr);
     }
 
     emitToUserSocket(userLabel, event, data) {
         if (userLabel && this.connectingSockets[userLabel]) {
             const socketId = this.connectingSockets[userLabel];
-            console.log(new Date(Date.now())+", sending message to client", socketId, event, data);
+            console.log(new Date(Date.now()) + ", sending message to client", socketId, event, data);
             this.io.to(socketId).emit(event, data, userLabel);
         }
     }
@@ -234,7 +236,7 @@ class MainController {
         this.emitToUserSocket(userLabel, 'depositTx', {
             status: 'pending',
             txHash: tx.txHash,
-            value: (Number(tx.value)/1e8).toFixed(6)
+            value: (Number(tx.value) / 1e8).toFixed(6)
         });
     }
 }

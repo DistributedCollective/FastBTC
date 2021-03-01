@@ -1,12 +1,19 @@
+const io = require("socket.io-client");
+const { origin, pathname } = new URL('http://localhost:3007/');
+console.log(origin);
+console.log(pathname)
 
 
-var socket = require('socket.io-client')('http://localhost:3007');
+const socket = io(origin, {
+    reconnectionDelayMax: 10000,
+    path: pathname && pathname !== '/' ? pathname : '',
+})
 
 
 socket.on('connect', function(){
     console.log("connected");
     //getHist();
-    getCosignerIndex();
+    //getCosignerIndex();
 });
 
 socket.on('disconnect', function(){

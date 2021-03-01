@@ -2,8 +2,8 @@
  * App 
  */
 
- /*
-const { origin, pathname } = new URL('https://testnet.sovryn.app/genesis/');
+ 
+const { origin, pathname } = new URL('http://3.129.31.108:3007');
 console.log(origin);
 console.log(pathname)
 
@@ -11,9 +11,8 @@ console.log(pathname)
 const socket = io(origin, {
     reconnectionDelayMax: 10000,
     path: pathname && pathname !== '/' ? pathname : '',
-})*/
+})
 
-const socket=io();
 var qr = require('qr-encode');
 const conf = require('../config/config');
 
