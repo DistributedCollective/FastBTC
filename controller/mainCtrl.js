@@ -185,7 +185,7 @@ class MainController {
             await dbCtrl.confirmDeposit(d.txHash);
         }
 
-        telegramBot.sendMessage("New BTC deposit arrived: " + JSON.stringify(d));
+        //telegramBot.sendMessage("New BTC deposit arrived: " + JSON.stringify(d));
 
         if (depositFound == null) {
             const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, true);
