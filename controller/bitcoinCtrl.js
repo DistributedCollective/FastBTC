@@ -76,6 +76,7 @@ class BitcoinCtrl {
             let currentOffset = 0, checkSize = 20, completed = false;
 
             while (!completed) {
+                await dbCtrl.initDb(conf.dbName); // init db
                 const addrLabels = await dbCtrl.getUserLabels(currentOffset, checkSize);
 
                 if (addrLabels && addrLabels.length > 0) {
