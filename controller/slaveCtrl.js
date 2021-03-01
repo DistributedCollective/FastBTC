@@ -11,17 +11,10 @@ class SlaveCtrl {
 
     async start(app) {
         await dbCtrl.initDb(conf.dbName);
-        /*
-        app.get('/getDb', checkAPIKey, (req, res) => {
-            console.log("New download db request");
-            res.sendFile('/home/ubuntu/Fast-BTC/db/'+conf.dbName+".db", (err) => {
-              res.end();
-              if (err) throw(err);
-            });
-        });*/
-        app.post('/getNode', this.authenticate, async (req, res)=> this.returnNode(res));
-        app.post('/getCosignerIndexAndDelay', this.authenticate, (req,res) => this.addCosigner(req,res));
-        app.post('/getBtcAdr', this.authenticate, async (req, res)=> await this.returnBtcAdr(req, res));
+
+        app.post('/getNode', this.authenticate.bind(this), async (req, res)=> this.returnNode(res));
+        app.post('/getCosignerIndexAndDelay', this.authenticate.bind(this), (req,res) => this.addCosigner(req,res));
+        app.post('/getBtcAdr', this.authenticate.bind(this), async (req, res)=> await this.returnBtcAdr(req, res));
     }
 
 
@@ -46,7 +39,7 @@ class SlaveCtrl {
     verifySignature(msg, signature, address) {
         console.log("verify signature");
         try {
-            return p.web3.eth.accounts.recover(msg, signature).toLowerCase() == address.toLowerCase();
+            return this.web3.eth.accounts.recover(msg, signature).toLowerCase() == address.toLowerCase();
         } catch (e) {
             console.error("Error recovering message");
             console.error(e);
