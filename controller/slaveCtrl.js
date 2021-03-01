@@ -14,7 +14,7 @@ class SlaveCtrl {
 
         app.post('/getNode', this.authenticate.bind(this), async (req, res)=> this.returnNode(res));
         app.post('/getCosignerIndexAndDelay', this.authenticate.bind(this), (req,res) => this.addCosigner(req,res));
-        app.post('/getBtcAdr', this.authenticate.bind(this), async (req, res)=> await this.returnBtcAdr(req, res));
+        app.post('/getPayment', this.authenticate.bind(this), async (req, res)=> await this.returnPayment(req, res));
     }
 
 
@@ -63,7 +63,9 @@ class SlaveCtrl {
         this.cosignersArray = this.cosignersArray.filter(index => index !== socket.id);
     }
 
-    async returnBtcAdr(req, res) {
+    async returnPayment(req, res) {
+        console.log("Return btc address");
+        console.log(req.body)
         const { btcAdr, txHash} = await dbCtrl.getUserBtcAdrAndTxHashByTxId(req.body.txId)
         res.status(200).json({btcAdr, txHash});
     }

@@ -13,7 +13,7 @@ class BitcoinCtrl {
         this.pubKeys = conf.walletSigs.pubKeys;
         this.cosigners = conf.walletSigs.cosigners;
         this.thresholdConfirmations = conf.thresholdConfirmations;
-        this.api = new BitcoinNodeWrapper(conf.node);
+        this.api = BitcoinNodeWrapper.init(conf.node);
         this.network = this.isMainNet ? networks.bitcoin : networks.testnet;
         this.checkDepositTxs().catch(console.error);
     }

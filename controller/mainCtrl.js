@@ -17,7 +17,6 @@ class MainController {
         this.connectingSockets = {}; //object of {[label]: socketId}
 
         await dbCtrl.initDb(conf.dbName);
-        await bitcoinCtrl.init();
         await rskCtrl.init();
         this.initSocket(server);
 
