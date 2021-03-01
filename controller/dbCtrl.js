@@ -295,7 +295,7 @@ class DbCtrl {
             let user;
             const tx = await this.transactionRepository.getUserBtcAdrByTxId({ txId });
             if (tx) user = await this.getUserByLabel({ label: tx.userAdrLabel });
-            return user ? user.btcadr : "";
+            return user ? user.btcadr : null;
         } catch (e) {
             console.log(e);
             return null;
