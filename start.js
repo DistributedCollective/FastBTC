@@ -1,10 +1,14 @@
 /**
 * Relays Btc to Rbtc. 
 */
-import conf from './config/config';
 const express= require('express');
 const app = express();
 const http = require('http').createServer(app);
+const bodyParser = require('body-parser');
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+
+import conf from './config/config';
 import MainCtrl from './controller/mainCtrl';
 import SlaveCtrl from './controller/slaveCtrl';
 

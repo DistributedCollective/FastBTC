@@ -25,6 +25,7 @@
     "bip39": "^3.0.2",
     "bitcoinjs-lib": "^5.2.0",
     "bitcore-lib": "^8.23.1",
+    "body-parser": "^1.19.0",
     "bs58": "^4.0.1",
     "convert-hex": "^0.1.0",
     "csv-parser": "^3.0.0",
