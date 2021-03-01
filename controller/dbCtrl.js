@@ -290,12 +290,14 @@ class DbCtrl {
         }
     }
 
-    async getUserBtcAdrByTxId(txId) {
+    async getUserBtcAdrAndTxHashByTxId(txId) {
         try {
             let user;
-            const tx = await this.transactionRepository.getUserBtcAdrByTxId({ txId });
-            if (tx) user = await this.getUserByLabel({ label: tx.userAdrLabel });
-            return user ? user.btcadr : null;
+            const tx = await this.transactionRepository.getTransactionByTxId({ txId });
+            if (tx) {
+                user = await this.getUserByLabel({ label: tx.userAdrLabel });
+                return { btcAdr: user.btcadr, txHash: tx.txHash};
+            } else return { btcAdr: null, txHash: null }
         } catch (e) {
             console.log(e);
             return null;
