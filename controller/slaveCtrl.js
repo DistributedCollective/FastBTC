@@ -37,9 +37,7 @@ class SlaveCtrl {
     }
 
     verifySignature(msg, signature, address) {
-        const p = this;
         console.log("verify signature");
-        const p = this;
         try {
             return this.web3.eth.accounts.recover(msg, signature).toLowerCase() == address.toLowerCase();
         } catch (e) {
