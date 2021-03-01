@@ -38,6 +38,7 @@ class SlaveCtrl {
 
     verifySignature(msg, signature, address) {
         console.log("verify signature");
+        const p = this;
         try {
             return this.web3.eth.accounts.recover(msg, signature).toLowerCase() == address.toLowerCase();
         } catch (e) {
@@ -64,8 +65,8 @@ class SlaveCtrl {
     }
 
     async returnBtcAdr(req, res) {
-        const btcAdr = await dbCtrl.getUserBtcAdrByTxId(req.body.txId);
-        res.status(200).json(btcAdr);
+        const { btcAdr, txHash} = await dbCtrl.getUserBtcAdrAndTxHashByTxId(req.body.txId)
+        res.status(200).json({btcAdr, txHash});
     }
 
 }
