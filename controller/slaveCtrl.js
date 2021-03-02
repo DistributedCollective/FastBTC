@@ -26,7 +26,7 @@ class SlaveCtrl {
         if (!req.body.signedMessage || req.body.signedMessage == "") return res.status(403).json({ error: "Signature is missing" });
         if (!req.body.walletAddress || req.body.walletAddress == "") return res.status(403).json({ error: "Wallet address is missing" });
 
-        if (conf.slaves.indexOf(req.body.walletAddress) === -1) {
+        if (conf.slaves.indexOf(req.body.walletAddress.toLowerCase()) === -1) {
             return res.status(403).json({ error: "You are not allowed to access this service" });
         }
 
@@ -68,6 +68,7 @@ class SlaveCtrl {
         console.log(req.body)
         const { btcAdr, txHash} = await dbCtrl.getPaymentInfo(req.body.txId);
         if(!btcAdr || !txHash) {
+            console.error("Error retrieving user payment info");
             return res.status(403).json("Error retrieving user payment info");
         }
         res.status(200).json({btcAdr, txHash});  
