@@ -283,7 +283,7 @@ class DbCtrl {
     async getPaymentInfo(txId) {
         console.log("Get payment info for "+txId);
         try {
-            const tx = await this.transactionRepository.getTransactionByTxId({ txId });
+            const tx = await this.transactionRepository.getTransactionByTxId(txId);
             console.log(tx);
             if (!tx || !tx.userAdrLabel || !tx.txHash) return { btcAdr: null, txHash: null };
 

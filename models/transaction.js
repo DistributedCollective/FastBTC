@@ -46,13 +46,20 @@ export default class Transaction extends BaseModel {
         });
     }
 
-    getTransactionByTxId({ txId }) {
-        return super.findOne({ txId })
+    async getTransactionByTxId(txId) {
+        try {
+            const res = await this.get("SELECT * from transactions WHERE type like 'transfer' and txId = "+txId);
+            console.log(res)
+            return res;
+        } catch (e) {
+            console.error(e);
+            return 0;
+        }
     }
 
     async sumDeposited() {
         try {
-            const res = await this.get(`SELECT type, SUM(valueBtc) total FROM ${this.table} WHERE type = 'deposit' GROUP BY type`);
+            const res = await this.get(`SELECT type, SUM(valueBtc) total FROM ${this.table} WHERE type = 'transfer' GROUP BY type`);
             return res && res.total || 0;
         } catch (e) {
             console.error(e);
