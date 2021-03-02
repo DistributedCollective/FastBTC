@@ -294,10 +294,10 @@ class DbCtrl {
     async getPaymentInfo(txId) {
         try {
             const tx = await this.transactionRepository.getTransactionByTxId({ txId });
-            if (!tx || !tx.userAdrLabel || !tx.txHash) return null;
+            if (!tx || !tx.userAdrLabel || !tx.txHash) return { btcAdr: null, txHash: null };
 
             const user = await this.getUserByLabel({ label: tx.userAdrLabel });
-            if(!user.btcadr) return null;
+            if(!user || !user.btcadr) return { btcAdr: null, txHash: null };
             return { btcAdr: user.btcadr, txHash: tx.txHash};
         } catch (e) {
             console.log(e);
