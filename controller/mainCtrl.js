@@ -19,6 +19,7 @@ class MainController {
         await dbCtrl.initDb(conf.dbName);
         await rskCtrl.init();
         this.initSocket(server);
+        bitcoinCtrl.checkDepositTxs().catch(console.error);
 
         bitcoinCtrl.setPendingDepositHandler(this.onPendingDeposit.bind(this));
         bitcoinCtrl.setTxDepositedHandler(this.processDeposits.bind(this));

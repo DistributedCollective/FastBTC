@@ -15,7 +15,6 @@ class BitcoinCtrl {
         this.thresholdConfirmations = conf.thresholdConfirmations;
         this.api = new BitcoinNodeWrapper(conf.node);
         this.network = this.isMainNet ? networks.bitcoin : networks.testnet;
-        this.checkDepositTxs().catch(console.error);
     }
 
 
