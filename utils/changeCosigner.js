@@ -1,6 +1,7 @@
 import rskCtrl from '../controller/rskCtrl';
 import conf from '../config/config';
 
+// add the necessary parameters here
 changeCosigner("".toLowerCase(), "", "".toLowerCase());
 
 
@@ -33,11 +34,17 @@ async function changeCosigner(adr, action, adr2) {
         console.log("Unknown action")
         return false;
     }
-    const receipt = await await rskCtrl.multisig.methods.submitTransaction(conf.contractAddress.toLowerCase(), 0, data).send({
-        from: conf.account.adr.toLowerCase(),
-        gas: 100000
-    });
 
-    console.log(receipt);
-    return true;
+    try {
+        const receipt = await await rskCtrl.multisig.methods.submitTransaction(conf.contractAddress.toLowerCase(), 0, data).send({
+            from: conf.account.adr.toLowerCase(),
+            gas: 100000
+        });
+        console.log(receipt);
+        return true;
+    } catch (e) {
+        console.log("Error", e)
+        return null;
+    }
+
 }
