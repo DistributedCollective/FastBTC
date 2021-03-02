@@ -9,6 +9,7 @@ describe('Db', async () => {
             await dbCtrl.initDb(conf.dbName);
         });
 
+        /*
         it('should return last 10 trades', async () => {
             const sql = "select user.id, web3adr, btcadr, valueUsd, valueBtc, type, transactions.dateAdded, transactions.txHash"
                 + " from user cross join transactions on user.label = transactions.userAdrLabel order by transactions.dateAdded desc limit 10"
@@ -45,6 +46,13 @@ describe('Db', async () => {
             console.log(resDb);
             assert(!resDb)
         });*/
+
+        it('should return a withdraw tx', async () => {
+            const { btcAdr, txHash} = await dbCtrl.getPaymentInfo(51);
+            console.log(btcAdr);
+            console.log(txHash);
+            assert(true)
+        });
     });
 });
 

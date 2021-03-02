@@ -89,17 +89,6 @@ class DbCtrl {
         }
     }
 
-    async getUserByLabel(label) {
-        try {
-            return await this.userRepository.findOne({
-                label: label
-            });
-        } catch (e) {
-            console.log(e);
-            return null;
-        }
-    }
-
     async getUserByBtcAddress(adr) {
         try {
             return await this.userRepository.findOne({
@@ -292,15 +281,15 @@ class DbCtrl {
     }
 
     async getPaymentInfo(txId) {
-        console.log("Get payment info");
+        console.log("Get payment info for "+txId);
         try {
             const tx = await this.transactionRepository.getTransactionByTxId({ txId });
-            console.log(tx)
-            if (!tx || !tx.userAdrLabel || !tx.txHash) return { btcAdr: null, txHash: null};
+            console.log(tx);
+            if (!tx || !tx.userAdrLabel || !tx.txHash) return { btcAdr: null, txHash: null };
 
-            const user = await this.getUserByLabel({ label: tx.userAdrLabel });
-            console.log(user)
-            if(!user.btcadr) return null;
+            const user = await this.getUserByLabel(tx.userAdrLabel);
+            console.log(user);
+            if(!user || !user.btcadr) return { btcAdr: null, txHash: null };
             return { btcAdr: user.btcadr, txHash: tx.txHash};
         } catch (e) {
             console.log(e);
