@@ -220,7 +220,7 @@ class MainController {
             txHash: resTx.txHash,
             value: Number(resTx.value).toFixed(6)
         });
-        telegramBot.sendMessage(Number(resTx.value).toFixed(6) + " Rsk transferred to " + user.web3adr);
+        //telegramBot.sendMessage(Number(resTx.value).toFixed(6) + " Rsk transferred to " + user.web3adr);
     }
 
     emitToUserSocket(userLabel, event, data) {
