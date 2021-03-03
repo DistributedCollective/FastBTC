@@ -10,7 +10,7 @@ export default class DepositTransaction extends Transaction {
             valueBtc INTEGER,
             dateAdded datetime,
             status text,
-            FOREIGN KEY (transferId) REFERENCES transactions(id)
+            FOREIGN KEY (transferId) REFERENCES transfers(id)
         )`;
 
         super(db, 'deposits', sql);
