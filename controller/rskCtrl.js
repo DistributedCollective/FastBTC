@@ -64,7 +64,8 @@ class RskCtrl {
         console.log("wei amount "+weiAmount)
 
         const receipt = await this.transferFromMultisig(weiAmount, to);
-        let txId
+        let txId;
+        
         if (receipt && receipt.events.Submission) {
             const hexTransactionId = receipt.events.Submission.raw.topics[1];
             txId = this.web3.utils.hexToNumber(hexTransactionId);
