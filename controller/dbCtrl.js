@@ -265,7 +265,19 @@ class DbCtrl {
         }
     }
 
-    async addTransferTx(userAdrLabel, txHash, txId, valueBtc) {
+    async updateDeposit(txHash, txId) {
+        console.log("update deposit tx hash "+txHash+", txId "+txId);
+        try {
+            return await this.transactionRepository.update({
+                txHash: txHash,
+            }, {txId: txId});
+        } catch (e) {
+            console.log(e);
+            return null;
+        }
+    }
+
+    async addTransferTx(userAdrLabel, txHash, valueBtc) {
         try {
             return await this.transactionRepository.insertTransferTx({
                 userAdrLabel,
@@ -284,10 +296,12 @@ class DbCtrl {
         console.log("Get payment info for "+txId);
         try {
             const tx = await this.transactionRepository.getTransactionByTxId(txId);
+            console.log("tx")
             console.log(tx);
             if (!tx || !tx.userAdrLabel || !tx.txHash) return { btcAdr: null, txHash: null };
 
             const user = await this.getUserByLabel(tx.userAdrLabel);
+            console.log("user")
             console.log(user);
             if(!user || !user.btcadr) return { btcAdr: null, txHash: null };
             return { btcAdr: user.btcadr, txHash: tx.txHash};

@@ -30,7 +30,7 @@ class BitcoinCtrl {
     }
 
     async createAddress(index, label) {
-        console.log("create public key for "+index+" "+label);
+        console.log("create payment address key for "+index+" "+label);
         const publicKeys = this.getDerivedPubKeys(index);
 
         const payment = payments.p2sh({
@@ -137,7 +137,7 @@ class BitcoinCtrl {
 
             if (added == null && user != null) {
                 const msg = `user ${user.btcadr} has a deposit, tx ${txId}, value ${(value / 1e8)} BTC`
-                //telegramBot.sendMessage(msg);
+                telegramBot.sendMessage(msg);
 
                 await dbCtrl.addDeposit(user.label, txId, value, false);
 

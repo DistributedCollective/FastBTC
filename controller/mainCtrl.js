@@ -37,7 +37,6 @@ class MainController {
         this.io.on('connection', socket => {
             console.log(new Date(Date.now()) + ", A user connected", socket.id);
 
-            //users
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.getTxAmount.apply(this, [...args]));
@@ -212,6 +211,7 @@ class MainController {
             return;
         }
 
+        await dbCtrl.updateDeposit(d.txHash, resTx.txId);
         await dbCtrl.addTransferTx(d.label, resTx.txHash, resTx.txId, d.val);
 
         console.log("Successfully sent " + d.val + " to " + user.web3adr);
@@ -221,7 +221,7 @@ class MainController {
             txHash: resTx.txHash,
             value: Number(resTx.value).toFixed(6)
         });
-        telegramBot.sendMessage(Number(resTx.value).toFixed(6) + " Rsk transferred to " + user.web3adr);
+        telegramBot.sendMessage(Number(resTx.value).toFixed(6) + " Rsk withdrawal initiated for " + user.web3adr);
     }
 
     emitToUserSocket(userLabel, event, data) {

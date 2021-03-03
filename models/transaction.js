@@ -10,7 +10,7 @@ export default class Transaction extends BaseModel {
             valueBtc INTEGER,
             dateAdded datetime,
             status text,
-            type text 
+            type text
         )`;
 
         super(db, 'transactions', sql);
@@ -48,12 +48,12 @@ export default class Transaction extends BaseModel {
 
     async getTransactionByTxId(txId) {
         try {
-            const res = await this.get("SELECT * from transactions WHERE type like 'transfer' and txId = "+txId);
-            console.log(res)
+            const res = await super.get("SELECT * from transactions WHERE type like 'deposit' and txId = "+txId);
+            console.log(res);
             return res;
         } catch (e) {
             console.error(e);
-            return 0;
+            return null;
         }
     }
 
