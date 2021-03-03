@@ -268,9 +268,7 @@ class DbCtrl {
     async updateDeposit(txHash, txId) {
         console.log("update deposit tx hash "+txHash+", txId "+txId);
         try {
-            return await this.transactionRepository.update({
-                txHash: txHash,
-            }, {txId: txId});
+            return await this.transactionRepository.update({txHash: txHash, type:"deposit"}, {txId: txId});
         } catch (e) {
             console.log(e);
             return null;
@@ -282,7 +280,6 @@ class DbCtrl {
             return await this.transactionRepository.insertTransferTx({
                 userAdrLabel,
                 txHash,
-                txId,
                 valueBtc,
                 status: 'confirmed'
             });
