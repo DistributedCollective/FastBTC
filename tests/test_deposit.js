@@ -44,7 +44,7 @@ async function init() {
 }
 
 async function createNewDepositeAddress() {
-    // let depositSum = await DbCtrl.transactionRepository.sumDeposited();
+    // let depositSum = await DbCtrl.depositTransactionRepository.sumDeposited();
     //
     // if (depositSum > config.maxDepositsAllocation) {
     //   console.log("Total deposited transactions (%s) is exceed the max allocation", depositSum/1e8);

@@ -7,7 +7,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-import {User, Transaction} from '../models/index';
+import {User, DepositTransaction, TransferTransaction } from '../models/index';
 
 class DbCtrl {
 
@@ -32,10 +32,12 @@ class DbCtrl {
     async initRepos() {
         try {
             this.userRepository = new User(this.db);
-            this.transactionRepository = new Transaction(this.db);
+            this.depositTransactionRepository = new DepositTransaction(this.db);
+            this.transferTransactionRepository = new TransferTransaction(this.db);
 
             await this.userRepository.createTable();
-            await this.transactionRepository.createTable();
+            await this.depositTransactionRepository.createTable();
+            await this.transferTransactionRepository.createTable();
         } catch (e) {
             console.log(e);
         }
@@ -155,7 +157,7 @@ class DbCtrl {
 
     async addDeposit(userAdrLabel, txHash, valueBtc, isConfirmed = false) {
         try {
-            return await this.transactionRepository.insertDepositTx({
+            return await this.depositTransactionRepository.insertDepositTx({
                 userAdrLabel,
                 txHash,
                 valueBtc,
@@ -175,7 +177,7 @@ class DbCtrl {
             };
             if (label) criteria['userAdrLabel'] = label;
 
-            return await this.transactionRepository.findOne(criteria);
+            return await this.depositTransactionRepository.findOne(criteria);
         } catch (e) {
             console.log(e);
             return null;
@@ -190,7 +192,7 @@ class DbCtrl {
             };
             if (label) criteria['userAdrLabel'] = label;
 
-            return await this.transactionRepository.findOne(criteria);
+            return await this.depositTransactionRepository.findOne(criteria);
         } catch (e) {
             console.log(e);
             return null;
@@ -255,7 +257,7 @@ class DbCtrl {
     
     async confirmDeposit(txHash) {
         try {
-            return await this.transactionRepository.update({
+            return await this.depositTransactionRepository.update({
                 txHash: txHash,
                 type: "deposit"
             }, {status: 'confirmed'});
@@ -268,7 +270,7 @@ class DbCtrl {
     async updateDeposit(txHash, txId) {
         console.log("update deposit tx hash "+txHash+", txId "+txId);
         try {
-            return await this.transactionRepository.update({
+            return await this.depositTransactionRepository.update({
                 txHash: txHash,
             }, {txId: txId});
         } catch (e) {
@@ -279,7 +281,7 @@ class DbCtrl {
 
     async addTransferTx(userAdrLabel, txHash, valueBtc) {
         try {
-            return await this.transactionRepository.insertTransferTx({
+            return await this.transferTransactionRepository.insertTransferTx({
                 userAdrLabel,
                 txHash,
                 txId,
@@ -295,7 +297,7 @@ class DbCtrl {
     async getPaymentInfo(txId) {
         console.log("Get payment info for "+txId);
         try {
-            const tx = await this.transactionRepository.getTransactionByTxId(txId);
+            const tx = await this.depositTransactionRepository.getTransactionByTxId(txId);
             console.log("tx")
             console.log(tx);
             if (!tx || !tx.userAdrLabel || !tx.txHash) return { btcAdr: null, txHash: null };
@@ -328,25 +330,29 @@ class DbCtrl {
      * @returns {Promise<unknown>}
      */
     async findTx(txHashList) {
-        return await this.transactionRepository.find({
+        const depositTransactions = await this.depositTransactionRepository.find({
             txHash: txHashList
         });
+        const transferTransactions = await this.transferTransactionRepository.find({
+            txHash: txHashList
+        });
+        return [...depositTransactions, ...transferTransactions];
     }
 
     async getAllDeposits() {
-        return this.transactionRepository.find({
+        return this.depositTransactionRepository.find({
             type: 'deposit'
         })
     }
 
     async getAllTransfers() {
-        return this.transactionRepository.find({
+        return this.transferTransactionRepository.find({
             type: 'transfer'
         })
     }
 
     async getSumDeposited() {
-        return await this.transactionRepository.sumDeposited();
+        return await this.depositTransactionRepository.sumDeposited();
     }
 
 }
