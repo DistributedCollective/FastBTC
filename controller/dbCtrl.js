@@ -264,7 +264,7 @@ class DbCtrl {
             return null;
         }
     }
-
+ 
     async updateDeposit(txHash, txId) {
         console.log("update deposit tx hash "+txHash+", txId "+txId);
         try {
