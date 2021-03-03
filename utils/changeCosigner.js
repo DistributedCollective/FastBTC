@@ -5,13 +5,14 @@ import conf from '../config/config';
 changeCosigner("".toLowerCase(), "", "".toLowerCase());
 
 
-async function changeCosigner(adr, action, adr2) {
+async function changeCosigner(adr, action) {
     console.log("Changing Cosigner.\nInitializing RSK");
     await rskCtrl.init();
 
     const pKey = conf.account.pKey || rskCtrl.web3.eth.accounts.decrypt(conf.account.ks, process.argv[3]).privateKey;
     rskCtrl.web3.eth.accounts.wallet.add(pKey);
-    let data
+    let data;
+
     if (action === 'add') {
         data = rskCtrl.web3.eth.abi.encodeFunctionCall({
             name: 'addOwner',
@@ -38,7 +39,7 @@ async function changeCosigner(adr, action, adr2) {
     try {
         const receipt = await rskCtrl.multisig.methods.submitTransaction(conf.contractAddress.toLowerCase(), 0, data).send({
             from: conf.account.adr.toLowerCase(),
-            gas: 100000
+            gas: 300000
         });
         console.log(receipt);
         return true;
