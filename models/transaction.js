@@ -17,6 +17,24 @@ export default class Transaction extends BaseModel {
         }
     }
 
+    insertDepositTx({userAdrLabel, txHash, valueBtc, status}) {
+        return super.insert({
+            userAdrLabel, txHash, valueBtc,
+            type: "deposit",
+            dateAdded: new Date(),
+            status: status
+        });
+    }
+
+    insertTransferTx({userAdrLabel, txHash, valueBtc, status}) {
+        return super.insert({
+            userAdrLabel, txHash, valueBtc, 
+            type: "transfer",
+            dateAdded: new Date(),
+            status: status
+        });
+    }
+
     async getTransactionByTxId(txId) {
         try {
             const res = await super.get("SELECT * from transactions WHERE type like 'deposit' and txId = "+txId);

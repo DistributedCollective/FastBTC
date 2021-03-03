@@ -212,7 +212,7 @@ class MainController {
         }
 
         await dbCtrl.updateDeposit(d.txHash, resTx.txId);
-        await dbCtrl.addTransferTx(d.label, resTx.txHash, resTx.txId, d.val);
+        await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val);
 
         console.log("Successfully sent " + d.val + " to " + user.web3adr);
         console.log(resTx);

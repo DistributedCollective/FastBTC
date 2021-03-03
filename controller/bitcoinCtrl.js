@@ -136,7 +136,7 @@ class BitcoinCtrl {
             const user = await dbCtrl.getUserByBtcAddress(address);
 
             if (added == null && user != null) {
-                const msg = `user ${user.btcadr} has a deposit, tx ${txId}, value ${(value / 1e8)} BTC`
+                const msg = `user ${user.btcadr} has a pending deposit, tx ${txId}, value ${(value / 1e8)} BTC`
                 telegramBot.sendMessage(msg);
 
                 await dbCtrl.addDeposit(user.label, txId, value, false);

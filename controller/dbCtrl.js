@@ -102,30 +102,6 @@ class DbCtrl {
         }
     }
 
-    async addUser(web3adr, btcadr, label, email) {
-        try {
-            return await this.userRepository.insert({
-                web3adr,
-                btcadr,
-                label,
-                email,
-            });
-        } catch (e) {
-            console.log(e);
-            return null;
-        }
-    }
-
-    async updateUser(userId, {name, email}) {
-        try {
-            await this.userRepository.update({id: userId}, {name: name, email: email});
-
-            return await this.userRepository.findOne({id: userId});
-        } catch (e) {
-            console.log(e);
-            return null;
-        }
-    }
 
     async getNextUserId() {
         try {
@@ -266,13 +242,11 @@ class DbCtrl {
             return null;
         }
     }
-
+ 
     async updateDeposit(txHash, txId) {
         console.log("update deposit tx hash "+txHash+", txId "+txId);
         try {
-            return await this.depositTransactionRepository.update({
-                txHash: txHash,
-            }, {txId: txId});
+            return await this.transactionRepository.update({txHash: txHash, type:"deposit"}, {txId: txId});
         } catch (e) {
             console.log(e);
             return null;
@@ -284,7 +258,6 @@ class DbCtrl {
             return await this.transferTransactionRepository.insertTransferTx({
                 userAdrLabel,
                 txHash,
-                txId,
                 valueBtc,
                 status: 'confirmed'
             });

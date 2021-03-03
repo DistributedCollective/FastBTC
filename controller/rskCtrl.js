@@ -43,7 +43,7 @@ class RskCtrl {
         console.log("Current Btc price " + this.lastPrice);
         let transferValueSatoshi = Number(amount) - conf.commission;
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));
-
+        console.log("transferValueSatoshi "+transferValueSatoshi)
         const bal = await this.getBalanceSats(conf.contractAddress);
         if (bal < amount) {
             console.error("Not enough balance left on the wallet " + this.from + " bal = " + bal);
@@ -52,17 +52,20 @@ class RskCtrl {
 
         const maxAmount = (this.max + conf.toleranceMax) * 1e8 / this.lastPrice;
 
-        if (transferValueSatoshi > maxAmount || transferValueSatoshi < conf.toleranceMin) {
+        if (transferValueSatoshi > maxAmount || transferValueSatoshi <= conf.toleranceMin) {
             console.error(new Date(Date.now()) + "Transfer amount outside limit");
             console.error("Max amount: " + maxAmount + " transferValue: " + transferValueSatoshi + ", max: " + this.max + ", min: " + this.min);
             return { "error": "Your transferred amount exceeded the limit. Please send between " + (maxAmount / 1e8) + " and " + (this.min / 1e8) + " Btc. Contact the admin: support@sovryn.app " };
         }
 
         const transferValue = (transferValueSatoshi / 1e8).toString();
+        console.log("transfer value "+transferValue)
         const weiAmount = this.web3.utils.toWei(transferValue, 'ether');
+        console.log("wei amount "+weiAmount)
 
         const receipt = await this.transferFromMultisig(weiAmount, to);
-        let txId
+        let txId;
+        
         if (receipt && receipt.events.Submission) {
             const hexTransactionId = receipt.events.Submission.raw.topics[1];
             txId = this.web3.utils.hexToNumber(hexTransactionId);
