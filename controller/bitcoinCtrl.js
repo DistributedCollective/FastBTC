@@ -90,14 +90,14 @@ class BitcoinCtrl {
                                 await this.addPendingDepositTx({
                                     address: tx.address,
                                     value: tx.value,
-                                    txId: tx.txId,
+                                    txHash: tx.txHash,
                                     label: adrLabel
                                 });
                             } else if (confirmations >= this.thresholdConfirmations) {
                                 await this.depositTxConfirmed({
                                     address: tx.address,
                                     value: tx.value,
-                                    txId: tx.txId,
+                                    txHash: tx.txHash,
                                     confirmations: confirmations,
                                     label: adrLabel
                                 });
@@ -130,20 +130,20 @@ class BitcoinCtrl {
         this.onTxDepositedHandler = handler;
     }
 
-    async addPendingDepositTx({ address, value, txId, label }) {
+    async addPendingDepositTx({ address, value, txHash, label }) {
         try {
-            const added = await dbCtrl.getDeposit(txId, label);
+            const added = await dbCtrl.getDeposit(txHash, label);
             const user = await dbCtrl.getUserByBtcAddress(address);
 
             if (added == null && user != null) {
-                const msg = `user ${user.btcadr} has a pending deposit, tx ${txId}, value ${(value / 1e8)} BTC`
+                const msg = `user ${user.btcadr} has a pending deposit, tx ${txHash}, value ${(value / 1e8)} BTC`
                 telegramBot.sendMessage(msg);
 
-                await dbCtrl.addDeposit(user.label, txId, value, false);
+                await dbCtrl.addDeposit(user.label, txHash, value, false);
 
                 if (this.onPendingDepositHandler) {
                     this.onPendingDepositHandler(user.label, {
-                        txHash: txId,
+                        txHash,
                         value: value,
                         status: 'pending'
                     });
@@ -155,10 +155,10 @@ class BitcoinCtrl {
         }
     }
 
-    async depositTxConfirmed({ address, value, txId, confirmations, label }) {
+    async depositTxConfirmed({ address, value, txHash, confirmations, label }) {
         try {
             const user = await dbCtrl.getUserByBtcAddress(address);
-            const confirmedInDB = await dbCtrl.getDeposit(txId, label);
+            const confirmedInDB = await dbCtrl.getDeposit(txHash, label);
 
             if (user != null && this.onTxDepositedHandler && (confirmedInDB == null || confirmedInDB.status !== 'confirmed')) {
                 const btcPrice = await U.getBTCPrice();
@@ -166,7 +166,7 @@ class BitcoinCtrl {
                 this.onTxDepositedHandler({
                     address: user.btcadr,
                     label: user.label,
-                    txHash: txId,
+                    txHash,
                     conf: confirmations,
                     val: value
                 });

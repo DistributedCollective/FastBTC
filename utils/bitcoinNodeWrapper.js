@@ -259,7 +259,7 @@ export default class BitcoinNodeWrapper {
             const received = (txList || []).map(tx => {
                 if (tx && tx.category === 'receive') {
                     return {
-                        txId: tx.txid,
+                        txHash: tx.txid,
                         blockNumber: tx.blockheight,
                         address: tx.address,
                         value: Number(tx.amount) * 1e8,
