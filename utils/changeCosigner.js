@@ -36,7 +36,7 @@ async function changeCosigner(adr, action, adr2) {
     }
 
     try {
-        const receipt = await await rskCtrl.multisig.methods.submitTransaction(conf.contractAddress.toLowerCase(), 0, data).send({
+        const receipt = await rskCtrl.multisig.methods.submitTransaction(conf.contractAddress.toLowerCase(), 0, data).send({
             from: conf.account.adr.toLowerCase(),
             gas: 100000
         });
