@@ -100,30 +100,6 @@ class DbCtrl {
         }
     }
 
-    async addUser(web3adr, btcadr, label, email) {
-        try {
-            return await this.userRepository.insert({
-                web3adr,
-                btcadr,
-                label,
-                email,
-            });
-        } catch (e) {
-            console.log(e);
-            return null;
-        }
-    }
-
-    async updateUser(userId, {name, email}) {
-        try {
-            await this.userRepository.update({id: userId}, {name: name, email: email});
-
-            return await this.userRepository.findOne({id: userId});
-        } catch (e) {
-            console.log(e);
-            return null;
-        }
-    }
 
     async getNextUserId() {
         try {
