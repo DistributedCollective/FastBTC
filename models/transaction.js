@@ -37,9 +37,9 @@ export default class Transaction extends BaseModel {
         });
     }
 
-    insertTransferTx({userAdrLabel, txHash, txId, valueBtc, status}) {
+    insertTransferTx({userAdrLabel, txHash, valueBtc, status}) {
         return super.insert({
-            userAdrLabel, txHash, txId, valueBtc, 
+            userAdrLabel, txHash, valueBtc, 
             type: "transfer",
             dateAdded: new Date(),
             status: status
