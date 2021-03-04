@@ -78,7 +78,8 @@ class SlaveCtrl {
     async storeWithdrawRequest(req, res) {
         console.log("Storing withdraw request in DB")
         try {
-            const success = await dbCtrl.addTransferTx(req.user.label, req.tx.txHash, req.txId, req.tx.valueBtc);
+            const success = await dbCtrl.addTransferTx(req.body.user.label, req.body.tx.txHash, 
+                req.body.txId, req.body.tx.valueBtc);
             res.status(200).json(success);  
         } catch (e) {
             console.log(e);
