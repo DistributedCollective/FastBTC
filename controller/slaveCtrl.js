@@ -15,6 +15,7 @@ class SlaveCtrl {
         app.post('/getNode', this.authenticate.bind(this), async (req, res)=> this.returnNode(res));
         app.post('/getCosignerIndexAndDelay', this.authenticate.bind(this), (req,res) => this.addCosigner(req,res));
         app.post('/getPayment', this.authenticate.bind(this), async (req, res)=> await this.returnPayment(req, res));
+        app.post('/storeWithdrawRequest', this.authenticate.bind(this), async (req, res)=> await this.storeWithdrawRequest(req, res));
     }
 
 
@@ -66,12 +67,23 @@ class SlaveCtrl {
     async returnPayment(req, res) {
         console.log("Return btc address");
         console.log(req.body)
-        const { btcAdr, txHash} = await dbCtrl.getPaymentInfo(req.body.txId);
-        if(!btcAdr || !txHash) {
+        const { user, tx } = await dbCtrl.getPaymentInfo(req.body.txId);
+        if(!user || !tx) {
             console.error("Error retrieving user payment info");
             return res.status(403).json("Error retrieving user payment info");
         }
-        res.status(200).json({btcAdr, txHash});  
+        res.status(200).json({ user, tx });  
+    }
+
+    async storeWithdrawRequest(req, res) {
+        console.log("Storing withdraw request in DB")
+        try {
+            const success = await dbCtrl.addTransferTx(req.user.label, req.tx.txHash, req.txId, req.tx.valueBtc);
+            res.status(200).json(success);  
+        } catch (e) {
+            console.log(e);
+            return res.status(403).json("Error storing the withdraw request");
+        }
     }
 }
 

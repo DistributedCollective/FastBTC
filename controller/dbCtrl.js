@@ -251,11 +251,12 @@ class DbCtrl {
         }
     }
 
-    async addTransferTx(userAdrLabel, txHash, valueBtc) {
+    async addTransferTx(userAdrLabel, txHash, txId, valueBtc) {
         try {
             return await this.transactionRepository.insertTransferTx({
                 userAdrLabel,
                 txHash,
+                txId,
                 valueBtc,
                 status: 'confirmed'
             });
@@ -277,7 +278,7 @@ class DbCtrl {
             console.log("user")
             console.log(user);
             if(!user || !user.btcadr) return { btcAdr: null, txHash: null };
-            return { btcAdr: user.btcadr, txHash: tx.txHash};
+            return { user, tx };
         } catch (e) {
             console.log(e);
             return null;
