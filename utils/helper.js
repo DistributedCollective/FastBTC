@@ -8,22 +8,6 @@ import Web3 from 'web3';
 
 const web3 = new Web3();
 
-const getCryptoPrice = async (crypto) => {
-    try {
-        const res = await fetch(`https://min-api.cryptocompare.com/data/pricemulti?fsyms=${crypto}&tsyms=USD&api_key=` + configs.cryptoCompareKey);
-        const data = await res.json();
-        if (data && data[crypto] && data[crypto]['USD']) {
-            return Number(data[crypto]['USD']);
-        } else {
-            console.error("error getting price from cryptocompare");
-            console.error(data);
-            return Promise.reject("Can not get price for " + crypto);
-        }
-    }
-    catch (e) {
-        return Promise.reject("Error retrieving price for " + crypto);
-    }
-};
 
 class Util {
     async wasteTime(s) {
@@ -42,14 +26,6 @@ class Util {
             result += characters.charAt(Math.floor(Math.random() * charactersLength));
         }
         return result;
-    }
-
-    async getBTCPrice() {
-        return await getCryptoPrice('BTC');
-    }
-
-    async getRbtcPrice() {
-        return await getCryptoPrice('RBTC');
     }
 
     ecrecover(message, signature) {

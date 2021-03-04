@@ -55,7 +55,10 @@ class SlaveCtrl {
     addCosigner(req, res) {
         console.log("Adding cosigner");
         if(this.cosignersArray.indexOf(req.body.walletAddress)==-1) this.cosignersArray.push(req.body.walletAddress);
-        res.status(200).json({ index: this.cosignersArray.length - 1, delay: 2 * (this.cosignersArray.length - 1) });
+
+        const delay=Math.floor(index/2)*60;
+
+        res.status(200).json({ index: this.cosignersArray.length - 1, delay: delay });
     }
 
     removeCosigner(socket) {

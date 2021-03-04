@@ -37,9 +37,7 @@ class RskCtrl {
      */
     async sendRbtc(amount, to) {
         console.log("Trying to send " + amount + " to: " + to);
-        const btcPrice = await helper.getBTCPrice();
-        if (!btcPrice.error) this.lastPrice = btcPrice;
-
+       
         console.log("Current Btc price " + this.lastPrice);
         let transferValueSatoshi = Number(amount) - conf.commission;
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));

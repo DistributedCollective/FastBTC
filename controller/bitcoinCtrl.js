@@ -161,8 +161,7 @@ class BitcoinCtrl {
             const confirmedInDB = await dbCtrl.getDeposit(txId, label);
 
             if (user != null && this.onTxDepositedHandler && (confirmedInDB == null || confirmedInDB.status !== 'confirmed')) {
-                const btcPrice = await U.getBTCPrice();
-
+                
                 this.onTxDepositedHandler({
                     address: user.btcadr,
                     label: user.label,
