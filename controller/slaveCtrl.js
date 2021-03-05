@@ -10,8 +10,6 @@ class SlaveCtrl {
     }
 
     async start(app) {
-        await dbCtrl.initDb(conf.dbName);
-
         app.post('/getNode', this.authenticate.bind(this), async (req, res)=> this.returnNode(res));
         app.post('/getCosignerIndexAndDelay', this.authenticate.bind(this), (req,res) => this.addCosigner(req,res));
         app.post('/getPayment', this.authenticate.bind(this), async (req, res)=> await this.returnPayment(req, res));
@@ -56,8 +54,8 @@ class SlaveCtrl {
         console.log("Adding cosigner");
         if(this.cosignersArray.indexOf(req.body.walletAddress)==-1) this.cosignersArray.push(req.body.walletAddress);
 
-        const delay=Math.floor(index/2)*60;
-
+        //const delay=Math.floor(index/2)*60;
+        const delay=this.cosignersArray.length<3?0:60;
         res.status(200).json({ index: this.cosignersArray.length - 1, delay: delay });
     }
 

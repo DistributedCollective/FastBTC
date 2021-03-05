@@ -26,7 +26,7 @@ class MainController {
     }
 
     initSocket(httpServer) {
-
+        console.log("init socket")
         this.io = SocketIO(httpServer, {
             cors: {
                 origin: "*",

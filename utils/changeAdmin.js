@@ -1,12 +1,12 @@
 import rskCtrl from '../controller/rskCtrl';
-
+import conf from '../config/config';
 
 const from ={
-    adr: "",
-    pKey: ""
+    adr: conf.account.adr,
+    pKey: conf.account.pKey
 };
 
-changeAdmin("".toLowerCase());
+changeAdmin("0xeb8d632089f84a5a7e09456e4ab063364c5ebc5c".toLowerCase());
 
 
 async function changeAdmin(adr) {
