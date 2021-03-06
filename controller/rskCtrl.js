@@ -53,7 +53,7 @@ class RskCtrl {
             return { "error": "Your transferred amount exceeded the limit." };
         }
 
-        const transferValue = (transferValueSatoshi / 1e8).toFixed(0);
+        const transferValue = (transferValueSatoshi / 1e8).toString();
         console.log("transfer value "+transferValue)
         const weiAmount = this.web3.utils.toWei(transferValue, 'ether');
         console.log("wei amount "+weiAmount)
