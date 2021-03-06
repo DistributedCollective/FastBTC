@@ -38,7 +38,6 @@ class RskCtrl {
     async sendRbtc(amount, to) {
         console.log("Trying to send " + amount + " to: " + to);
        
-        console.log("Current Btc price " + this.lastPrice);
         let transferValueSatoshi = Number(amount) - conf.commission;
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));
         console.log("transferValueSatoshi "+transferValueSatoshi)
@@ -48,15 +47,13 @@ class RskCtrl {
             return { "error": "Not enough balance left. Please contact the admin support@sovryn.app" };
         }
 
-        const maxAmount = (this.max + conf.toleranceMax) * 1e8 / this.lastPrice;
-
-        if (transferValueSatoshi > maxAmount || transferValueSatoshi <= conf.toleranceMin) {
+        if (transferValueSatoshi > conf.maxAmount || transferValueSatoshi <= conf.minAmount) {
             console.error(new Date(Date.now()) + "Transfer amount outside limit");
-            console.error("Max amount: " + maxAmount + " transferValue: " + transferValueSatoshi + ", max: " + this.max + ", min: " + this.min);
-            return { "error": "Your transferred amount exceeded the limit. Please send between " + (maxAmount / 1e8) + " and " + (this.min / 1e8) + " Btc. Contact the admin: support@sovryn.app " };
+            console.error("transferValue: " + transferValueSatoshi);
+            return { "error": "Your transferred amount exceeded the limit." };
         }
 
-        const transferValue = (transferValueSatoshi / 1e8).toString();
+        const transferValue = (transferValueSatoshi / 1e8).toFixed(0);
         console.log("transfer value "+transferValue)
         const weiAmount = this.web3.utils.toWei(transferValue, 'ether');
         console.log("wei amount "+weiAmount)
