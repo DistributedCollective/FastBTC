@@ -36,7 +36,7 @@ class MainController {
 
         this.io.on('connection', socket => {
             console.log(new Date(Date.now()) + ", A user connected", socket.id);
-
+    
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.getTxAmount.apply(this, [...args]));

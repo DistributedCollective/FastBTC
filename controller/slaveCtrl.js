@@ -19,6 +19,8 @@ class SlaveCtrl {
     authenticate(req, res, next) {
         console.log("new authentication request");
         console.log(req.body);
+        const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        if(ip) console.log(ip); // ip address of the confirmation-node
 
         if (!req.body.message || req.body.message == "") return res.status(403).json({ error: "Message is missing" });
         if (!req.body.signedMessage || req.body.signedMessage == "") return res.status(403).json({ error: "Signature is missing" });
@@ -54,8 +56,7 @@ class SlaveCtrl {
         console.log("Adding cosigner");
         if(this.cosignersArray.indexOf(req.body.walletAddress)==-1) this.cosignersArray.push(req.body.walletAddress);
 
-        //const delay=Math.floor(index/2)*60;
-        const delay=this.cosignersArray.length<3?0:60;
+        const delay=Math.floor(this.cosignersArray.length/2)*60;
         res.status(200).json({ index: this.cosignersArray.length - 1, delay: delay });
     }
 

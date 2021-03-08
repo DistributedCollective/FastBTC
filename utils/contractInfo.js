@@ -1,7 +1,7 @@
 import rskCtrl from '../controller/rskCtrl';
 import conf from '../config/config';
 
-export default async function getCosigners() {
+async function getCosigners() {
     console.log("Getting Cosigners.\nInitializing RSK");
     await rskCtrl.init();
 
@@ -24,4 +24,21 @@ export default async function getCosigners() {
     }
 }
 
-getCosigners();
+async function getProposal(txId){
+    console.log("Getting Cosigners.\nInitializing RSK");
+    await rskCtrl.init();
+
+    try{
+        const isConfirmed = await rskCtrl.multisig.methods["isConfirmed"](txId).call();
+        console.log(isConfirmed);
+    }
+    catch(e){
+        console.error("Error getting confirmed info");
+        console.error(e);
+        return true; //need to be true to not be processed again
+    }
+}
+
+//getCosigners();
+
+getProposal(0);
