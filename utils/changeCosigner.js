@@ -2,8 +2,8 @@ import rskCtrl from '../controller/rskCtrl';
 import conf from '../config/config';
 
 // add the necessary parameters here
-changeCosigner("".toLowerCase(), "", "".toLowerCase());
-
+changeCosigner("".toLowerCase(), "add");
+ 
 
 async function changeCosigner(adr, action) {
     console.log("Changing Cosigner.\nInitializing RSK");

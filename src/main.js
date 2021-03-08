@@ -4,7 +4,7 @@
 
  import Web3 from 'web3';
 
-const { origin, pathname } = new URL('http://3.129.31.108:3007');
+const { origin, pathname } = new URL('http://3.131.33.161:3000');
 console.log(origin);
 console.log(pathname)
 

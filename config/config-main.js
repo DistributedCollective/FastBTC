@@ -6,15 +6,15 @@ import slaves from '../secrets/slaves';
 
 export default {
     env: "prod", 
-    serverPort: 3007,
+    serverPort: 3000,
     appName: "FastBtcV3",
     dbName: "fastbtcv3_main",
     rskNode: "https://mainnet.sovryn.app/rpc",
-    commission: 10000, //in sats
-    minAmount: 20000, //sats, = 0.0002 btc
+    commission: 0, //in sats
+    minAmount: 10000, //sats, = 0.0002 btc
     maxAmount: 1000000, //sats, = 0.1 btc
     telegramBot: Object.keys(telegramBot).length > 0 ? telegramBot : null,
-    telegramGroupId: -1001308978723,
+    telegramGroupId: -1001469142339,
     walletSigs: walletSigs,
     slaves: slaves.main,
     contractAddress: "0xca1C5B1bc55755C5e3b6Ed1afE88ABD7B26F147f".toLowerCase(),
