@@ -11,7 +11,7 @@ export default {
     dbName: "fastbtcv3_test",
     rskNode: "https://testnet.sovryn.app/rpc",
     commission: 500, //in sats
-    minAmount: 100000, //sats, = 0.001 btc
+    minAmount: 10000, //sats, = 0.001 btc
     maxAmount: 1000000, //sats, = 0.1 btc
     telegramBot: Object.keys(telegramBot).length > 0 ? telegramBot : null,
     telegramGroupId: -523868176,
