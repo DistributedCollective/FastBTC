@@ -10,6 +10,7 @@ async function getCosigners() {
         const adminOfSmartWallet = await rskCtrl.contract.methods["admin"]().call();
         const ownerOfSmartWallet = await rskCtrl.contract.methods["owner"]().call();
         const signaturesRequired = await rskCtrl.multisig.methods["required"]().call();
+        const numberOfTransactions = await rskCtrl.multisig.methods["getTransactionCount"](true, true).call();
     
         console.log("Managed wallet address: "+conf.contractAddress);
         console.log("Multisig contract address: "+conf.multisigAddress);
@@ -18,6 +19,7 @@ async function getCosigners() {
         console.log("Admin is ",adminOfSmartWallet);
         console.log("Onwer is ",ownerOfSmartWallet);
         console.log("Secrets/admin: "+conf.account.adr);
+        console.log("Number of tx: ",numberOfTransactions);
     } catch (e) {
         console.log("\nError getting cosigners", e)
         return null;
@@ -39,6 +41,6 @@ async function getProposal(txId){
     }
 }
 
-//getCosigners();
+getCosigners();
 
-getProposal(0);
+getProposal(1);
