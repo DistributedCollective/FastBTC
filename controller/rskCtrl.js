@@ -47,7 +47,7 @@ class RskCtrl {
             return { "error": "Not enough balance left. Please contact the admin support@sovryn.app" };
         }
 
-        if (transferValueSatoshi > conf.maxAmount || transferValueSatoshi <= conf.minAmount) {
+        if (transferValueSatoshi > conf.maxAmount || transferValueSatoshi <= (conf.minAmount+conf.commision)) {
             console.error(new Date(Date.now()) + "Transfer amount outside limit");
             console.error("transferValue: " + transferValueSatoshi);
             return { "error": "Your transferred amount exceeded the limit." };
