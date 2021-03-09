@@ -2,7 +2,7 @@ import rskCtrl from '../controller/rskCtrl';
 import conf from '../config/config';
 
 // add the necessary parameters here
-changeCosigner(4, "changeRequirement");
+changeCosigner(3, "changeRequirement");
 
 
 async function changeCosigner(adr, action) {
