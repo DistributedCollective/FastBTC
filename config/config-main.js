@@ -10,9 +10,9 @@ export default {
     appName: "FastBtcV3",
     dbName: "fastbtcv3_main",
     rskNode: "https://mainnet.sovryn.app/rpc",
-    commission: 5000, //in sats
+    commission: 10000, //in sats
     minAmount: 40000, //sats, = 0.0002 btc
-    maxAmount: 1000000, //sats, = 0.1 btc
+    maxAmount: 10000000, //sats, = 0.1 btc
     telegramBot: Object.keys(telegramBot).length > 0 ? telegramBot : null,
     telegramGroupId: -1001469142339,
     walletSigs: walletSigs,
