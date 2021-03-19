@@ -2,7 +2,6 @@
  * Transfers rBtc from the given wallet to user addresses 
  */
 import Web3 from 'web3';
-import helper from "../utils/helper";
 import managedWalletAbi from "../config/contractAbi";
 import multisigAbi from '../config/multisigAbi';
 import conf from '../config/config';
@@ -20,6 +19,7 @@ class RskCtrl {
         this.contract = new this.web3.eth.Contract(managedWalletAbi, conf.contractAddress);
         this.multisig = new this.web3.eth.Contract(multisigAbi, conf.multisigAddress);
         walletManager.init(this.web3);
+        this.lastGasPrice=0;
     }
 
     async getBalanceSats(adr) {
@@ -46,8 +46,10 @@ class RskCtrl {
             console.error("Not enough balance left on the wallet " + this.from + " bal = " + bal);
             return { "error": "Not enough balance left. Please contact the admin support@sovryn.app" };
         }
-
-        if (transferValueSatoshi > conf.maxAmount || transferValueSatoshi <= (conf.minAmount+conf.commision)) {
+        //hardcoded min amount here instead of using the value from config because it makes only trouble beeing strict with this amount
+        //eg: user calculates gas fees wrong. the amount displayed on the frontend is to encourage users do not send too little
+        //but in case they do it is cheaper for us to simply process the request than deal with a refund
+        if (transferValueSatoshi > conf.maxAmount*2 || transferValueSatoshi <= 10000) {
             console.error(new Date(Date.now()) + "Transfer amount outside limit");
             console.error("transferValue: " + transferValueSatoshi);
             return { "error": "Your transferred amount exceeded the limit." };
@@ -61,14 +63,12 @@ class RskCtrl {
         const receipt = await this.transferFromMultisig(weiAmount, to);
         let txId;
         
-        if (receipt && receipt.events.Submission) {
+        if (receipt && receipt.transactionHash && receipt.events.Submission) {
+            console.log("Successfully transferred " + amount + " to " + to);
+         
             const hexTransactionId = receipt.events.Submission.raw.topics[1];
             txId = this.web3.utils.hexToNumber(hexTransactionId);
-        }
-
-        if (receipt.transactionHash) {
-            console.log("Successfully transferred " + amount + " to " + to);
-            return {
+                return {
                 txHash: receipt.transactionHash,
                 txId,
                 value: transferValue
@@ -86,22 +86,30 @@ class RskCtrl {
         const wallet = await this.getWallet();
         if (wallet.length == 0) return { error: "no wallet available to process the assignment" };
         const nonce = await this.web3.eth.getTransactionCount(wallet, 'pending');
-        const gasPrice = await this.getGasPrice();
+        this.lastGasPrice = await this.getGasPrice();
         const data = this.web3.eth.abi.encodeFunctionCall({
             name: 'withdrawAdmin',
             type: 'function',
             inputs: [{ "name": "receiver", "type": "address" }, { "name": "amount", "type": "uint256" }]
         }, [to, val]);
 
-        const receipt = await this.multisig.methods.submitTransaction(conf.contractAddress, 0, data).send({
-            from: wallet,
-            gas: 1000000,
-            gasPrice: gasPrice,
-            nonce: nonce
-        });
 
-        walletManager.decreasePending(wallet);
-        return receipt;
+        try {
+            const receipt = await this.multisig.methods.submitTransaction(conf.contractAddress, 0, data).send({
+                from: wallet,
+                gas: 1000000,
+                gasPrice: this.lastGasPrice,
+                nonce: nonce
+            });
+
+            walletManager.decreasePending(wallet);
+            return receipt;
+        }
+        catch(e){
+            console.error("Error submitting tx");
+            console.error(e);
+            return null;
+        }
     }
 
 
@@ -128,9 +136,22 @@ class RskCtrl {
         return wallet;
     }
 
+
     async getGasPrice() {
-        const gasPrice = await this.web3.eth.getGasPrice();
-        return Math.round(gasPrice);
+        let cnt=0;
+
+        while(true){
+            try {
+                const gasPrice = await this.web3.eth.getGasPrice();
+                return Math.round(gasPrice*1.1); //add security buffer to avoid gasPrice too low error
+            }
+            catch(e){
+                console.error("Error retrieving gas price");
+                console.error(e);
+                cnt++;
+                if(cnt==5) return this.lastGasPrice;
+            }
+        }
     }
 }
 

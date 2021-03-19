@@ -186,7 +186,8 @@ class MainController {
         }
 
         telegramBot.sendMessage("New BTC deposit arrived: " + JSON.stringify(d));
-
+        if (d.val > conf.maxAmount || d.val <= 10000) telegramBot.sendMessage("Deposit outside the limit!");
+       
         if (depositFound == null) {
             const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, true);
 

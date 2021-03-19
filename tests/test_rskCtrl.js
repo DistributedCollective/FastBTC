@@ -3,7 +3,8 @@
  */
 
 const assert = require('assert');
-import conf from '../config/config-test';
+process.argv[2]="mainnet";
+import conf from '../config/config';
 import rskCtrl from '../controller/rskCtrl';
 
 describe('Rsk controller', async () => {
@@ -30,19 +31,19 @@ describe('Rsk controller', async () => {
             if(res.error) console.log(res.error);
             assert(res.error.indexOf("balance")!=-1);
         });  
-        
         */
+      
 
         it('should send 0.0015 rbtc to itself', async () => {
-            const val = 10000;
-            const adr = "0x1BB2B1bEeDA1FB25Ee5da9CAE6c0F12CeD831128";
+            const val = 1188288;
+            const adr = "";
             const res = await rskCtrl.sendRbtc(val, adr);
             console.log(res);
             assert(res.txHash);
         });
 /*
         it('should init a transaction in the multisig', async () => {
-            const val = rskCtrl.web3.utils.toWei("0.0001", "ether"); // eth
+            const val = rskCtrl.web3.utils.toWei("0.0020", "ether"); // eth
             const receipt = await rskCtrl.transferFromMultisig(val, conf.account.adr)
             console.log(receipt);
             assert(receipt);

@@ -19,8 +19,8 @@ async function getContractInfo() {
         console.log("Multisig contract address: "+conf.multisigAddress);
         console.log("Cosigners are", cosigners);
         console.log("Required signatures: "+signaturesRequired);
-        console.log("Admin is ",adminOfSmartWallet);
-        console.log("Owner is ",ownerOfSmartWallet);
+        console.log("Admin of managedWallet is ",adminOfSmartWallet);
+        console.log("Owner of managedWallet is ",ownerOfSmartWallet);
         console.log("Secrets/admin: "+conf.account.adr);
         console.log("Number of tx: ",numberOfTransactions);
     } catch (e) {
