@@ -10,6 +10,7 @@ export default {
     appName: "FastBtcV3",
     dbName: "fastbtcv3_main",
     rskNode: "https://mainnet.sovryn.app/rpc",
+    blockExplorer: "https://explorer.rsk.co",
     commission: 10000, //in sats
     minAmount: 40000, //sats, = 0.0002 btc
     maxAmount: 10000000, //sats, = 0.1 btc

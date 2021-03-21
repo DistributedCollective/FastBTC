@@ -222,7 +222,9 @@ class MainController {
             txHash: resTx.txHash,
             value: Number(resTx.value).toFixed(6)
         });
-        telegramBot.sendMessage(Number(resTx.value).toFixed(6) + " Rsk withdrawal initiated for " + user.web3adr);
+        const msg = Number(resTx.value).toFixed(6) + " Rsk withdrawal initiated for " + user.web3adr;
+        if (telegramBot) telegramBot.sendMessage(`${msg} ${conf.blockExplorer}/tx/${resTx.txHash}`);
+
     }
 
     emitToUserSocket(userLabel, event, data) {

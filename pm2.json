@@ -8,6 +8,7 @@
       "args": "mainnet password",
       "out_file": "./logs/out.log",
       "error_file": "./logs/err.log",
+      "time": true,
       "env": {
         "NODE_ENV": "production"
       }

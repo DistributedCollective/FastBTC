@@ -38,7 +38,8 @@ class RskCtrl {
     async sendRbtc(amount, to) {
         console.log("Trying to send " + amount + " to: " + to);
        
-        let transferValueSatoshi = Number(amount) - conf.commission;
+        let transferValueSatoshi = Number(amount) - conf.commission; //subtract base fee
+        transferValueSatoshi=transferValueSatoshi-(transferValueSatoshi/1000*2); //subtract 0.2% commision
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));
         console.log("transferValueSatoshi "+transferValueSatoshi)
         const bal = await this.getBalanceSats(conf.contractAddress);
@@ -63,7 +64,7 @@ class RskCtrl {
         const receipt = await this.transferFromMultisig(weiAmount, to);
         let txId;
         
-        if (receipt && receipt.transactionHash && receipt.events.Submission) {
+        if (receipt && receipt.transactionHash && receipt.events && receipt.events.Submission) {
             console.log("Successfully transferred " + amount + " to " + to);
          
             const hexTransactionId = receipt.events.Submission.raw.topics[1];
