@@ -1,3 +1,7 @@
+/**
+ * Slaves (confirmation nodes) controller. Authenticate the slaves and returns Btc node credentials as well as Btc deposit payment information
+ */
+
 import dbCtrl from './dbCtrl';
 import conf from '../config/config';
 import Web3 from 'web3';
