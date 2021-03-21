@@ -29,7 +29,7 @@ Webpack
 1. npm install
 2. npm run build-client
 3. Create empty directories "logs", "secrets" and "db"
-4. Set the managed wallet smart and multisig contract addresses in config/[config_mainnet | config_testnet] 
+4. Set the managed wallet and multisig contract addresses in config/[config_mainnet | config_testnet] 
 5. Within "secrets" a file accounts.js with the credentials of the admin wallet
 
 export default {

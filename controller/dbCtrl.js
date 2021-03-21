@@ -1,7 +1,6 @@
 /**
  * Database controller
  * Stores user deposits on a given Btc address and corresponding Rsk transfers
- * 
  */
 
 const sqlite3 = require('sqlite3').verbose();

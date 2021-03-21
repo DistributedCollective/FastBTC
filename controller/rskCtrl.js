@@ -1,5 +1,5 @@
 /**
- * Transfers rBtc from the given wallet to user addresses 
+ * Initiates rBtc withdrawals on the multisig contract 
  */
 import Web3 from 'web3';
 import managedWalletAbi from "../config/contractAbi";
@@ -39,7 +39,7 @@ class RskCtrl {
         console.log("Trying to send " + amount + " to: " + to);
        
         let transferValueSatoshi = Number(amount) - conf.commission; //subtract base fee
-        transferValueSatoshi=transferValueSatoshi-(transferValueSatoshi/1000*2); //subtract 0.2% commision
+        transferValueSatoshi=transferValueSatoshi-(transferValueSatoshi/1000*1.5); //subtract 0.15% commision
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));
         console.log("transferValueSatoshi "+transferValueSatoshi)
         const bal = await this.getBalanceSats(conf.contractAddress);
@@ -138,6 +138,10 @@ class RskCtrl {
     }
 
 
+    /**
+     * The Rsk node does not return a valid response occassionally for a short period of time
+     * Thats why the request is repeated 5 times and in case it still failes the last known gas price is returned
+     */
     async getGasPrice() {
         let cnt=0;
 

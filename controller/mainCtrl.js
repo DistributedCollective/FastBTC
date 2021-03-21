@@ -126,11 +126,8 @@ class MainController {
         }
     }
 
-
-
-
     /**
-     * Get max/min amount for deposit to user address
+     * Get min/max amount for deposits
      * @param socket - client socket
      * @param cb - callback function
      * @returns {Promise<void>}
