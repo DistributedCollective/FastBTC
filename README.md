@@ -1,15 +1,20 @@
 # Fast-Btc-Relay
 
 Relays Btc to RBtc. 
-For every RBtc address provided by the user a BTC deposit addresses (p2wsh/p2ms) is generated from a multisig hd wallet (bip32).
-A smart contract on Rsk provides RBtc which can be withdrawn from an authorized admin wallet.
-A watcher is listening 24h-7 for incoming transactions on all created Btc deposit addresses. If a new transaction is detected the admin wallet credits the same amount on the users Rsk wallet address minus a small provision. A sqlite database keeps track of the deposits and withdrawals.
+For every RBtc address provided by the user a BTC deposit addresses (p2sh/p2ms) is generated from a multisig hd wallet (bip32).
+A smart contract* on Rsk provides RBtc which can be withdrawn from an authorized admin wallet**.
+A watcher is listening 24h-7 for incoming transactions on all created Btc deposit addresses. If a new deposit transaction is detected a withdraw transaction with the same amount minus a small commision is initiated on the Rsk multisig contract. N confirmation nodes*** approve the withdraw request after requesting the Btc transaction hash and address. A sqlite database keeps track of the deposits and withdrawals.
+
 Improvements:
 - Include automated Btc->RBtc conversion via 2WP.
 - Eliminate trust on BTC deposits by integrating atomic swaps with the smart contract as counterparty.
 - Improve security: the higher the amount the more confirmations should be waited for. 
 
-
+```
+* https://github.com/DistributedCollective/ManagedWallet/blob/master/contracts/ManagedWallet.sol
+** https://github.com/DistributedCollective/Sovryn-smart-contracts/blob/development/contracts/multisig/MultiSigWallet.sol
+*** https://github.com/DistributedCollective/fastBTC-confirmation-node
+```
 
 ### Requirements
 
@@ -24,7 +29,8 @@ Webpack
 1. npm install
 2. npm run build-client
 3. Create empty directories "logs", "secrets" and "db"
-4. Within "secrets" a file accounts.js with the credentials of the admin wallet
+4. Set the managed wallet smart and multisig contract addresses in config/[config_mainnet | config_testnet] 
+5. Within "secrets" a file accounts.js with the credentials of the admin wallet
 
 export default {
     "test": {
@@ -49,25 +55,8 @@ npm run start:main yourpassword
 export default {
     "test": {
         adr: "0x..."
-        ks: {
-            version: 3,
-            id: '',
-            address: '',
-            crypto: {
-              ciphertext: '',
-              cipherparams: { iv: '' },
-              cipher: '',
-              kdf: '',
-              kdfparams: {
-                dklen: xx,
-                salt: '',
-                n: xxxx,
-                r: x,
-                p: x
-              },
-              mac: ''
-            }
-        }    },
+        ks: {...}
+    },
     "main": {
         adr: "0x..."
         ks: {...}
@@ -75,79 +64,36 @@ export default {
 }
 ```
 
-and telegram.js for telegram notifications on successful deposits/withdraws and errors
+and secrets/telegram.js for telegram notifications on successful deposits/withdraws and errors
 
-```sh
-export default {
-    infoBotToken: "...",
-    errorBotToken: "..."
-}
+```
+export default "bot-token-id";
 ```
   
-walletSigs.main.js for the multisigs hd wallet  
+Add walletSigs.main.js  and walletSigs.test.js for the multisigs hd wallet  
 
 ```sh
 export default {
     pubKeys: [
-        "pub-key1",
-        "pub-key2",
-        "pub-key3"
-    ]
-}
+        "tpub...",
+        "tpub...",
+        "tpub..."
+    ],
+    cosigners:2
+} 
 ```
+In case only one network is used add the other one with the example data from above.
 
-To generate the keys run "npm run [genAdminTestnet | genAdminMainnet]" 3 times. Paste the 12 words from first output to "myWordSeed" and xpub from second output to pub-key1 and xpub from third output to pub-key2. 
+To generate the signing keys run "npm run [genAdminTestnet | genAdminMainnet]" and add the xpub from the output to pubKeys array. 
 
-and cryptocompare.js for btc price polling
-
-```sh
-export const apiKey = "...";
-```
-
-5. Set the block number of Btc test- or mainnet on config/store.json from which polling should start
-```sh
-{
-	"lastBlockNumber": 1897463
-}
-```
 
 
 ### Start
 
 ```sh
-npm run start
+npm run start [mainnet | testnet] [walletpassword]
 ```
 Check the frontend at http://your-ip:port/ 
-
-
-### Withdraw from Btc multisig
-
-1. Make sure the database in db/ is up-to-date and matches the name in the config file, 
-2. Add a receiver address on utils/withdrawBtc.js on line 7
-3. Change the gasPrice on line 8 (optional)
-3. Add the 12 seed words from one of the 3 accounts on line 9 and the private key of the second account on line 10,
-3. then execute:  
-
-```sh
-npm run [withdrawBtcMainnet | withdrawBtcTestnet]
-```
-
-
-### Withdraw from the smart contract on Rsk
-
- 1. Set the receiver in utils/withdrawRsk.js on line 6
- 2. In case you are the admin you are done, in case you are the contract owner: add your private key and wallet address on line 8 and 9 and change the contract call from "withdrawAdmin" to "withdraw" on line 21
- 3. Specify the amount on line 5,
- 4. then execute
-
-```sh
-npm run [withdrawRskMainnet | withdrawRskTestnet]
-```
-
-
-### Control the database
-
-Sqlite commandline tool: type sqlite3 in the shell, ctrl+d to exit
 
 
 License

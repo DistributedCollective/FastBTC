@@ -7,6 +7,15 @@ const receiver = "";
 withdraw(v, receiver);
 
 
+async function withdraw(val, adr){
+    console.log("init rsk");
+    await rskCtrl.init();
+    const res = await rskCtrl.sendRbtc(val, adr);
+    console.log(res);
+}
+
+/*
+//old version
 async function withdraw(val, to) {
     console.log("init rsk");
     await rskCtrl.init();
@@ -36,3 +45,5 @@ async function withdrawList(){
 const list=["adr","val-in-btc"];
 
 //withdrawList();
+
+*/
