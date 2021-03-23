@@ -39,7 +39,7 @@ class RskCtrl {
         console.log("Trying to send " + amount + " to: " + to);
        
         let transferValueSatoshi = Number(amount) - conf.commission; //subtract base fee
-        transferValueSatoshi=transferValueSatoshi-(transferValueSatoshi/1000*1.5); //subtract 0.15% commision
+        transferValueSatoshi=transferValueSatoshi-(transferValueSatoshi/1000*2); //subtract 0.15% commision
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));
         console.log("transferValueSatoshi "+transferValueSatoshi)
         const bal = await this.getBalanceSats(conf.contractAddress);

@@ -1,6 +1,7 @@
 import dbCtrl from './dbCtrl';
 import conf from '../config/config';
 import Web3 from 'web3';
+import Util from '../utils/helper';
 
 class SlaveCtrl {
     constructor() {
@@ -68,14 +69,25 @@ class SlaveCtrl {
     async returnPayment(req, res) {
         console.log("Return btc address");
         console.log(req.body)
-        const { btcAdr, txHash} = await dbCtrl.getPaymentInfo(req.body.txId);
-        if(!btcAdr || !txHash) {
-            console.error("Error retrieving user payment info");
-            return res.status(403).json("Error retrieving user payment info");
+        let cnt=0;
+
+        //dirty quickfix for payment undefined response from db
+        while(true) {
+            const { btcAdr, txHash} = await dbCtrl.getPaymentInfo(req.body.txId);
+            if(!btcAdr || !txHash) {
+                console.error("Error retrieving user payment info. "+cnt+" attempt");
+                cnt++;
+
+                if(cnt==5) return res.status(403).json("Error retrieving user payment info");
+                else {
+                    Util.wasteTime(1);
+                    continue;
+                }
+            }
+            return res.status(200).json({btcAdr, txHash});  
         }
-        res.status(200).json({btcAdr, txHash});  
     }
-}
+}  
 
 
 export default new SlaveCtrl();

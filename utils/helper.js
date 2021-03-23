@@ -1,8 +1,6 @@
 /**
  * Helper and utilities functions
  */
-import configs from '../config/config-main';
-import fetch from 'node-fetch';
 import * as util from 'ethereumjs-util';
 import Web3 from 'web3';
 
