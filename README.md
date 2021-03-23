@@ -87,6 +87,45 @@ In case only one network is used add the other one with the example data from ab
 To generate the signing keys run "npm run [genAdminTestnet | genAdminMainnet]" and add the xpub from the output to pubKeys array. 
 
 
+Add secrets/btcNode.js with the credentials of a Btc node for main and testnet
+
+
+```sh
+export default {
+    main: {
+        url: "",
+        user: "",
+        password: ""
+    },
+    test: {
+        url: "",
+        user: "",
+        password: ""
+    }
+}
+```
+
+And last but not least the signer addresses of the confirmation nodes in secrets/slaves.js
+
+
+```sh
+export default {
+    test:
+        [
+            "0xcafecafecafe".toLowerCase(),
+            ...
+        ],
+    main:
+        [
+            "0xcafecafecafe".toLowerCase(),
+            ....
+        ]
+}
+```
+
+
+
+
 
 ### Start
 
