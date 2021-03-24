@@ -5,12 +5,13 @@ export default class Transaction extends BaseModel {
         const sql = `CREATE TABLE IF NOT EXISTS transactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             userAdrLabel text,
-            txHash text UNIQUE,
-            txId INTEGER UNIQUE,
+            txHash text,
+            txId INTEGER,
             valueBtc INTEGER,
             dateAdded datetime,
             status text,
-            type text
+            type text,
+            unique(txHash, userAdrLabel)
         )`;
 
         super(db, 'transactions', sql);
@@ -39,7 +40,7 @@ export default class Transaction extends BaseModel {
 
     insertTransferTx({userAdrLabel, txHash, valueBtc, status}) {
         return super.insert({
-            userAdrLabel, txHash, valueBtc, 
+            userAdrLabel, txHash, valueBtc,
             type: "transfer",
             dateAdded: new Date(),
             status: status

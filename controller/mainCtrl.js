@@ -36,7 +36,7 @@ class MainController {
 
         this.io.on('connection', socket => {
             console.log(new Date(Date.now()) + ", A user connected", socket.id);
-    
+
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.getTxAmount.apply(this, [...args]));
@@ -53,12 +53,9 @@ class MainController {
      */
     async getDepositAddress(socket, address, cb) {
         try {
-            console.log("User get deposit address", address);
-
             if (address == null || address === '') {
                 return cb({ error: "Address is empty" });
             }
-
 
             let user = await dbCtrl.getUserByAddress(address);
 
@@ -98,7 +95,6 @@ class MainController {
      * Loads all deposits from user
      */
     async getDepositHistory(address, cb) {
-        console.log("User get deposit history", address);
 
         if (address == null || address === '') {
             return cb({ error: "Address is empty" });
@@ -174,17 +170,17 @@ class MainController {
 
 
     async processDeposits(d) {
-        const depositFound = await dbCtrl.getDeposit(d.txHash);
+        const depositFound = await dbCtrl.getDeposit(d.txHash, d.label);
 
         if (depositFound) {
             if (depositFound.status === 'confirmed') return;
 
-            await dbCtrl.confirmDeposit(d.txHash); 
+            await dbCtrl.confirmDeposit(d.txHash, d.label);
         }
 
         telegramBot.sendMessage("New BTC deposit arrived: " + JSON.stringify(d));
         if (d.val > conf.maxAmount || d.val <= 10000) telegramBot.sendMessage("Deposit outside the limit!");
-       
+
         if (depositFound == null) {
             const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, true);
 
@@ -209,7 +205,7 @@ class MainController {
             return;
         }
 
-        await dbCtrl.updateDeposit(d.txHash, resTx.txId);
+        await dbCtrl.updateDeposit(d.txHash, resTx.txId, d.label);
         await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val);
 
         console.log("Successfully sent " + d.val + " to " + user.web3adr);

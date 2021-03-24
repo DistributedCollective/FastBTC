@@ -1,5 +1,5 @@
 /**
- * Initiates rBtc withdrawals on the multisig contract 
+ * Initiates rBtc withdrawals on the multisig contract
  */
 import Web3 from 'web3';
 import managedWalletAbi from "../config/contractAbi";
@@ -37,21 +37,21 @@ class RskCtrl {
      */
     async sendRbtc(amount, to) {
         console.log("Trying to send " + amount + " to: " + to);
-       
+
         let transferValueSatoshi = Number(amount) - conf.commission; //subtract base fee
         transferValueSatoshi=transferValueSatoshi-(transferValueSatoshi/1000*2); //subtract 0.15% commision
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));
         console.log("transferValueSatoshi "+transferValueSatoshi)
         const bal = await this.getBalanceSats(conf.contractAddress);
         if (bal < amount) {
-            console.error("Not enough balance left on the wallet " + this.from + " bal = " + bal);
+            console.error("Not enough balance left on the wallet " + this.from + " bal = " + bal, { to });
             return { "error": "Not enough balance left. Please contact the admin support@sovryn.app" };
         }
         //hardcoded min amount here instead of using the value from config because it makes only trouble beeing strict with this amount
         //eg: user calculates gas fees wrong. the amount displayed on the frontend is to encourage users do not send too little
         //but in case they do it is cheaper for us to simply process the request than deal with a refund
         if (transferValueSatoshi > conf.maxAmount*2 || transferValueSatoshi <= 10000) {
-            console.error(new Date(Date.now()) + "Transfer amount outside limit");
+            console.error(new Date(Date.now()) + "Transfer amount outside limit", { to });
             console.error("transferValue: " + transferValueSatoshi);
             return { "error": "Your transferred amount exceeded the limit." };
         }
@@ -63,10 +63,10 @@ class RskCtrl {
 
         const receipt = await this.transferFromMultisig(weiAmount, to);
         let txId;
-        
+
         if (receipt && receipt.transactionHash && receipt.events && receipt.events.Submission) {
             console.log("Successfully transferred " + amount + " to " + to);
-         
+
             const hexTransactionId = receipt.events.Submission.raw.topics[1];
             txId = this.web3.utils.hexToNumber(hexTransactionId);
                 return {
@@ -107,7 +107,7 @@ class RskCtrl {
             return receipt;
         }
         catch(e){
-            console.error("Error submitting tx");
+            console.error("Error submitting tx", { to, val });
             console.error(e);
             return null;
         }
@@ -116,7 +116,7 @@ class RskCtrl {
 
 
     /**
-     * @notice loads a free wallet from the wallet manager 
+     * @notice loads a free wallet from the wallet manager
      * @dev this is secured by a mutex to make sure we're never exceeding 4 pending transactions per wallet
      */
     async getWallet() {
