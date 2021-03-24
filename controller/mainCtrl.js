@@ -179,7 +179,7 @@ class MainController {
         if (depositFound) {
             if (depositFound.status === 'confirmed') return;
 
-            await dbCtrl.confirmDeposit(d.txHash);
+            await dbCtrl.confirmDeposit(d.txHash); 
         }
 
         telegramBot.sendMessage("New BTC deposit arrived: " + JSON.stringify(d));

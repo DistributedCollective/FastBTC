@@ -137,7 +137,8 @@ class DbCtrl {
                 status: isConfirmed ? 'confirmed' : 'pending'
             });
         } catch (e) {
-            console.log(e);
+            console.error("error adding deposit for "+txHash+" user: "+userAdrLabel+", value: "+valueBtc);
+            console.error(e);
             return null;
         }
     }
@@ -152,7 +153,7 @@ class DbCtrl {
 
             return await this.transactionRepository.findOne(criteria);
         } catch (e) {
-            console.log(e);
+            console.error(e);
             return null;
         }
     }
@@ -235,7 +236,8 @@ class DbCtrl {
                 type: "deposit"
             }, {status: 'confirmed'});
         } catch (e) {
-            console.log(e);
+            console.error("error confirming deposit for "+txHash)
+            console.error(e);
             return null;
         }
     }
