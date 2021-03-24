@@ -21,8 +21,8 @@ async function exportDb() {
 
     dbCtrl.db.all(sql, [], (err, rows) => {
         if (err) {
-            console.log('Error running sql: ' + sql);
-            console.log(err);
+            console.error('Error running sql: ' + sql);
+            console.error(err);
         }
         else {
             console.log(rows);
@@ -34,7 +34,7 @@ async function exportDb() {
             }
 
             console.log(stats);
-            
+
             fs.writeFile('tx.json', JSON.stringify(rows), (err) => {
                 if (err) {
                     throw err;

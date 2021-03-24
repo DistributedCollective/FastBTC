@@ -50,11 +50,11 @@ class DbCtrl {
 
 
             if (user) {
-                console.log("user found");
+                console.log("getUserByAddress: user found");
                 console.log(user);
             }
             else {
-                console.log("no user found");
+                console.log("getUserByAddress: no user found");
             }
 
             return user;
@@ -142,14 +142,14 @@ class DbCtrl {
             return null;
         }
     }
-    
-    async getDeposit(txHash, label = '') {
+
+    async getDeposit(txHash, label) {
         try {
             const criteria = {
                 txHash: txHash,
-                type: "deposit"
+                type: "deposit",
+                userAdrLabel: label,
             };
-            if (label) criteria['userAdrLabel'] = label;
 
             return await this.transactionRepository.findOne(criteria);
         } catch (e) {
@@ -158,32 +158,17 @@ class DbCtrl {
         }
     }
 
-    async getDepositByTxId(txHash, label = '') {
-        try {
-            const criteria = {
-                txHash: txHash,
-                type: "deposit"
-            };
-            if (label) criteria['userAdrLabel'] = label;
-
-            return await this.transactionRepository.findOne(criteria);
-        } catch (e) {
-            console.log(e);
-            return null;
-        }
-    }
-
     getDepositHistory(userWeb3Adr) {
         const sql = "select user.id, web3adr, btcadr, valueBtc, type, transactions.dateAdded, transactions.txHash, status"
         + " from user cross join transactions on user.label = transactions.userAdrLabel "
         +"AND web3adr = '"+userWeb3Adr+"';";
-       
+
         return new Promise(resolve=> {
             try {
                 this.db.all(sql, [], (err, rows) => {
                     if (err) {
-                        console.log('Error running sql: ' + sql);
-                        console.log(err);
+                        console.error('Error running sql: ' + sql);
+                        console.error(err);
                         return resolve(null);
                     }
                     else {
@@ -194,8 +179,8 @@ class DbCtrl {
                 });
             }
             catch(e){
-                console.log('Error executing sql: ' + sql);
-                console.log(err);
+                console.error('Error executing sql: ' + sql);
+                console.error(err);
                 return resolve(null);
             }
         });
@@ -203,13 +188,13 @@ class DbCtrl {
 
     getLastTxTimestamp(){
         const sql = "select dateAdded from transactions where type = 'deposit' order by dateAdded desc;";
-       
+
         return new Promise(resolve=> {
             try {
                 this.db.get(sql, [], (err, result) => {
                     if (err) {
-                        console.log('Error running sql: ' + sql);
-                        console.log(err);
+                        console.error('Error running sql: ' + sql);
+                        console.error(err);
                         return resolve(Date.now());
                     }
                     else {
@@ -228,11 +213,12 @@ class DbCtrl {
             }
         });
     }
-    
-    async confirmDeposit(txHash) {
+
+    async confirmDeposit(txHash, label) {
         try {
             return await this.transactionRepository.update({
                 txHash: txHash,
+                userAdrLabel: label,
                 type: "deposit"
             }, {status: 'confirmed'});
         } catch (e) {
@@ -241,11 +227,11 @@ class DbCtrl {
             return null;
         }
     }
- 
-    async updateDeposit(txHash, txId) {
-        console.log("update deposit tx hash "+txHash+", txId "+txId);
+
+    async updateDeposit(txHash, txId, label) {
+        console.log("update deposit tx hash "+txHash+", txId "+txId + ", label" + label);
         try {
-            return await this.transactionRepository.update({txHash: txHash, type:"deposit"}, {txId: txId});
+            return await this.transactionRepository.update({txHash: txHash, userAdrLabel: label, type:"deposit"}, {txId: txId});
         } catch (e) {
             console.log(e);
             return null;
@@ -297,7 +283,7 @@ class DbCtrl {
     }
 
     /**
-     *
+     * Use with caution, most likely you need to search for both txHash and userAdrLabel to make sure item is unique
      * @param { string[] } txHashList
      * @returns {Promise<unknown>}
      */
