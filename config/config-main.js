@@ -5,7 +5,7 @@ import accounts from "../secrets/accounts";
 import slaves from '../secrets/slaves';
 
 export default {
-    env: "prod", 
+    env: "prod",
     serverPort: 3000,
     appName: "FastBtcV3",
     dbName: "fastbtcv3_main",
@@ -13,7 +13,7 @@ export default {
     blockExplorer: "https://explorer.rsk.co",
     commission: 5000, //in sats
     minAmount: 40000, //sats, = 0.0002 btc
-    maxAmount: 25000000, //sats, = 0.1 btc
+    maxAmount: 100000000, //sats, = 1 btc
     telegramBot: Object.keys(telegramBot).length > 0 ? telegramBot : null,
     telegramGroupId: -1001469142339,
     walletSigs: walletSigs,
