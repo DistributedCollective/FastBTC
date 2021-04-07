@@ -275,6 +275,4 @@ export default class BitcoinNodeWrapper {
             return [];
         }
     }
-
 }
-

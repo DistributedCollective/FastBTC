@@ -78,11 +78,11 @@ class BitcoinCtrl {
                 const addrLabels = await dbCtrl.getUserLabels(currentOffset, checkSize);
 
                 if (addrLabels && addrLabels.length > 0) {
-                    console.log(addrLabels.length + " users");
+                    console.log("%d users", addrLabels.length);
                     for (let adrLabel of addrLabels) {
                         const txList = await this.api.listReceivedTxsByLabel(adrLabel, 9999);
 
-                        // console.log("Address label %s has %s tx", adrLabel, (txList||[]).length);
+                        console.log("Address label %s has %s tx", adrLabel, (txList||[]).length);
                         for (const tx of (txList || [])) {
                             const confirmations = tx && tx.confirmations;
 

@@ -5,7 +5,7 @@ import Web3 from 'web3';
 import managedWalletAbi from "../config/contractAbi";
 import multisigAbi from '../config/multisigAbi';
 import conf from '../config/config';
-import { Mutex } from 'async-mutex';
+import {Mutex} from 'async-mutex';
 import walletManager from './walletCtrl';
 import U from '../utils/helper';
 
@@ -19,7 +19,7 @@ class RskCtrl {
         this.contract = new this.web3.eth.Contract(managedWalletAbi, conf.contractAddress);
         this.multisig = new this.web3.eth.Contract(multisigAbi, conf.multisigAddress);
         walletManager.init(this.web3);
-        this.lastGasPrice=0;
+        this.lastGasPrice = 0;
     }
 
     async getBalanceSats(adr) {
@@ -39,27 +39,30 @@ class RskCtrl {
         console.log("Trying to send " + amount + " to: " + to);
 
         let transferValueSatoshi = Number(amount) - conf.commission; //subtract base fee
-        transferValueSatoshi=transferValueSatoshi-(transferValueSatoshi/1000*2); //subtract 0.15% commision
+
+        transferValueSatoshi=transferValueSatoshi-(transferValueSatoshi/1000*2); //subtract 0.2% commision
+
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));
-        console.log("transferValueSatoshi "+transferValueSatoshi)
+        console.log("transferValueSatoshi " + transferValueSatoshi)
         const bal = await this.getBalanceSats(conf.contractAddress);
         if (bal < amount) {
             console.error("Not enough balance left on the wallet " + this.from + " bal = " + bal, { to });
             return { "error": "Not enough balance left. Please contact the admin support@sovryn.app" };
         }
+
         //hardcoded min amount here instead of using the value from config because it makes only trouble beeing strict with this amount
         //eg: user calculates gas fees wrong. the amount displayed on the frontend is to encourage users do not send too little
         //but in case they do it is cheaper for us to simply process the request than deal with a refund
-        if (transferValueSatoshi > conf.maxAmount*2 || transferValueSatoshi <= 10000) {
-            console.error(new Date(Date.now()) + "Transfer amount outside limit", { to });
+        if (transferValueSatoshi > conf.maxAmount * 2 || transferValueSatoshi <= 10000) {
+            console.error("transfer amount outside limit", { to });
             console.error("transferValue: " + transferValueSatoshi);
-            return { "error": "Your transferred amount exceeded the limit." };
+            return {"error": "Your transferred amount exceeded the limit."};
         }
 
         const transferValue = (transferValueSatoshi / 1e8).toString();
-        console.log("transfer value "+transferValue)
+        console.log("transfer value " + transferValue)
         const weiAmount = this.web3.utils.toWei(transferValue, 'ether');
-        console.log("wei amount "+weiAmount)
+        console.log("wei amount " + weiAmount)
 
         const receipt = await this.transferFromMultisig(weiAmount, to);
         let txId;
@@ -69,29 +72,33 @@ class RskCtrl {
 
             const hexTransactionId = receipt.events.Submission.raw.topics[1];
             txId = this.web3.utils.hexToNumber(hexTransactionId);
-                return {
+            return {
                 txHash: receipt.transactionHash,
                 txId,
                 value: transferValue
             };
-        }
-        else {
+        } else {
             console.error("Error sending " + amount + " to: " + to);
             console.error(receipt);
-            return { "error": "Error sending rsk. Please contact the admin support@sovryn.app." };
+            return {"error": "Error sending rsk. Please contact the admin support@sovryn.app."};
         }
     }
 
     async transferFromMultisig(val, to) {
-        console.log("transfer " + val + " to " + to)
+        console.log("transfer %s to %s", val, to)
         const wallet = await this.getWallet();
-        if (wallet.length == 0) return { error: "no wallet available to process the assignment" };
+        if (wallet.length === 0) {
+            return {error: "no wallet available to process the assignment"};
+        }
         const nonce = await this.web3.eth.getTransactionCount(wallet, 'pending');
         this.lastGasPrice = await this.getGasPrice();
         const data = this.web3.eth.abi.encodeFunctionCall({
             name: 'withdrawAdmin',
             type: 'function',
-            inputs: [{ "name": "receiver", "type": "address" }, { "name": "amount", "type": "uint256" }]
+            inputs: [
+                {"name": "receiver", "type": "address"},
+                {"name": "amount",   "type": "uint256"}
+            ]
         }, [to, val]);
 
 
@@ -106,13 +113,12 @@ class RskCtrl {
             walletManager.decreasePending(wallet);
             return receipt;
         }
-        catch(e){
+        catch(e) {
             console.error("Error submitting tx", { to, val });
             console.error(e);
             return null;
         }
     }
-
 
 
     /**
@@ -129,8 +135,7 @@ class RskCtrl {
             //because the node can't handle too many simultaneous requests
             await U.wasteTime(0.5);
             this.mutex.release();
-        }
-        catch (e) {
+        } catch (e) {
             this.mutex.release();
             console.error(e);
         }
@@ -143,18 +148,19 @@ class RskCtrl {
      * Thats why the request is repeated 5 times and in case it still failes the last known gas price is returned
      */
     async getGasPrice() {
-        let cnt=0;
+        let cnt = 0;
 
-        while(true){
+        while (true) {
             try {
                 const gasPrice = await this.web3.eth.getGasPrice();
-                return Math.round(gasPrice*1.1); //add security buffer to avoid gasPrice too low error
-            }
-            catch(e){
+                return Math.round(gasPrice * 1.1); //add security buffer to avoid gasPrice too low error
+            } catch (e) {
                 console.error("Error retrieving gas price");
                 console.error(e);
                 cnt++;
-                if(cnt==5) return this.lastGasPrice;
+                if (cnt === 5) {
+                    return this.lastGasPrice;
+                }
             }
         }
     }
