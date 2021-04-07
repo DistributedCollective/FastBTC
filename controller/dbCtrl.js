@@ -50,8 +50,7 @@ class DbCtrl {
 
 
             if (user) {
-                console.log("getUserByAddress: user found");
-                console.log(user);
+                console.log("getUserByAddress: user found", user);
             }
             else {
                 console.log("getUserByAddress: no user found");
@@ -143,17 +142,19 @@ class DbCtrl {
         }
     }
 
-    async getDeposit(txHash, label) {
+    async getDeposit(txHash, label = '') {
         try {
             const criteria = {
                 txHash: txHash,
-                type: "deposit",
-                userAdrLabel: label,
+                type: "deposit"
             };
+            if (label) {
+                criteria['userAdrLabel'] = label;
+            }
 
             return await this.transactionRepository.findOne(criteria);
         } catch (e) {
-            console.error(e);
+            console.log(e);
             return null;
         }
     }
@@ -256,14 +257,16 @@ class DbCtrl {
         console.log("Get payment info for "+txId);
         try {
             const tx = await this.transactionRepository.getTransactionByTxId(txId);
-            console.log("tx")
-            console.log(tx);
-            if (!tx || !tx.userAdrLabel || !tx.txHash) return { btcAdr: null, txHash: null };
+            console.log("tx", tx);
+            if (!tx || !tx.userAdrLabel || !tx.txHash) {
+                return {btcAdr: null, txHash: null};
+            }
 
             const user = await this.getUserByLabel(tx.userAdrLabel);
-            console.log("user")
-            console.log(user);
-            if(!user || !user.btcadr) return { btcAdr: null, txHash: null };
+            console.log("user", user);
+            if (!user || !user.btcadr) {
+                return {btcAdr: null, txHash: null};
+            }
             return { btcAdr: user.btcadr, txHash: tx.txHash};
         } catch (e) {
             console.log(e);

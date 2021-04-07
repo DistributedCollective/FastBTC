@@ -43,21 +43,20 @@ class MainController {
         });
     }
 
-
-
-
     /**
      * Loads a users btc address or creates a new user entry in the database
      */
     async getDepositAddress(socket, address, cb) {
         try {
             if (address == null || address === '') {
-                return cb({ error: "Address is empty" });
+                return cb({error: "Address is empty"});
             }
 
             let user = await dbCtrl.getUserByAddress(address);
 
-            if (user == null) user = await this.addNewUser(address);
+            if (user == null) {
+                user = await this.addNewUser(address);
+            }
 
             if (user != null) {
                 this.connectingSockets[user.label] = socket.id;
@@ -166,7 +165,6 @@ class MainController {
         }
     }
 
-
     async processDeposits(d) {
         const depositFound = await dbCtrl.getDeposit(d.txHash, d.label);
 
@@ -186,7 +184,9 @@ class MainController {
         }
 
         const user = await dbCtrl.getUserByLabel(d.label);
-        if (!user) return console.error("Error finding user");
+        if (!user) {
+            return console.error("Error finding user");
+        }
 
         this.emitToUserSocket(user.label, 'depositTx', {
             txHash: d.txHash,
@@ -194,6 +194,7 @@ class MainController {
             status: 'confirmed'
         });
 
+        console.log("about to send R-BTC")
         const resTx = await rskCtrl.sendRbtc(d.val, user.web3adr);
         if (resTx.error) {
             console.error("Error transfering funds to " + user.web3adr);
@@ -214,14 +215,15 @@ class MainController {
             value: Number(resTx.value).toFixed(6)
         });
         const msg = Number(resTx.value).toFixed(6) + " Rsk withdrawal initiated for " + user.web3adr;
-        if (telegramBot) telegramBot.sendMessage(`${msg} ${conf.blockExplorer}/tx/${resTx.txHash}`);
-
+        if (telegramBot) {
+            telegramBot.sendMessage(`${msg} ${conf.blockExplorer}/tx/${resTx.txHash}`);
+        }
     }
 
     emitToUserSocket(userLabel, event, data) {
         if (userLabel && this.connectingSockets[userLabel]) {
             const socketId = this.connectingSockets[userLabel];
-            console.log(new Date(Date.now()) + ", sending message to client", socketId, event, data);
+            console.log("sending message to client", socketId, event, data);
             this.io.to(socketId).emit(event, data, userLabel);
         }
     }
