@@ -308,8 +308,12 @@ class DbCtrl {
         })
     }
 
-    async getSumDeposited() {
-        return await this.transactionRepository.sumDeposited();
+    async getSum(type) {
+        return await this.transactionRepository.sumTransacted(type);
+    }
+
+    async getTotalNumberOfTransactions(type) {
+        return await this.transactionRepository.countConfirmed(type);
     }
 
 }

@@ -10,7 +10,7 @@
     <title>Fast-Btc Database Viewer</title>
 </head>
 
-<body ng-controller="dbCtrl as ctrl">
+<body ng-controller="appCtrl as ctrl">
 <h1 class="text-center" style="margin-top: 50px">FastBTC Summary</h1>
 
 <div class="container">
@@ -20,8 +20,8 @@
     </p>
 
     <p style="margin-bottom: 20px; font-size: 110%; font-weight: bold">
-        <label>Total Transfered: {{ctrl.totalTransfer.btc}}</label><br/>
-        <label>Total Deposited: {{ctrl.totalDeposit.btc}}</label><br/>
+        <label>Total Transfered: {{ctrl.transfers.totalTransacted}}</label><br/>
+        <label>Total Deposited: {{ctrl.deposits.totalTransacted}}</label><br/>
     </p>
 
     <table class="table table-bordered">
@@ -36,15 +36,15 @@
         <tbody>
         <tr>
             <td>Transfers</td>
-            <td>{{ctrl.totalTransfer.btc}}</td>
-            <td>{{ctrl.numberOfTransfers}}</td>
-            <td>{{ctrl.avgSizeTransfer}}</td>
+            <td>{{ctrl.transfers.totalTransacted}}</td>
+            <td>{{ctrl.transfers.totalNumber}}</td>
+            <td>{{ctrl.transfers.averageSize}}</td>
         </tr>
         <tr>
             <td>Deposits</td>
-            <td>{{ctrl.totalDeposit.btc}}</td>
-            <td>{{ctrl.numberOfDeposits}}</td>
-            <td>{{ctrl.avgSizeDeposit}}</td>
+            <td>{{ctrl.deposits.totalTransacted}}</td>
+            <td>{{ctrl.deposits.totalNumber}}</td>
+            <td>{{ctrl.deposits.averageSize}}</td>
         </tr>
         </tbody>
     </table>
@@ -61,7 +61,7 @@
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
-        <script src="/db.js"></script>
+        <script src="/main.js"></script>
 </body>
 
 </html>
