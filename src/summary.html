@@ -11,42 +11,36 @@
 </head>
 
 <body ng-controller="dbCtrl as ctrl">
-<h1 class="text-center" style="margin-top: 50px">Deposit Database</h1>
+<h1 class="text-center" style="margin-top: 50px">FastBTC Summary</h1>
 
 <div class="container">
 
     <p style="margin-bottom: 20px; font-size: 110%; font-weight: bold">
-        <label>Total BTC: {{ctrl.totalDeposit.btc}}</label><br/>
-        <label>Total USD: {{ctrl.totalDeposit.usd}}</label><br/>
+        <label>Total Transfered: {{ctrl.totalTransfer.btc}}</label><br/>
+        <label>Total Deposited: {{ctrl.totalDeposit.btc}}</label><br/>
     </p>
 
     <table class="table table-bordered">
         <thead>
         <tr>
-            <th>ID</th>
-            <th>User label</th>
-            <th>Tx hash</th>
-            <th>Value BTC</th>
-            <th>Value USD</th>
-            <th>Created date</th>
-            <th>Status</th>
+            <th></th>
+            <th>Total</th>
+            <th>Amount</th>
+            <th>Avg. size</th>
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="item in ctrl.data">
-            <td>{{item.id}}</td>
-            <td>{{item.userAdrLabel}}</td>
-            <td>
-                <span title="{{item.txHash}}" style="display: inline-block;max-width: 300px;text-overflow: ellipsis;overflow: hidden">
-                    <a href="https://live.blockcypher.com/btc/tx/{{item.txHash}}" target="_blank">
-                        {{item.txHash}}
-                    </a>
-                </span>
-            </td>
-            <td>{{item.valueBtc}}</td>
-            <td>{{item.valueUsd}}</td>
-            <td>{{item.dateAdded|date:'dd-MM-yyyy HH:mm'}}</td>
-            <td>{{item.status}}</td>
+        <tr>
+            <td>Transfers</td>
+            <td>{{ctrl.totalTransfer.btc}}</td>
+            <td>{{ctrl.numberOfTransfers}}</td>
+            <td>{{ctrl.avgSizeTransfer}}</td>
+        </tr>
+        <tr>
+            <td>Deposits</td>
+            <td>{{ctrl.totalDeposit.btc}}</td>
+            <td>{{ctrl.numberOfDeposits}}</td>
+            <td>{{ctrl.avgSizeDeposit}}</td>
         </tr>
         </tbody>
     </table>
