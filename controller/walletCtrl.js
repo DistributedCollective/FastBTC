@@ -32,6 +32,8 @@ class WalletManager {
             }
             await U.wasteTime(5);
         }
+
+        console.log("no free wallet after %d ms", timeout)
         return "";
     }
 
