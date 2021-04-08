@@ -48,7 +48,7 @@ class DBCtrl {
             this.totalDeposit.usd = this.totalDeposit.usd.toFixed(3);
 
             this.numberOfDeposits = this.data.length;
-            this.avgSizeDeposit = this.totalDeposit.btc / this.data.length;
+            this.avgSizeDeposit = (this.totalDeposit.btc / this.data.length).toFixed(6);
             this.$scope.$apply();
         });
     }
@@ -74,7 +74,7 @@ class DBCtrl {
             this.totalTransfer.usd = this.totalTransfer.usd.toFixed(3);
 
             this.numberOfTransfers = this.data.length;
-            this.avgSizeTransfer = this.totalTransfer.btc / this.data.length;
+            this.avgSizeTransfer = (this.totalTransfer.btc / this.data.length).toFixed(6);
             this.$scope.$apply();
         });
     }
