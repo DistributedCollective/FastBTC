@@ -61,7 +61,7 @@ export default class Transaction extends BaseModel {
     // type should be either 'deposit' or 'tranfer'
     async sumTransacted(type) {
         try {
-            const res = await this.get(`SELECT type, SUM(valueBtc) total FROM ${this.table} WHERE type = '${type}' AND status = 'confirmed' GROUP BY type`);
+            const res = await this.get(`SELECT type, SUM(valueBtc) total FROM ${this.table} WHERE type like '${type}' AND status like 'confirmed' GROUP BY type`);
             return res && res.total || 0;
         } catch (e) {
             console.error(e);
@@ -71,7 +71,7 @@ export default class Transaction extends BaseModel {
 
     async countConfirmed(type) {
         try {
-            const res = await this.get(`SELECT type, COUNT(DISTINCT column) FROM ${this.table} WHERE type = '${type}' AND status = 'confirmed' GROUP BY type`);
+            const res = await this.get(`SELECT type, COUNT(DISTINCT column) FROM ${this.table} WHERE type like '${type}' AND status like 'confirmed' GROUP BY type`);
             return res || 0;
         } catch (e) {
             console.error(e);
