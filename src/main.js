@@ -4,7 +4,7 @@
 
  import Web3 from 'web3';
 
-const { origin, pathname } = new URL('https://genesisbackend.sovryn.app/genesis');
+ const { origin, pathname } = new URL('http://localhost:3007'); // TODO: remove
 console.log(pathname)
 
 
