@@ -11,19 +11,6 @@ export default class User extends BaseModel {
             )`);
     }
 
-
-    async createTable() {
-        try {
-            const userTb = await super.createTable();
-
-            console.log("Created User table", userTb);
-
-            return userTb;
-        } catch (e) {
-            console.log('Can not create User table', e);
-        }
-    }
-
     insert({web3adr, btcadr, label}) {
         return super.insert({
             web3adr,
@@ -53,6 +40,9 @@ export default class User extends BaseModel {
     }
 
     findByAddress(address) {
-        return super.get(`SELECT * FROM ${this.table} WHERE web3adr = ? COLLATE NOCASE`, [address]);
+        return super.get(
+            `SELECT *FROM ${this.tableName} WHERE web3adr = ? COLLATE NOCASE`,
+            [address]
+        );
     }
 }
