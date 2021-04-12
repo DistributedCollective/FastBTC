@@ -88,10 +88,14 @@ class RskCtrl {
         console.log("transfer %s to %s", val, to)
         const wallet = await this.getWallet();
         if (wallet.length === 0) {
-            return {error: "no wallet available to process the assignment"};
+            return {
+                error: "no wallet available to process the assignment"
+            };
         }
+
         const nonce = await this.web3.eth.getTransactionCount(wallet, 'pending');
         this.lastGasPrice = await this.getGasPrice();
+
         const data = this.web3.eth.abi.encodeFunctionCall({
             name: 'withdrawAdmin',
             type: 'function',
@@ -100,7 +104,6 @@ class RskCtrl {
                 {"name": "amount",   "type": "uint256"}
             ]
         }, [to, val]);
-
 
         try {
             const receipt = await this.multisig.methods.submitTransaction(conf.contractAddress, 0, data).send({
@@ -113,10 +116,13 @@ class RskCtrl {
             walletManager.decreasePending(wallet);
             return receipt;
         }
+
         catch(e) {
             console.error("Error submitting tx", { to, val });
             console.error(e);
-            return null;
+            return {
+
+            };
         }
     }
 

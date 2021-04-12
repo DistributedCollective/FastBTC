@@ -17,18 +17,6 @@ export default class Transaction extends BaseModel {
         super(db, 'transactions', sql);
     }
 
-    async createTable() {
-        try {
-            const userTb = await super.createTable();
-
-            console.log("Created Transaction table", userTb);
-
-            return userTb;
-        } catch (e) {
-            console.log('Can not create Transaction table', e);
-        }
-    }
-
     insertDepositTx({userAdrLabel, txHash, valueBtc, status}) {
         return super.insert({
             userAdrLabel, txHash, valueBtc,
@@ -60,7 +48,7 @@ export default class Transaction extends BaseModel {
 
     async sumDeposited() {
         try {
-            const res = await this.get(`SELECT type, SUM(valueBtc) total FROM ${this.table} WHERE type = 'transfer' GROUP BY type`);
+            const res = await this.get(`SELECT type, SUM(valueBtc) total FROM ${this.tableName} WHERE type = 'transfer' GROUP BY type`);
             return res && res.total || 0;
         } catch (e) {
             console.error(e);

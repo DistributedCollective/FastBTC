@@ -6,9 +6,11 @@ import Web3 from 'web3';
 
 const web3 = new Web3();
 
+const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+let charactersLength = characters.length;
 
 class Util {
-    async wasteTime(s) {
+    wasteTime(s) {
         return new Promise((resolve) => {
             setTimeout(() => {
                 resolve();
@@ -18,8 +20,6 @@ class Util {
 
     async getRandomString(length) {
         let result = '';
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let charactersLength = characters.length;
         for (let i = 0; i < length; i++) {
             result += characters.charAt(Math.floor(Math.random() * charactersLength));
         }
