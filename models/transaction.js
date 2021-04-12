@@ -59,7 +59,7 @@ export default class Transaction extends BaseModel {
 
     async countConfirmed(type) {
         try {
-            const res = await this.get(`SELECT type, COUNT(DISTINCT column) FROM ${this.table} WHERE type like ? AND status like 'confirmed' GROUP BY type`, [type]);
+            const res = await this.get(`SELECT type, COUNT(*) FROM ${this.table} WHERE type = ? AND status = 'confirmed' GROUP BY type`, [type]);
             return res || 0;
         } catch (e) {
             console.error(e);
