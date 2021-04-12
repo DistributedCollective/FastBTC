@@ -17,18 +17,6 @@ export default class Transaction extends BaseModel {
         super(db, 'transactions', sql);
     }
 
-    async createTable() {
-        try {
-            const userTb = await super.createTable();
-
-            console.log("Created Transaction table", userTb);
-
-            return userTb;
-        } catch (e) {
-            console.log('Can not create Transaction table', e);
-        }
-    }
-
     insertDepositTx({userAdrLabel, txHash, valueBtc, status}) {
         return super.insert({
             userAdrLabel, txHash, valueBtc,
