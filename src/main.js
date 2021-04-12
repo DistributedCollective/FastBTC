@@ -4,6 +4,7 @@
 
  import Web3 from 'web3';
 
+
 const { origin, pathname } = new URL('http://localhost:3007');
 console.log(origin);
 console.log(pathname)
@@ -44,6 +45,17 @@ class AppCtrl {
             max: 0.002
         };
 
+        this.deposits = {
+            totalTransacted: 0,
+            totalNumber: 0,
+            averageSize: 0
+        };
+        this.transfers = {
+            totalTransacted: 0,
+            totalNumber: 0,
+            averageSize: 0
+        };
+
         this.error = false;
         this.rskExplorer = conf.env === "prod" ? "https://explorer.rsk.co" : "https://explorer.testnet.rsk.co";
         this.bitcoinExplorer = conf.env === "prod" ? "https://live.blockcypher.com/btc" : "https://live.blockcypher.com/btc-testnet";
@@ -70,6 +82,8 @@ class AppCtrl {
         });
 
         socket.emit('txAmount', (info) => this.showTxAmountInfo(info));
+
+        socket.emit('getStats', (res) => this.showStats(res));
 
         socket.on('depositTx', (tx) => {
             this.depositTx = tx;
@@ -127,6 +141,11 @@ class AppCtrl {
         }
     }
 
+    showStats(res) {
+        this.deposits = res.deposits;
+        this.transfers = res.transfers;
+        this.$scope.$apply();
+    }
 
 }
 

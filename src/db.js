@@ -27,7 +27,7 @@ class DBCtrl {
     }
 
     getDeposits() {
-        this.total = {
+        this.totalDeposit = {
             btc: 0,
             usd: 0
         };
@@ -35,17 +35,20 @@ class DBCtrl {
 
             this.data = (data || []).map(item => {
                 if (item.valueBtc > 0) {
-                    this.total.btc += Number(item.valueBtc)/1e8;
+                    this.totalDeposit.btc += Number(item.valueBtc)/1e8;
                     item.valueBtc = (Number(item.valueBtc)/1e8).toFixed(6).replace(/0+$/, '');
                 }
                 if (item.valueUsd > 0) {
-                    this.total.usd += Number(item.valueUsd);
+                    this.totalDeposit.usd += Number(item.valueUsd);
                     item.valueUsd = Number(item.valueUsd).toFixed(3);
                 }
                 return item;
             });
-            this.total.btc = this.total.btc.toFixed(6).replace(/0+$/, '');
-            this.total.usd = this.total.usd.toFixed(3);
+            this.totalDeposit.btc = this.totalDeposit.btc.toFixed(6).replace(/0+$/, '');
+            this.totalDeposit.usd = this.totalDeposit.usd.toFixed(3);
+
+            this.numberOfDeposits = this.data.length;
+            this.avgSizeDeposit = (this.totalDeposit.btc / this.data.length).toFixed(6);
             this.$scope.$apply();
         });
     }
@@ -69,6 +72,9 @@ class DBCtrl {
             });
             this.totalTransfer.btc = this.totalTransfer.btc.toFixed(6).replace(/0+$/, '');
             this.totalTransfer.usd = this.totalTransfer.usd.toFixed(3);
+
+            this.numberOfTransfers = this.data.length;
+            this.avgSizeTransfer = (this.totalTransfer.btc / this.data.length).toFixed(6);
             this.$scope.$apply();
         });
     }

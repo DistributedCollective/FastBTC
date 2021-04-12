@@ -37,6 +37,7 @@ class MainController {
         this.io.on('connection', socket => {
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
+            socket.on('getStats', (...args) => this.getStats.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.sendTxMinMax.apply(this, [...args]));
             socket.on('getDeposits', (...args) => this.getDbDeposits.apply(this, [...args]));
             socket.on('getTransfers', (...args) => this.getTransfers.apply(this, [...args]));
@@ -128,6 +129,28 @@ class MainController {
         });
     }
 
+
+    /**
+     * Loads stats for both transfers and deposits
+     */
+    async getStats(cb) {
+        try {
+            let deposits = {}; let transfers = {};
+
+            deposits.totalTransacted = await dbCtrl.getSum('deposit');
+            deposits.totalNumber = await dbCtrl.getTotalNumberOfTransactions('deposit');
+            transfers.totalTransacted = await dbCtrl.getSum('transfer');
+            transfers.totalNumber = await dbCtrl.getTotalNumberOfTransactions('transfer');
+
+            deposits.averageSize = (deposits.totalTransacted / deposits.totalNumber).toFixed(6);
+            transfers.averageSize = (transfers.totalTransacted / transfers.totalNumber).toFixed(6);
+
+            cb({deposits, transfers});
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
     async getDbDeposits(cb) {
         try {
             const list = await dbCtrl.getAllDeposits();
@@ -139,7 +162,7 @@ class MainController {
 
     async getTotalDeposits(cb) {
         try {
-            const total = await dbCtrl.getSumDeposited();
+            const total = await dbCtrl.getSum('deposit');
             cb(total);
         } catch (e) {
             console.error(e);
