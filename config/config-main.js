@@ -7,6 +7,7 @@ import slaves from '../secrets/slaves';
 export default {
     env: "prod",
     serverPort: 3000,
+    backendUrl: "http://3.131.33.161:3000",
     appName: "FastBtcV3",
     dbName: "fastbtcv3_main",
     rskNode: "https://mainnet.sovryn.app/rpc",
@@ -23,4 +24,4 @@ export default {
     account: accounts["main"],
     node: node.main,
     thresholdConfirmations: 1
-}
+};

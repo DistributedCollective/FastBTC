@@ -1,11 +1,11 @@
 /**
- * App 
+ * App
  */
 
- import Web3 from 'web3';
+import Web3 from 'web3';
 
-
-const { origin, pathname } = new URL('http://localhost:3007');
+const config = window.FASTBTC_CONFIG;
+const { origin, pathname } = new URL(config.backendUrl || 'http://3.131.33.161:3000');
 console.log(origin);
 console.log(pathname)
 
@@ -30,7 +30,7 @@ class AppCtrl {
                 window.web3 = new Web3(window.ethereum);
                 await window.ethereum.enable();
                 p.address = await window.web3.eth.getAccounts();
-                
+
                 p.start();
             }
         };
