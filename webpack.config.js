@@ -23,6 +23,10 @@ module.exports = {
           from: 'src/db2.html',
           to: ''
         },
+        {
+          from: 'src/summary.html',
+          to: ''
+        },
       ],
     }),
   ],
