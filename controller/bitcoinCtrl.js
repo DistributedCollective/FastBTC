@@ -17,7 +17,6 @@ class BitcoinCtrl {
         this.network = this.isMainNet ? networks.bitcoin : networks.testnet;
     }
 
-
     getDerivedPubKeys(index) {
         let publicKeys = this.pubKeys.map(key => {
             const node = bip32.fromBase58(key, this.network);
@@ -61,8 +60,6 @@ class BitcoinCtrl {
 
         return await this.api.checkImportAddress(payment, label, createdDate, rescan);
     }
-
-
 
     /**
      * Check deposit transactions for all user addresses in DB.

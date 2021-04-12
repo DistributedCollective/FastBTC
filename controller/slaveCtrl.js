@@ -15,26 +15,48 @@ class SlaveCtrl {
     }
 
     async start(app) {
-        app.post('/getNode', this.authenticate.bind(this), async (req, res)=> this.returnNode(res));
-        app.post('/getCosignerIndexAndDelay', this.authenticate.bind(this), (req,res) => this.addCosigner(req,res));
-        app.post('/getPayment', this.authenticate.bind(this), async (req, res)=> await this.returnPayment(req, res));
+        app.post('/getNode', this.authenticate.bind(this), async (req, res) => this.returnNode(res));
+        app.post('/getCosignerIndexAndDelay', this.authenticate.bind(this), (req, res) => this.addCosigner(req, res));
+        app.post('/getPayment', this.authenticate.bind(this), async (req, res) => await this.returnPayment(req, res));
     }
 
     authenticate(req, res, next) {
         console.log("new authentication request", req.body);
         const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-        if (ip) console.log('remote address', ip); // ip address of the confirmation-node
 
-        if (!req.body.message) return res.status(403).json({ error: "Message is missing" });
-        if (!req.body.signedMessage) return res.status(403).json({ error: "Signature is missing" });
-        if (!req.body.walletAddress) return res.status(403).json({ error: "Wallet address is missing" });
-
-        if (conf.slaves.indexOf(req.body.walletAddress.toLowerCase()) === -1) {
-            return res.status(403).json({ error: "You are not allowed to access this service" });
+        if (ip) {
+            console.log('remote address', ip);
         }
 
-        const updateAllowed = this.verifySignature(req.body.message, req.body.signedMessage, req.body.walletAddress);
-        if (!updateAllowed) return res.status(403).json({ Error: "Error verifying signature" });
+        if (!req.body.message) {
+            return res.status(403).json({error: "Message is missing"});
+        }
+
+        if (!req.body.message.startsWith("Hi master")) {
+            return res.status(403).json({error: "Invalid message"});
+        }
+
+        if (!req.body.signedMessage) {
+            return res.status(403).json({error: "Signature is missing"});
+        }
+
+        if (!req.body.walletAddress) {
+            return res.status(403).json({error: "Wallet address is missing"});
+        }
+
+        if (conf.slaves.indexOf(req.body.walletAddress.toLowerCase()) === -1) {
+            return res.status(403).json({error: "You are not allowed to access this service"});
+        }
+
+        const updateAllowed = this.verifySignature(
+            req.body.message,
+            req.body.signedMessage,
+            req.body.walletAddress
+        );
+
+        if (!updateAllowed) {
+            return res.status(403).json({Error: "Error verifying signature"});
+        }
 
         next();
     }
@@ -50,10 +72,9 @@ class SlaveCtrl {
         }
     }
 
-    returnNode(res){
+    returnNode(res) {
         res.status(200).json(conf.node);
     }
-
 
     addCosigner(req, res) {
         console.log("Adding cosigner");
@@ -62,7 +83,10 @@ class SlaveCtrl {
         }
 
         const delay = Math.floor(this.cosignersArray.length / 2) * 60;
-        res.status(200).json({ index: this.cosignersArray.length - 1, delay: delay });
+        res.status(200).json({
+            index: this.cosignersArray.length - 1,
+            delay: delay
+        });
     }
 
     removeCosigner(socket) {
@@ -73,25 +97,36 @@ class SlaveCtrl {
     async returnPayment(req, res) {
         console.log("Return btc address");
         console.log(req.body)
-        let cnt=0;
+        let cnt = 0;
 
-        //dirty quickfix for payment undefined response from db
-        while(true) {
-            const { btcAdr, txHash} = await dbCtrl.getPaymentInfo(req.body.txId);
-            if(!btcAdr || !txHash) {
-                console.error("Error retrieving user payment info. "+cnt+" attempt");
+        // dirty quickfix for payment undefined response from db
+        while (true) {
+            let response;
+            try {
+                response = await dbCtrl.getPaymentInfo(req.body.txId);
+            }
+            catch (e) {
+                console.log("error getting payment info")
+                console.log(e);
+                response = {};
+            }
+            const {btcAdr, txHash} = response;
+            if (!btcAdr || !txHash) {
                 cnt++;
+                console.error("Error retrieving user payment info. %d attempt", cnt);
 
-                if(cnt==5) return res.status(403).json("Error retrieving user payment info");
+                if (cnt === 5) {
+                    return res.status(403).json("Error retrieving user payment info");
+                }
                 else {
-                    Util.wasteTime(1);
+                    await Util.wasteTime(0.1);
                     continue;
                 }
             }
-            return res.status(200).json({btcAdr, txHash});  
+            return res.status(200).json({btcAdr, txHash});
         }
     }
-}  
+}
 
 
 export default new SlaveCtrl();
