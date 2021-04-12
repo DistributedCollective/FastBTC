@@ -37,7 +37,7 @@ export default class Transaction extends BaseModel {
 
     async getTransactionByTxId(txId) {
         try {
-            const res = await super.get("SELECT * from transactions WHERE type like 'deposit' and txId = "+txId);
+            const res = await super.get("SELECT * from transactions WHERE type like 'deposit' and txId = ?", [txId]);
             console.log(res);
             return res;
         } catch (e) {
@@ -49,7 +49,7 @@ export default class Transaction extends BaseModel {
     // type should be either 'deposit' or 'tranfer'
     async sumTransacted(type) {
         try {
-            const res = await this.get(`SELECT type, SUM(valueBtc) total FROM ${this.table} WHERE type like '${type}' AND status like 'confirmed' GROUP BY type`);
+            const res = await this.get(`SELECT type, SUM(valueBtc) total FROM ${this.table} WHERE type like ? AND status like 'confirmed' GROUP BY type`, [type]);
             return res && res.total || 0;
         } catch (e) {
             console.error(e);
@@ -59,7 +59,7 @@ export default class Transaction extends BaseModel {
 
     async countConfirmed(type) {
         try {
-            const res = await this.get(`SELECT type, COUNT(DISTINCT column) FROM ${this.table} WHERE type like '${type}' AND status like 'confirmed' GROUP BY type`);
+            const res = await this.get(`SELECT type, COUNT(DISTINCT column) FROM ${this.table} WHERE type like ? AND status like 'confirmed' GROUP BY type`, [type]);
             return res || 0;
         } catch (e) {
             console.error(e);
