@@ -48,13 +48,13 @@ class SlaveCtrl {
             return res.status(403).json({error: "You are not allowed to access this service"});
         }
 
-        const updateAllowed = this.verifySignature(
+        const signatureVerified = this.verifySignature(
             req.body.message,
             req.body.signedMessage,
-            req.body.walletAddress
+            req.body.walletAddress,
         );
 
-        if (!updateAllowed) {
+        if (!signatureVerified) {
             return res.status(403).json({Error: "Error verifying signature"});
         }
 
@@ -77,22 +77,26 @@ class SlaveCtrl {
     }
 
     addCosigner(req, res) {
-        console.log("Adding cosigner");
+        console.log("Adding cosigner: %s", req.body.walletAddress);
+
         if (this.cosignersArray.indexOf(req.body.walletAddress) === -1) {
             this.cosignersArray.push(req.body.walletAddress);
         }
 
-        const delay = Math.floor(this.cosignersArray.length / 2) * 60;
+        const index = this.cosignersArray.indexOf(req.body.walletAddress);
+        const delay = Math.floor(index / 2) * 60;
+
         res.status(200).json({
-            index: this.cosignersArray.length - 1,
-            delay: delay
+            index: index,
+            delay: delay,
         });
     }
 
-    removeCosigner(socket) {
-        console.log("Removing cosigner");
-        this.cosignersArray = this.cosignersArray.filter(index => index !== socket.id);
-    }
+    // this is not actually ever called
+    // removeCosigner(socket) {
+    //     console.log("Removing cosigner");
+    //     this.cosignersArray = this.cosignersArray.filter(index => index !== socket.id);
+    // }
 
     async returnPayment(req, res) {
         console.log("Return btc address");
@@ -119,7 +123,7 @@ class SlaveCtrl {
                     return res.status(403).json("Error retrieving user payment info");
                 }
                 else {
-                    await Util.wasteTime(0.1);
+                    await Util.wasteTime(1);
                     continue;
                 }
             }

@@ -38,7 +38,7 @@ class DbCtrl {
             await this.userRepository.createTable();
             await this.transactionRepository.createTable();
         } catch (e) {
-            console.log(e);
+            console.error(e);
         }
     }
 
