@@ -272,6 +272,10 @@ class DbCtrl {
     async getTotalNumberOfTransactions(type) {
         return await this.transactionRepository.countConfirmed(type);
     }
+
+    async getNumberOfUnprocessedTransactions(type) {
+        return await this.transactionRepository.countUnprocessed(type);
+    }
 }
 
 export default new DbCtrl();

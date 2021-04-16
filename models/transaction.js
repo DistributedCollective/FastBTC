@@ -66,4 +66,14 @@ export default class Transaction extends BaseModel {
             return 0;
         }
     }
+
+    async countUnprocessed(type) {
+        try { 
+            const res = await this.get(`SELECT type, COUNT(*) FROM ${this.tableName} WHERE type = ? AND txId = NULL AND id > 100 AND status = 'confirmed' GROUP BY type`, [type]);
+            return res || 0;
+        } catch(e) {
+            console.error(e);
+            return 0;
+        }
+    }
 }
