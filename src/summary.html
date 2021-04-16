@@ -25,6 +25,7 @@
             <thead>
                 <tr>
                     <th>Master node</th>
+                    <th ng-repeat="slaveNode in ctrl.balances.slaveNodes">Slave Node {{ $index }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -33,6 +34,10 @@
                         'alert alert-success': ctrl.balances.masterNode > ctrl.threshold,
                         'alert alert-danger': ctrl.balances.masterNode < ctrl.threshold 
                       }">{{ctrl.balances.masterNode}}</td>
+                    <td role="alert" ng-repeat="slaveNode in ctrl.balances.slaveNodes" ng-class="{ 
+                        'alert alert-success': slaveNode > ctrl.threshold,
+                        'alert alert-danger': slaveNode < ctrl.threshold 
+                      }">{{slaveNode}}</td>
                 </tr>
             </tbody>
         </table>

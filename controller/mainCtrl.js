@@ -10,6 +10,7 @@ import rskCtrl from './rskCtrl';
 import Util from '../utils/helper';
 import telegramBot from '../utils/telegram';
 import bitcoinCtrl from "./bitcoinCtrl";
+import slaveCtrl from './slaveCtrl';
 
 class MainController {
 
@@ -157,6 +158,7 @@ class MainController {
         try {
             let balances = {};
             balances.masterNode = await rskCtrl.getBalance(address);
+            balances.slaveNodes = await slaveCtrl.getCosignersBalances();
 
             cb(balances);
         } catch(e) {
