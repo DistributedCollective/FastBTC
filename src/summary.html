@@ -29,7 +29,10 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>{{ctrl.balances.masterNode}}</td>
+                    <td role="alert" ng-class="{ 
+                        'alert alert-success': ctrl.balances.masterNode > ctrl.threshold,
+                        'alert alert-danger': ctrl.balances.masterNode < ctrl.threshold 
+                      }">{{ctrl.balances.masterNode}}</td>
                 </tr>
             </tbody>
         </table>

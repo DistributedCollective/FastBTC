@@ -56,7 +56,8 @@ class AppCtrl {
             averageSize: 0
         };
 
-        this.balances = [];
+        this.balances = {};
+        this.threshold = 0;
         this.error = false;
         this.rskExplorer = conf.env === "prod" ? "https://explorer.rsk.co" : "https://explorer.testnet.rsk.co";
         this.bitcoinExplorer = conf.env === "prod" ? "https://live.blockcypher.com/btc" : "https://live.blockcypher.com/btc-testnet";
@@ -87,6 +88,8 @@ class AppCtrl {
         socket.emit('getStats', (res) => this.showStats(res));
 
         socket.emit('getBalances', (res) => this.showBalances(res));
+
+        socket.emit('getThreshold', (res) => this.showThreshold(res));
 
         socket.on('depositTx', (tx) => {
             this.depositTx = tx;
@@ -152,6 +155,11 @@ class AppCtrl {
 
     showBalances(res) {
         this.balances = res.balances;
+        this.$scope.$apply();
+    }
+
+    showThreshold(res) {
+        this.threshold = res.threshold;
         this.$scope.$apply();
     }
 }

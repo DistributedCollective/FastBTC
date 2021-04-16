@@ -39,6 +39,7 @@ class MainController {
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('getStats', (...args) => this.getStats.apply(this, [...args]));
             socket.on('getBalances', (...args) => this.getBalances.apply(this, [...args]));
+            socket.on('getThreshold', (...args) => this.getThreshold.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.sendTxMinMax.apply(this, [...args]));
             socket.on('getDeposits', (...args) => this.getDbDeposits.apply(this, [...args]));
             socket.on('getTransfers', (...args) => this.getTransfers.apply(this, [...args]));
@@ -158,6 +159,14 @@ class MainController {
             balances.masterNode = await rskCtrl.getBalance(address);
 
             cb(balances);
+        } catch(e) {
+            console.log(e);
+        }
+    }
+
+    async getThreshold(cb) {
+        try {
+            cb({threshold: conf.balanceThreshold});
         } catch(e) {
             console.log(e);
         }
