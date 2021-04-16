@@ -38,6 +38,7 @@ class MainController {
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('getStats', (...args) => this.getStats.apply(this, [...args]));
+            socket.on('getBalances', (...args) => this.getBalances.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.sendTxMinMax.apply(this, [...args]));
             socket.on('getDeposits', (...args) => this.getDbDeposits.apply(this, [...args]));
             socket.on('getTransfers', (...args) => this.getTransfers.apply(this, [...args]));
@@ -147,6 +148,17 @@ class MainController {
 
             cb({deposits, transfers});
         } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async getBalances(address, cb) {
+        try {
+            let balances = {};
+            balances.masterNode = await rskCtrl.getBalance(address);
+
+            cb(balances);
+        } catch(e) {
             console.log(e);
         }
     }

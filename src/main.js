@@ -5,7 +5,7 @@
 import Web3 from 'web3';
 
 const config = window.FASTBTC_CONFIG;
-const { origin, pathname } = new URL(config.backendUrl || 'http://3.131.33.161:3000');
+const { origin, pathname } = new URL(config ? config.backendUrl : 'http://3.131.33.161:3000');
 console.log(origin);
 console.log(pathname)
 
@@ -56,6 +56,7 @@ class AppCtrl {
             averageSize: 0
         };
 
+        this.balances = [];
         this.error = false;
         this.rskExplorer = conf.env === "prod" ? "https://explorer.rsk.co" : "https://explorer.testnet.rsk.co";
         this.bitcoinExplorer = conf.env === "prod" ? "https://live.blockcypher.com/btc" : "https://live.blockcypher.com/btc-testnet";
@@ -84,6 +85,8 @@ class AppCtrl {
         socket.emit('txAmount', (info) => this.showTxAmountInfo(info));
 
         socket.emit('getStats', (res) => this.showStats(res));
+
+        socket.emit('getBalances', (res) => this.showBalances(res));
 
         socket.on('depositTx', (tx) => {
             this.depositTx = tx;
@@ -147,6 +150,10 @@ class AppCtrl {
         this.$scope.$apply();
     }
 
+    showBalances(res) {
+        this.balances = res.balances;
+        this.$scope.$apply();
+    }
 }
 
 angular.module('app', []).controller('appCtrl', AppCtrl);

@@ -20,32 +20,48 @@
     </p>
 
     <p style="margin-bottom: 20px; font-size: 110%; font-weight: bold">
+        <label>Balances:</label><br/>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Master node</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ctrl.balances.masterNode}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </p>
+
+    <p style="margin-bottom: 20px; font-size: 110%; font-weight: bold">
         <label>Total Transfered: {{ctrl.transfers.totalTransacted}}</label><br/>
         <label>Total Deposited: {{ctrl.deposits.totalTransacted}}</label><br/>
     </p>
 
     <table class="table table-bordered">
         <thead>
-        <tr>
-            <th></th>
-            <th>Total transacted</th>
-            <th>Number of transactions</th>
-            <th>Average size</th>
-        </tr>
+            <tr>
+                <th></th>
+                <th>Total transacted</th>
+                <th>Number of transactions</th>
+                <th>Average size</th>
+            </tr>
         </thead>
         <tbody>
-        <tr>
-            <td>Transfers</td>
-            <td>{{ctrl.transfers.totalTransacted}}</td>
-            <td>{{ctrl.transfers.totalNumber}}</td>
-            <td>{{ctrl.transfers.averageSize}}</td>
-        </tr>
-        <tr>
-            <td>Deposits</td>
-            <td>{{ctrl.deposits.totalTransacted}}</td>
-            <td>{{ctrl.deposits.totalNumber}}</td>
-            <td>{{ctrl.deposits.averageSize}}</td>
-        </tr>
+            <tr>
+                <td>Transfers</td>
+                <td>{{ctrl.transfers.totalTransacted}}</td>
+                <td>{{ctrl.transfers.totalNumber}}</td>
+                <td>{{ctrl.transfers.averageSize}}</td>
+            </tr>
+            <tr>
+                <td>Deposits</td>
+                <td>{{ctrl.deposits.totalTransacted}}</td>
+                <td>{{ctrl.deposits.totalNumber}}</td>
+                <td>{{ctrl.deposits.averageSize}}</td>
+            </tr>
         </tbody>
     </table>
 </div>
