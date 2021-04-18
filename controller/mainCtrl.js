@@ -19,10 +19,10 @@ class MainController {
         await dbCtrl.initDb(conf.dbName);
         await rskCtrl.init();
         this.initSocket(server);
-        bitcoinCtrl.checkDepositTxs().catch(console.error);
 
         bitcoinCtrl.setPendingDepositHandler(this.onPendingDeposit.bind(this));
         bitcoinCtrl.setTxDepositedHandler(this.processDeposits.bind(this));
+        bitcoinCtrl.startDepositCheckLoop();
     }
 
     initSocket(httpServer) {
@@ -80,8 +80,7 @@ class MainController {
                 }
             }
 
-            console.log("returning user");
-            console.log(user);
+            console.log("returning user", user);
             return cb(null, user);
 
         } catch (e) {
@@ -142,8 +141,8 @@ class MainController {
             transfers.totalTransacted = await dbCtrl.getSum('transfer');
             transfers.totalNumber = await dbCtrl.getTotalNumberOfTransactions('transfer');
 
-            deposits.averageSize = (deposits.totalTransacted / deposits.totalNumber).toFixed(6);
-            transfers.averageSize = (transfers.totalTransacted / transfers.totalNumber).toFixed(6);
+            deposits.averageSize = (deposits.totalTransacted / deposits.totalNumber).toFixed(8);
+            transfers.averageSize = (transfers.totalTransacted / transfers.totalNumber).toFixed(8);
 
             cb({deposits, transfers});
         } catch (e) {
@@ -190,7 +189,7 @@ class MainController {
             await dbCtrl.confirmDeposit(d.txHash, d.label);
         }
 
-        telegramBot.sendMessage("New BTC deposit arrived: " + JSON.stringify(d));
+        telegramBot.sendMessage( `New BTC deposit confirmed: address ${d.address}, tx ${d.txHash}, value ${d.value / 1e8} BTC`);
         if (d.val > conf.maxAmount || d.val <= 10000) {
             telegramBot.sendMessage("Deposit outside the limit!");
         }
@@ -210,7 +209,7 @@ class MainController {
 
         this.emitToUserSocket(user.label, 'depositTx', {
             txHash: d.txHash,
-            value: (d.val / 1e8).toFixed(6),
+            value: (d.val / 1e8).toFixed(8),
             status: 'confirmed'
         });
 
@@ -232,12 +231,10 @@ class MainController {
 
         this.emitToUserSocket(user.label, "transferTx", {
             txHash: resTx.txHash,
-            value: Number(resTx.value).toFixed(6)
+            value: Number(resTx.value).toFixed(8)
         });
-        const msg = Number(resTx.value).toFixed(6) + " Rsk withdrawal initiated for " + user.web3adr;
-        if (telegramBot) {
-            telegramBot.sendMessage(`${msg} ${conf.blockExplorer}/tx/${resTx.txHash}`);
-        }
+        const msg = Number(resTx.value).toFixed(8) + " Rsk withdrawal initiated for " + user.web3adr;
+        telegramBot.sendMessage(`${msg} ${conf.blockExplorer}/tx/${resTx.txHash}`);
     }
 
     emitToUserSocket(userLabel, event, data) {
@@ -252,7 +249,7 @@ class MainController {
         this.emitToUserSocket(userLabel, 'depositTx', {
             status: 'pending',
             txHash: tx.txHash,
-            value: (Number(tx.value) / 1e8).toFixed(6)
+            value: (Number(tx.value) / 1e8).toFixed(8)
         });
     }
 }

@@ -9,6 +9,8 @@ import BitcoinNodeWrapper from "../utils/bitcoinNodeWrapper";
 
 class BitcoinCtrl {
     constructor() {
+        this.onTxDepositedHandler = () => {};
+        this.onPendingDepositHandler = () => {};
         this.isMainNet = conf.env === 'prod';
         this.pubKeys = conf.walletSigs.pubKeys;
         this.cosigners = conf.walletSigs.cosigners;
@@ -61,64 +63,6 @@ class BitcoinCtrl {
         return await this.api.checkImportAddress(payment, label, createdDate, rescan);
     }
 
-    /**
-     * Check deposit transactions for all user addresses in DB.
-     * It gets incoming transactions from the node by user label. If tx has 0 confirmations, add a pending tx to db
-     * Otherwise check it is confirmed when has more than [thresholdConfirmations] confirmations
-     */
-    async checkDepositTxs() {
-        console.log("Checking deposits")
-        try {
-            let currentOffset = 0, checkSize = 20, completed = false;
-
-            while (!completed) {
-                const addrLabels = await dbCtrl.getUserLabels(currentOffset, checkSize);
-
-                if (addrLabels && addrLabels.length > 0) {
-                    console.log("%d users", addrLabels.length);
-                    for (let adrLabel of addrLabels) {
-                        const txList = await this.api.listReceivedTxsByLabel(adrLabel, 9999);
-
-                        console.log("Address label %s has %s tx", adrLabel, (txList||[]).length);
-                        for (const tx of (txList || [])) {
-                            const confirmations = tx && tx.confirmations;
-
-                            if (confirmations === 0) {
-                                await this.addPendingDepositTx({
-                                    address: tx.address,
-                                    value: tx.value,
-                                    txId: tx.txId,
-                                    label: adrLabel
-                                });
-                            } else if (confirmations >= this.thresholdConfirmations) {
-                                await this.depositTxConfirmed({
-                                    address: tx.address,
-                                    value: tx.value,
-                                    txId: tx.txId,
-                                    confirmations: confirmations,
-                                    label: adrLabel
-                                });
-                            }
-                        }
-                    }
-                } else {
-                    completed = true;
-                }
-
-                currentOffset += checkSize;
-                await U.wasteTime(1);
-            }
-
-            if (completed) {
-                await U.wasteTime(20);
-                this.checkDepositTxs().catch(console.error);
-            }
-
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
     setPendingDepositHandler(handler) {
         this.onPendingDepositHandler = handler;
     }
@@ -129,22 +73,20 @@ class BitcoinCtrl {
 
     async addPendingDepositTx({ address, value, txId, label }) {
         try {
-            const added = await dbCtrl.getDeposit(txId, label);
             const user = await dbCtrl.getUserByBtcAddress(address);
+            const added = await dbCtrl.getDeposit(txId, label);
 
             if (added == null && user != null) {
-                const msg = `user ${user.btcadr} has a pending deposit, tx ${txId}, value ${(value / 1e8)} BTC`
+                const msg = `user ${user.btcadr} (label ${label}) has a pending deposit, tx ${txId}, value ${(value / 1e8)} BTC`
                 telegramBot.sendMessage(msg);
 
                 await dbCtrl.addDeposit(user.label, txId, value, false);
 
-                if (this.onPendingDepositHandler) {
-                    this.onPendingDepositHandler(user.label, {
-                        txHash: txId,
-                        value: value,
-                        status: 'pending'
-                    });
-                }
+                this.onPendingDepositHandler(user.label, {
+                    txHash: txId,
+                    value: value,
+                    status: 'pending'
+                });
             }
 
         } catch (e) {
@@ -157,8 +99,7 @@ class BitcoinCtrl {
             const user = await dbCtrl.getUserByBtcAddress(address);
             const confirmedInDB = await dbCtrl.getDeposit(txId, label);
 
-            if (user != null && this.onTxDepositedHandler && (confirmedInDB == null || confirmedInDB.status !== 'confirmed')) {
-                
+            if (user != null && (confirmedInDB == null || confirmedInDB.status !== 'confirmed')) {
                 this.onTxDepositedHandler({
                     address: user.btcadr,
                     label: user.label,
@@ -167,10 +108,111 @@ class BitcoinCtrl {
                     val: value
                 });
             }
-
         } catch (e) {
             console.error(e);
         }
+    }
+
+    /**
+     * Check deposit transactions for all user addresses in DB.
+     * It gets incoming transactions from the node by user label. If tx has 0 confirmations, add a pending tx to db
+     * Otherwise check it is confirmed when has more than [thresholdConfirmations] confirmations
+     */
+    async checkDepositTxs() {
+        const addrLabels = new Set(await dbCtrl.getUserLabels(-1, -1));
+        const blockBookmark = await dbCtrl.getBookmark(
+            "block_bookmark",
+            null
+        );
+
+        console.log("checking deposits - %d confirmation depth by default",
+            conf.maxConfirmationsToTrack);
+        const since = await this.api.listDepositsSinceBlock(
+            blockBookmark,
+            conf.maxConfirmationsToTrack,
+        );
+
+        const txList = (since.transactions || []).filter(tx => {
+            if (! addrLabels.has(tx.label)) {
+                console.log("ignoring unknown label %s", tx.label);
+                return false;
+            }
+            return true;
+        });
+
+        const summary = txList.reduce((summary, tx) => {
+            summary.unconfirmed += tx.confirmations === 0;
+            summary.confirmed += tx.confirmations > 0;
+            summary.total ++;
+            return summary;
+        }, { unconfirmed: 0, confirmed: 0, total: 0 });
+
+        console.log(
+            "%d btc deposits in the window - %d confirmed, %d unconfirmed",
+            summary.total, summary.confirmed, summary.unconfirmed
+        )
+
+        for (const tx of txList) {
+            const confirmations = tx && tx.confirmations;
+
+            if (! addrLabels.has(tx.label)) {
+                console.log("ignoring unknown label %s", tx.label);
+                continue;
+            }
+
+            if (confirmations === 0) {
+                await this.addPendingDepositTx({
+                    address: tx.address,
+                    value: tx.value,
+                    txId: tx.txId,
+                    label: tx.label,
+                });
+            } else if (confirmations >= this.thresholdConfirmations) {
+                await this.depositTxConfirmed({
+                    address: tx.address,
+                    value: tx.value,
+                    txId: tx.txId,
+                    confirmations: confirmations,
+                    label: tx.label,
+                });
+            }
+        }
+
+        if (since.lastblock) {
+            // If we got a sensible last block then store it here.
+            await dbCtrl.setBookmark(
+                "block_bookmark",
+                since.lastblock,
+            );
+        }
+    }
+
+    /**
+     * Async infinite loop checking BTC deposits
+     *
+     * @returns {Promise<void>}
+     */
+    async depositCheckLoop() {
+        while (true) {
+            // delay 5 seconds from *this* time.
+            const delayer = U.wasteTime(5);
+            try {
+                await this.checkDepositTxs();
+            }
+            catch (e) {
+                console.error("checkDepositTxs errored out", e);
+            }
+            await delayer;
+        }
+    }
+
+    /**
+     * Start the infinite async loop checking BTC deposits
+     */
+    startDepositCheckLoop() {
+        this.depositCheckLoop().then(() => {
+            console.log("deposit check loop exited (how did that happen?)");
+        });
     }
 }
 

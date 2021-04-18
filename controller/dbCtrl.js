@@ -6,7 +6,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-import {Transaction, User} from '../models/index';
+import {Bookmarks, Transaction, User} from '../models/index';
 
 class DbCtrl {
     async initDb(dbName) {
@@ -34,10 +34,12 @@ class DbCtrl {
         try {
             this.userRepository = new User(this.db);
             this.transactionRepository = new Transaction(this.db);
+            this.bookmarkRepository = new Bookmarks(this.db);
 
             await this.userRepository.createTable();
             await this.transactionRepository.createTable();
-        } catch (e) {
+            await this.bookmarkRepository.createTable();
+       } catch (e) {
             console.error(e);
         }
     }
@@ -125,7 +127,7 @@ class DbCtrl {
             type: "deposit"
         };
         if (label) {
-            criteria['userAdrLabel'] = label;
+            criteria.userAdrLabel = label;
         }
 
         return await this.transactionRepository.findOne(criteria);
@@ -271,6 +273,14 @@ class DbCtrl {
 
     async getTotalNumberOfTransactions(type) {
         return await this.transactionRepository.countConfirmed(type);
+    }
+
+    async getBookmark(key, defaultValue) {
+        return await this.bookmarkRepository.getBookmark(key, defaultValue);
+    }
+
+    async setBookmark(key, value) {
+        return await this.bookmarkRepository.setBookmark(key, value);
     }
 }
 
