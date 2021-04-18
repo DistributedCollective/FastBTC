@@ -23,5 +23,6 @@ export default {
     multisigAddress: "0x1D67BDA1144CacDbEFF1782f0E5B43D7B50bbFe0".toLowerCase(),
     account: accounts["test"],
     node: node.test,
-    thresholdConfirmations: 1
+    thresholdConfirmations: 1,
+    maxConfirmationsToTrack: 6,
 };
