@@ -145,8 +145,10 @@ class MainController {
             transfers.totalTransacted = await dbCtrl.getSum('transfer');
             transfers.totalNumber = await dbCtrl.getTotalNumberOfTransactions('transfer');
 
-            deposits.averageSize = (deposits.totalTransacted / deposits.totalNumber).toFixed(6);
-            transfers.averageSize = (transfers.totalTransacted / transfers.totalNumber).toFixed(6);
+            deposits.averageSize = deposits.totalTransacted > 0 ? 
+                (deposits.totalTransacted / deposits.totalNumber).toFixed(6) : 0;
+            transfers.averageSize = transfers.totalTransacted > 0 ?
+                (transfers.totalTransacted / transfers.totalNumber).toFixed(6) : 0;
 
             cb({deposits, transfers});
         } catch (e) {
