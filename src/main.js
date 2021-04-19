@@ -136,7 +136,7 @@ class AppCtrl {
             var img = new Image()
             img.src = dataURI
             const qrCode = document.getElementById('qrCode');
-            qrCode ? qrCode.document.appendChild(img) : '';
+            qrCode ? qrCode.appendChild(img) : '';
 
         }, 50);
     }
