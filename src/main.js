@@ -48,12 +48,19 @@ class AppCtrl {
         this.deposits = {
             totalTransacted: 0,
             totalNumber: 0,
+            unprocessed: 0,
             averageSize: 0
         };
         this.transfers = {
             totalTransacted: 0,
             totalNumber: 0,
+            unprocessed: 0,
             averageSize: 0
+        };
+        this.multisig = {
+            confirmed: 0,
+            executed: 0,
+            unexecuted: 0
         };
 
         this.error = false;
@@ -145,6 +152,7 @@ class AppCtrl {
     showStats(res) {
         this.deposits = res.deposits;
         this.transfers = res.transfers;
+        this.multisig = res.multisig;
         this.$scope.$apply();
     }
 

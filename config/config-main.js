@@ -23,5 +23,6 @@ export default {
     multisigAddress: "0x0f279e810B95E0d425622b9b40D7bCD0B5C4B19d".toLowerCase(),
     account: accounts["main"],
     node: node.main,
-    thresholdConfirmations: 1
+    thresholdConfirmations: 1,
+    startIndex: 175, //multisig tx-index from which the node starts confirming withdraw requests 
 };

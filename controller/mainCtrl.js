@@ -135,21 +135,24 @@ class MainController {
      */
     async getStats(cb) {
         try {
-            let deposits = {}; let transfers = {};
+            let deposits = {}; let transfers = {}; let multisig = {};
 
             deposits.totalTransacted = await dbCtrl.getSum('deposit');
             deposits.totalNumber = await dbCtrl.getTotalNumberOfTransactions('deposit');
             deposits.unprocessed = await dbCtrl.getNumberOfUnprocessedTransactions('deposit');
+
             transfers.totalTransacted = await dbCtrl.getSum('transfer');
             transfers.totalNumber = await dbCtrl.getTotalNumberOfTransactions('transfer');
             transfers.unprocessed = await dbCtrl.getNumberOfUnprocessedTransactions('transfer');
+
+            multisig = await this.getMultisigStats();
 
             deposits.averageSize = deposits.totalTransacted ?
                 Math.abs((deposits.totalTransacted / deposits.totalNumber).toFixed(6)) : 0;
             transfers.averageSize = transfers.totalTransacted > 0 ? 
                 Math.abs((transfers.totalTransacted / transfers.totalNumber).toFixed(6)) : 0;
 
-            cb({deposits, transfers});
+            cb({deposits, transfers, multisig});
         } catch (e) {
             console.log(e);
         }
@@ -258,6 +261,36 @@ class MainController {
             txHash: tx.txHash,
             value: (Number(tx.value) / 1e8).toFixed(6)
         });
+    }
+
+    async getMultisigStats(){
+        let confirmed = 0; let executed = 0; let unexecuted = 0;
+        try{
+            const numberOfTransactions = await rskCtrl.multisig.methods["getTransactionCount"](true, true).call();
+            if(!numberOfTransactions) {
+                await Util.wasteTime(5) 
+            }
+            for(let txId = conf.startIndex; txId < numberOfTransactions; txId++){
+                try {
+                    const isConfirmed = await rskCtrl.multisig.methods["isConfirmed"](txId).call();
+                    const txObj = await rskCtrl.multisig.methods["transactions"](txId).call();
+                    if (isConfirmed) confirmed++;
+                    if (txObj.executed) executed++;
+                    if (isConfirmed && !txObj.executed) {
+                        console.log(txId+": is confirmed: "+isConfirmed+" but unexecuted");
+                        unexecuted++;
+                    }
+                } catch(e) {
+                    console.log(e);
+                    continue;
+                }
+            }
+            return { confirmed, executed, unexecuted };
+        }
+        catch(e){
+            console.error("Error getting confirmed info");
+            console.error(e);
+        }
     }
 }
 
