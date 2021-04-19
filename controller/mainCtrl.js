@@ -154,13 +154,13 @@ class MainController {
         }
     }
 
-    async getBalances(address, cb) {
+    async getBalances(cb) {
         try {
             let balances = {};
-            balances.masterNode = await rskCtrl.getBalance(address);
+            balances.masterNode = await rskCtrl.getBalance(conf.multisigAddress);
             balances.slaveNodes = await slaveCtrl.getCosignersBalances();
 
-            cb(balances);
+            cb({balances});
         } catch(e) {
             console.log(e);
         }
