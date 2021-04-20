@@ -35,8 +35,8 @@ class DBCtrl {
 
             this.data = (data || []).map(item => {
                 if (item.valueBtc > 0) {
-                    this.totalDeposit.btc += Number(item.valueBtc)/1e8;
-                    item.valueBtc = (Number(item.valueBtc)/1e8).toFixed(6).replace(/0+$/, '');
+                    this.totalDeposit.btc += Number(item.valueBtc);
+                    item.valueBtc = Number(item.valueBtc).toFixed(6).replace(/0+$/, '');
                 }
                 if (item.valueUsd > 0) {
                     this.totalDeposit.usd += Number(item.valueUsd);
@@ -61,8 +61,8 @@ class DBCtrl {
         socket.emit('getTransfers', (data) => {
             this.transfers = (data || []).map(item => {
                 if (item.valueBtc > 0) {
-                    this.totalTransfer.btc += Number(item.valueBtc)/1e8;
-                    item.valueBtc = (Number(item.valueBtc)/1e8).toFixed(6).replace(/0+$/, '');
+                    this.totalTransfer.btc += Number(item.valueBtc);
+                    item.valueBtc = Number(item.valueBtc).toFixed(6).replace(/0+$/, '');
                 }
                 if (item.valueUsd > 0) {
                     this.totalTransfer.usd += Number(item.valueUsd);
