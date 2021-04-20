@@ -59,8 +59,8 @@ export default class Transaction extends BaseModel {
 
     async countConfirmed(type) {
         try {
-            const res = await this.get(`SELECT type, COUNT(*) FROM ${this.tableName} WHERE type = ? AND status = 'confirmed' GROUP BY type`, [type]);
-            return res ? res['COUNT(*)'] : 0;
+            const res = await this.get(`SELECT type, COUNT(*) AS ct FROM ${this.tableName} WHERE type = ? AND status = 'confirmed' GROUP BY type`, [type]);
+            return res ? res.ct : 0;
         } catch (e) {
             console.error(e);
             return 0;
@@ -69,8 +69,8 @@ export default class Transaction extends BaseModel {
 
     async countUnprocessed(type) {
         try { 
-            const res = await this.get(`SELECT type, COUNT(*) FROM ${this.tableName} WHERE type = ? AND txId = NULL AND id > 100 AND status = 'confirmed' GROUP BY type`, [type]);
-            return res || 0;
+            const res = await this.get(`SELECT type, COUNT(*) AS ct FROM ${this.tableName} WHERE type = ? AND txId = NULL AND id > 100 AND status = 'confirmed' GROUP BY type`, [type]);
+            return res ? res.ct : 0;
         } catch(e) {
             console.error(e);
             return 0;
