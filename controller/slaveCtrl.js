@@ -115,8 +115,8 @@ class SlaveCtrl {
                 console.log(e);
                 response = {};
             }
-            const {tx, user} = response;
-            if (!tx || !user) {
+            const {user, tx} = response;
+            if (!user || !tx) {
                 cnt++;
                 console.error("Error retrieving user payment info. %d attempt", cnt);
 
@@ -128,7 +128,7 @@ class SlaveCtrl {
                     continue;
                 }
             }
-            return res.status(200).json({tx, user});
+            return res.status(200).json({user, tx});
         }
     }
 
