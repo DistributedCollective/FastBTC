@@ -236,7 +236,7 @@ class DbCtrl {
             return {btcAdr: null, txHash: null};
         }
 
-        return {btcAdr: user.btcadr, txHash: tx.txHash};
+        return {user, tx};
     }
 
     async getUserLabels(skip = 0, size = 10) {
