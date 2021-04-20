@@ -1,12 +1,13 @@
 import rskCtrl from '../controller/rskCtrl';
-
+import conf from '../config/config';
+import o from '../secrets/accounts';
 
 const from ={
-    adr: "",
-    pKey: ""
+    adr: o.owner.adr,
+    pKey: o.owner.pKey
 };
 
-changeAdmin("".toLowerCase());
+changeAdmin("0x967c84b731679E36A344002b8E3CE50620A7F69f".toLowerCase());
 
 
 async function changeAdmin(adr) {
@@ -15,7 +16,7 @@ async function changeAdmin(adr) {
 
     const pKey = from.pKey?from.pKey:rskCtrl.web3.eth.accounts.decrypt(from.ks, process.argv[3]).privateKey;
     rskCtrl.web3.eth.accounts.wallet.add(pKey);
-    const receipt = await rskCtrl.contract.methods.changeAdmin(adr).send({
+    const receipt = await rskCtrl.contract.methods.transferOwnership(adr).send({
         from: from.adr,
         gas: 100000
     });

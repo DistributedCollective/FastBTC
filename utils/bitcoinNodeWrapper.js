@@ -14,27 +14,28 @@ export default class BitcoinNodeWrapper {
     async call(method, params = null){
         return new Promise((resolve, reject) => {
             this.client.call(method, params, (err, res) => {
-                if (err) reject(err);
-                else resolve(res);
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve(res);
+                }
             });
         });
     }
 
     async getLastBlock() {
-        try {
-            const res = await this.call('getblockchaininfo');
-            return res && res.blocks;
-        } catch (e) {
-            console.error("Error reading last block");
-            console.error(e);
-        }
+        const res = await this.call('getblockchaininfo');
+        return res && res.blocks;
     }
 
     async getBlockChangedAddresses(blockNumber) {
         try {
             const blockHash = await this.call('getblockhash', [blockNumber]);
 
-            if (!blockHash) return [];
+            if (!blockHash) {
+                return [];
+            }
 
             const block = await this.call('getblock', [blockHash, 2]);
             const adrResult = [];
@@ -275,6 +276,4 @@ export default class BitcoinNodeWrapper {
             return [];
         }
     }
-
 }
-

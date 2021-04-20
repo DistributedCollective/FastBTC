@@ -3,7 +3,7 @@ import _ from 'lodash';
 export default class BaseModel {
     constructor (db, tableName, createTableSQL) {
         this.db = db;
-        this.table = tableName;
+        this.tableName = tableName;
         this.createTableSQL = createTableSQL;
     }
 
@@ -11,8 +11,8 @@ export default class BaseModel {
         return new Promise((resolve, reject) => {
             this.db.run(sql, params, function(err) {
                 if (err) {
-                    console.log('Error running sql ' + sql);
-                    console.log(err);
+                    console.error('Error running sql ' + sql);
+                    console.error(err);
                     reject(err);
                 }
                 else {
@@ -26,8 +26,8 @@ export default class BaseModel {
         return new Promise((resolve, reject) => {
             this.db.all(sql, params, (err, rows) => {
                 if (err) {
-                    console.log('Error running sql: ' + sql);
-                    console.log(err);
+                    console.error('Error running sql: ' + sql);
+                    console.error(err);
                     reject(err);
                 }
                 else {
@@ -41,8 +41,8 @@ export default class BaseModel {
         return new Promise((resolve, reject) => {
             this.db.get(sql, params, (err, result) => {
                 if (err) {
-                    console.log('Error running sql: ' + sql);
-                    console.log(err);
+                    console.error('Error running sql: ' + sql);
+                    console.error(err);
                     reject(err);
                 }
                 else {
@@ -53,9 +53,11 @@ export default class BaseModel {
     }
 
     async createTable() {
-        return await this.run(this.createTableSQL);
+        const table = await this.run(this.createTableSQL);
+        console.log("Created %s table", this.tableName);
+        console.log(table)
+        return table;
     }
-
 
     /**
      *
@@ -64,7 +66,7 @@ export default class BaseModel {
     findOne(criteria) {
         const params = _.values(criteria);
         const where = _.keys(criteria).map(k => `${k} = ?`).join(' AND ');
-        const sql = `SELECT * FROM ${this.table} WHERE ${where}`;
+        const sql = `SELECT *FROM ${this.tableName} WHERE ${where}`;
 
         return this.get(sql, params);
     }
@@ -77,7 +79,7 @@ export default class BaseModel {
      * @param orderBy
      */
     find(criteria, {limit, offset, orderBy} = {}) {
-        let sql = `SELECT * FROM ${this.table}`;
+        let sql = `SELECT * FROM ${this.tableName}`;
 
         if (_.size(criteria) > 0) {
             const where = _.keys(criteria).map(k => {
@@ -112,7 +114,7 @@ export default class BaseModel {
     async insert(data) {
         const params = _.values(data);
         const sql = `
-            INSERT INTO ${this.table} (${_.keys(data).join(',')})
+            INSERT INTO ${this.tableName} (${_.keys(data).join(',')})
             VALUES (${_.map(data, () => '?').join(',')})
         `;
 
@@ -121,7 +123,7 @@ export default class BaseModel {
         if (result && result.id) {
             return await this.findOne({id: result.id});
         } else {
-            return Promise.reject("Can not insert new item to table " + this.table);
+            return Promise.reject("Can not insert new item to table " + this.tableName);
         }
     }
 
@@ -130,7 +132,7 @@ export default class BaseModel {
         const where = _.keys(criteria).map(k => `${k} = ?`).join(' AND ');
         const params = _.values(updateObject).concat(_.values(criteria));
         const sql = `
-            UPDATE ${this.table}
+            UPDATE ${this.tableName}
             SET ${updateFields}
             WHERE ${where}
         `;
@@ -142,9 +144,7 @@ export default class BaseModel {
     delete(criteria) {
         const params = _.values(criteria);
         const where = _.keys(criteria).map(k => `${k} = ?`).join(' AND ');
-        const sql = `
-            DELETE FROM ${this.table} WHERE ${where}
-        `;
+        const sql = `DELETE FROM ${this.tableName} WHERE ${where}`;
 
         return this.run(sql, params);
     }

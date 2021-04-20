@@ -17,7 +17,6 @@ class BitcoinCtrl {
         this.network = this.isMainNet ? networks.bitcoin : networks.testnet;
     }
 
-
     getDerivedPubKeys(index) {
         let publicKeys = this.pubKeys.map(key => {
             const node = bip32.fromBase58(key, this.network);
@@ -62,8 +61,6 @@ class BitcoinCtrl {
         return await this.api.checkImportAddress(payment, label, createdDate, rescan);
     }
 
-
-
     /**
      * Check deposit transactions for all user addresses in DB.
      * It gets incoming transactions from the node by user label. If tx has 0 confirmations, add a pending tx to db
@@ -78,11 +75,11 @@ class BitcoinCtrl {
                 const addrLabels = await dbCtrl.getUserLabels(currentOffset, checkSize);
 
                 if (addrLabels && addrLabels.length > 0) {
-                    console.log(addrLabels.length + " users");
+                    console.log("%d users", addrLabels.length);
                     for (let adrLabel of addrLabels) {
                         const txList = await this.api.listReceivedTxsByLabel(adrLabel, 9999);
 
-                        // console.log("Address label %s has %s tx", adrLabel, (txList||[]).length);
+                        console.log("Address label %s has %s tx", adrLabel, (txList||[]).length);
                         for (const tx of (txList || [])) {
                             const confirmations = tx && tx.confirmations;
 
@@ -161,8 +158,7 @@ class BitcoinCtrl {
             const confirmedInDB = await dbCtrl.getDeposit(txId, label);
 
             if (user != null && this.onTxDepositedHandler && (confirmedInDB == null || confirmedInDB.status !== 'confirmed')) {
-                const btcPrice = await U.getBTCPrice();
-
+                
                 this.onTxDepositedHandler({
                     address: user.btcadr,
                     label: user.label,

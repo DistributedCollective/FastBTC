@@ -1,12 +1,11 @@
 /**
- * Transfers rBtc from the given wallet to user addresses 
+ * Initiates rBtc withdrawals on the multisig contract
  */
 import Web3 from 'web3';
-import helper from "../utils/helper";
 import managedWalletAbi from "../config/contractAbi";
 import multisigAbi from '../config/multisigAbi';
 import conf from '../config/config';
-import { Mutex } from 'async-mutex';
+import {Mutex} from 'async-mutex';
 import walletManager from './walletCtrl';
 import U from '../utils/helper';
 
@@ -20,6 +19,7 @@ class RskCtrl {
         this.contract = new this.web3.eth.Contract(managedWalletAbi, conf.contractAddress);
         this.multisig = new this.web3.eth.Contract(multisigAbi, conf.multisigAddress);
         walletManager.init(this.web3);
+        this.lastGasPrice = 0;
     }
 
     async getBalanceSats(adr) {
@@ -37,82 +37,98 @@ class RskCtrl {
      */
     async sendRbtc(amount, to) {
         console.log("Trying to send " + amount + " to: " + to);
-        const btcPrice = await helper.getBTCPrice();
-        if (!btcPrice.error) this.lastPrice = btcPrice;
 
-        console.log("Current Btc price " + this.lastPrice);
-        let transferValueSatoshi = Number(amount) - conf.commission;
+        let transferValueSatoshi = Number(amount) - conf.commission; //subtract base fee
+
+        transferValueSatoshi=transferValueSatoshi-(transferValueSatoshi/1000*2); //subtract 0.2% commision
+
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));
-        console.log("transferValueSatoshi "+transferValueSatoshi)
+        console.log("transferValueSatoshi " + transferValueSatoshi)
         const bal = await this.getBalanceSats(conf.contractAddress);
         if (bal < amount) {
-            console.error("Not enough balance left on the wallet " + this.from + " bal = " + bal);
+            console.error("Not enough balance left on the wallet " + this.from + " bal = " + bal, { to });
             return { "error": "Not enough balance left. Please contact the admin support@sovryn.app" };
         }
 
-        const maxAmount = (this.max + conf.toleranceMax) * 1e8 / this.lastPrice;
-
-        if (transferValueSatoshi > maxAmount || transferValueSatoshi <= conf.toleranceMin) {
-            console.error(new Date(Date.now()) + "Transfer amount outside limit");
-            console.error("Max amount: " + maxAmount + " transferValue: " + transferValueSatoshi + ", max: " + this.max + ", min: " + this.min);
-            return { "error": "Your transferred amount exceeded the limit. Please send between " + (maxAmount / 1e8) + " and " + (this.min / 1e8) + " Btc. Contact the admin: support@sovryn.app " };
+        //hardcoded min amount here instead of using the value from config because it makes only trouble beeing strict with this amount
+        //eg: user calculates gas fees wrong. the amount displayed on the frontend is to encourage users do not send too little
+        //but in case they do it is cheaper for us to simply process the request than deal with a refund
+        if (transferValueSatoshi > conf.maxAmount * 2 || transferValueSatoshi <= 10000) {
+            console.error("transfer amount outside limit", { to });
+            console.error("transferValue: " + transferValueSatoshi);
+            return {"error": "Your transferred amount exceeded the limit."};
         }
 
         const transferValue = (transferValueSatoshi / 1e8).toString();
-        console.log("transfer value "+transferValue)
+        console.log("transfer value " + transferValue)
         const weiAmount = this.web3.utils.toWei(transferValue, 'ether');
-        console.log("wei amount "+weiAmount)
+        console.log("wei amount " + weiAmount)
 
         const receipt = await this.transferFromMultisig(weiAmount, to);
         let txId;
-        
-        if (receipt && receipt.events.Submission) {
+
+        if (receipt && receipt.transactionHash && receipt.events && receipt.events.Submission) {
+            console.log("Successfully transferred " + amount + " to " + to);
+
             const hexTransactionId = receipt.events.Submission.raw.topics[1];
             txId = this.web3.utils.hexToNumber(hexTransactionId);
-        }
-
-        if (receipt.transactionHash) {
-            console.log("Successfully transferred " + amount + " to " + to);
             return {
                 txHash: receipt.transactionHash,
                 txId,
                 value: transferValue
             };
-        }
-        else {
+        } else {
             console.error("Error sending " + amount + " to: " + to);
             console.error(receipt);
-            return { "error": "Error sending rsk. Please contact the admin support@sovryn.app." };
+            return {"error": "Error sending rsk. Please contact the admin support@sovryn.app."};
         }
     }
 
     async transferFromMultisig(val, to) {
-        console.log("transfer " + val + " to " + to)
+        console.log("transfer %s to %s", val, to)
         const wallet = await this.getWallet();
-        if (wallet.length == 0) return { error: "no wallet available to process the assignment" };
+        if (wallet.length === 0) {
+            return {
+                error: "no wallet available to process the assignment"
+            };
+        }
+
         const nonce = await this.web3.eth.getTransactionCount(wallet, 'pending');
-        const gasPrice = await this.getGasPrice();
+        this.lastGasPrice = await this.getGasPrice();
+
         const data = this.web3.eth.abi.encodeFunctionCall({
             name: 'withdrawAdmin',
             type: 'function',
-            inputs: [{ "name": "receiver", "type": "address" }, { "name": "amount", "type": "uint256" }]
+            inputs: [
+                {"name": "receiver", "type": "address"},
+                {"name": "amount",   "type": "uint256"}
+            ]
         }, [to, val]);
 
-        const receipt = await this.multisig.methods.submitTransaction(conf.contractAddress, 0, data).send({
-            from: wallet,
-            gas: 1000000,
-            gasPrice: gasPrice,
-            nonce: nonce
-        });
+        try {
+            const receipt = await this.multisig.methods.submitTransaction(conf.contractAddress, 0, data).send({
+                from: wallet,
+                gas: 1000000,
+                gasPrice: this.lastGasPrice,
+                nonce: nonce
+            });
 
-        walletManager.decreasePending(wallet);
-        return receipt;
+            walletManager.decreasePending(wallet);
+            return receipt;
+        }
+
+        catch(e) {
+            console.error("Error submitting tx", { to, val });
+            console.error(e);
+            return {
+
+            };
+        }
     }
 
 
-
     /**
-     * @notice loads a free wallet from the wallet manager 
+     * @notice loads a free wallet from the wallet manager
      * @dev this is secured by a mutex to make sure we're never exceeding 4 pending transactions per wallet
      */
     async getWallet() {
@@ -125,17 +141,34 @@ class RskCtrl {
             //because the node can't handle too many simultaneous requests
             await U.wasteTime(0.5);
             this.mutex.release();
-        }
-        catch (e) {
+        } catch (e) {
             this.mutex.release();
             console.error(e);
         }
         return wallet;
     }
 
+
+    /**
+     * The Rsk node does not return a valid response occassionally for a short period of time
+     * Thats why the request is repeated 5 times and in case it still failes the last known gas price is returned
+     */
     async getGasPrice() {
-        const gasPrice = await this.web3.eth.getGasPrice();
-        return Math.round(gasPrice);
+        let cnt = 0;
+
+        while (true) {
+            try {
+                const gasPrice = await this.web3.eth.getGasPrice();
+                return Math.round(gasPrice * 1.1); //add security buffer to avoid gasPrice too low error
+            } catch (e) {
+                console.error("Error retrieving gas price");
+                console.error(e);
+                cnt++;
+                if (cnt === 5) {
+                    return this.lastGasPrice;
+                }
+            }
+        }
     }
 }
 

@@ -11,19 +11,24 @@ const pubKeys = [
 const network = networks.bitcoin;
 
 
-
-
-async function getPaymentAdr(index) {
-    const publicKeys = pubKeys.map(key => {
+function getDerivedPubKeys(index) {
+    let publicKeys = pubKeys.map(key => {
         const node = bip32.fromBase58(key, network);
         const child = node.derive(0).derive(index);
-        return child.publicKey;
+        return child.publicKey.toString('hex');
     });
+    publicKeys.sort();
+    publicKeys = publicKeys.map(k => Buffer.from(k, 'hex'));
+    return publicKeys;
+}
 
-    const payment = payments.p2wsh({
+async function getPaymentAdr(index) {
+    const publicKeys = getDerivedPubKeys(index);
+
+    const payment = payments.p2sh({
         network: network,
         redeem: payments.p2ms({
-            m: 2,
+            m: 3,
             pubkeys: publicKeys,
             network: network
         })
@@ -36,7 +41,7 @@ async function printAddresses(){
     //await dbCtrl.initDb("fastbtcrelay_main");
     //await bitcoinCtrl.init();
      
-    for(let i = 0; i < 10000; i++){
+    for(let i = 0; i < 20; i++){
         const {payment: userPayment} = await getPaymentAdr(i);
         console.log(i+" "+userPayment.address);
     }
