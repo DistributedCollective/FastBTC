@@ -131,9 +131,10 @@ class BitcoinCtrl {
         try {
             const added = await dbCtrl.getDeposit(txId, label);
             const user = await dbCtrl.getUserByBtcAddress(address);
+            value = value / 1e8; // value needs to be stored as BTC, not sats
 
             if (added == null && user != null) {
-                const msg = `user ${user.btcadr} has a pending deposit, tx ${txId}, value ${(value / 1e8)} BTC`
+                const msg = `user ${user.btcadr} has a pending deposit, tx ${txId}, value ${value} BTC`
                 telegramBot.sendMessage(msg);
 
                 await dbCtrl.addDeposit(user.label, txId, value, false);

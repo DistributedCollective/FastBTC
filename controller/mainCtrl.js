@@ -203,7 +203,7 @@ class MainController {
         }
 
         if (depositFound == null) {
-            const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, true);
+            const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val/1e8, true);
 
             if (!resDb) {
                 return console.error("Error adding deposit to db");
@@ -232,7 +232,7 @@ class MainController {
         }
 
         await dbCtrl.updateDeposit(d.txHash, resTx.txId, d.label);
-        await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val);
+        await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val/1e8);
 
         console.log("Successfully sent " + d.val + " to " + user.web3adr);
         console.log(resTx);
