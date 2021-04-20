@@ -2,7 +2,7 @@ import rskCtrl from '../controller/rskCtrl';
 import conf from '../config/config';
 
 // add the necessary parameters here
-changeCosigner("".toLowerCase(), "", "".toLowerCase());
+changeCosigner(3, "changeRequirement");
 
 
 async function changeCosigner(adr, action) {
@@ -31,13 +31,21 @@ async function changeCosigner(adr, action) {
             type: 'function',
             inputs: [{ "name": "owner", "type": "address" }, { "name": "newOwner", "type": "address" }]
         }, [adr]);
-    } else {
+    } else if (action === 'changeRequirement') {
+        data = rskCtrl.web3.eth.abi.encodeFunctionCall({
+            name: 'changeRequirement',
+            type: 'function',
+            inputs: [{ "name": "_required", "type": "uint256" }]
+        }, [adr]);
+
+    }
+    else {
         console.log("Unknown action")
         return false;
     }
 
     try {
-        const receipt = await rskCtrl.multisig.methods.submitTransaction(conf.contractAddress.toLowerCase(), 0, data).send({
+        const receipt = await rskCtrl.multisig.methods.submitTransaction(conf.multisigAddress.toLowerCase(), 0, data).send({
             from: conf.account.adr.toLowerCase(),
             gas: 300000
         });

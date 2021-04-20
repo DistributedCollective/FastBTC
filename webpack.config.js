@@ -4,7 +4,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 module.exports = {
   mode: 'development',
   entry: {
-    main: ['./src/initweb3.js', './src/main.js'],
+    main: ['./src/main.js'],
     db: ['./src/db.js']
   },
   devtool: 'inline-source-map',
@@ -21,6 +21,10 @@ module.exports = {
         },
         {
           from: 'src/db2.html',
+          to: ''
+        },
+        {
+          from: 'src/summary.html',
           to: ''
         },
       ],

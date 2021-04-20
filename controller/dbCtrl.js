@@ -1,28 +1,29 @@
 /**
  * Database controller
  * Stores user deposits on a given Btc address and corresponding Rsk transfers
- * 
  */
 
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-import {User, Transaction} from '../models/index';
+import {Transaction, User} from '../models/index';
 
 class DbCtrl {
-
     async initDb(dbName) {
-        const p=this;
-        return new Promise(resolve => {
+        const self = this;
+        return new Promise((resolve, reject) => {
             const file = path.join(__dirname, '../db/' + dbName + ".db");
-            this.db = new sqlite3.Database(file, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
-                if (err) {
-                    console.error(err.message, file);
-                } else {
-                    console.log('Connected to the ' + dbName + ' database.');
-                    p.initRepos().catch(console.log).then(() => resolve());
-                }
-            });
+            this.db = new sqlite3.Database(
+                file, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
+                (err) => {
+                    if (err) {
+                        console.error(err.message, file);
+                        reject(err);
+                    } else {
+                        console.log('Connected to the ' + dbName + ' database.');
+                        self.initRepos().catch(reject).then(() => resolve());
+                    }
+                });
         });
     }
 
@@ -37,97 +38,71 @@ class DbCtrl {
             await this.userRepository.createTable();
             await this.transactionRepository.createTable();
         } catch (e) {
-            console.log(e);
+            console.error(e);
         }
     }
 
     /**
      * Helpers
      **/
-
     async getUserByAddress(adr) {
-        try {
-            const user = await this.userRepository.findByAddress(adr);
+        const user = await this.userRepository.findByAddress(adr);
 
-
-            if (user) {
-                console.log("user found");
-                console.log(user);
-            }
-            else {
-                console.log("no user found");
-            }
-
-            return user;
-        } catch (e) {
-            console.log(e);
-            return null;
+        if (user) {
+            console.log("getUserByAddress: user found", user);
+        } else {
+            console.log("getUserByAddress: no user found");
         }
+        return user;
     }
 
     async getUserByLabel(label) {
-        try {
-            return await this.userRepository.findOne({
-                label: label
-            });
-        } catch (e) {
-            console.log(e);
-            return null;
-        }
+        return await this.userRepository.findOne({
+            label: label
+        });
     }
 
-    async addUser(web3adr, btcadr, label) {
-        try {
-            return await this.userRepository.insert({
-                web3adr,
-                btcadr,
-                label
-            });
-        } catch (e) {
-            console.log(e);
-            return null;
-        }
+    async addUser(web3adr, btcAddress, label) {
+        return await this.userRepository.insert({
+            web3adr,
+            btcadr: btcAddress,
+            label
+        });
     }
 
     async getUserByBtcAddress(adr) {
-        try {
-            return await this.userRepository.findOne({
-                btcadr: adr
-            });
-        } catch (e) {
-            console.log(e);
-            return null;
-        }
+        return await this.userRepository.findOne({
+            btcadr: adr
+        });
     }
 
-
-    async getNextUserId() {
-        try {
-            const users = await this.userRepository.find({}, {
-                limit: 1,
-                orderBy: {id: -1}
-            });
-
-            return users && users[0] && (users[0].id + 1) || 0;
-        } catch (e) {
-            console.log(e);
-            return Promise.reject(e);
-        }
-    }
-
-
-    async findUsersByAdrList(addresses) {
-        try {
-            const users = await this.userRepository.find({
-                btcadr: addresses
-            });
-
-            return users || [];
-        } catch (e) {
-            console.log(e);
-            return Promise.reject(e);
-        }
-    }
+    // async getNextUserId() {
+    //     try {
+    //         const users = await this.userRepository.find({}, {
+    //             limit: 1,
+    //             orderBy: {id: -1}
+    //         });
+    //
+    //         return users && users[0] && (users[0].id + 1) || 0;
+    //     } catch (e) {
+    //         console.log(e);
+    //         return Promise.reject(e);
+    //     }
+    // }
+    //
+    //
+    // async findUsersByAdrList(addresses) {
+    //     try {
+    //         const users = await this.userRepository.find({
+    //             btcadr: addresses
+    //         });
+    //
+    //         return users || [];
+    //     } catch (e) {
+    //         console.log(e);
+    //         return Promise.reject(e);
+    //     }
+    // }
 
     async addDeposit(userAdrLabel, txHash, valueBtc, isConfirmed = false) {
         try {
@@ -138,173 +113,145 @@ class DbCtrl {
                 status: isConfirmed ? 'confirmed' : 'pending'
             });
         } catch (e) {
-            console.log(e);
-            return null;
+            console.error("error adding deposit for " + txHash + " user: " + userAdrLabel + ", value: " + valueBtc);
+            console.error(e);
+            throw e;
         }
     }
-    
+
     async getDeposit(txHash, label = '') {
-        try {
-            const criteria = {
-                txHash: txHash,
-                type: "deposit"
-            };
-            if (label) criteria['userAdrLabel'] = label;
-
-            return await this.transactionRepository.findOne(criteria);
-        } catch (e) {
-            console.log(e);
-            return null;
+        const criteria = {
+            txHash: txHash,
+            type: "deposit"
+        };
+        if (label) {
+            criteria['userAdrLabel'] = label;
         }
+
+        return await this.transactionRepository.findOne(criteria);
     }
 
-    async getDepositByTxId(txHash, label = '') {
-        try {
-            const criteria = {
-                txHash: txHash,
-                type: "deposit"
-            };
-            if (label) criteria['userAdrLabel'] = label;
-
-            return await this.transactionRepository.findOne(criteria);
-        } catch (e) {
-            console.log(e);
-            return null;
-        }
-    }
-
-    getDepositHistory(userWeb3Adr) {
+    async getDepositHistory(userWeb3Adr) {
         const sql = "select user.id, web3adr, btcadr, valueBtc, type, transactions.dateAdded, transactions.txHash, status"
-        + " from user cross join transactions on user.label = transactions.userAdrLabel "
-        +"AND web3adr = '"+userWeb3Adr+"';";
-       
-        return new Promise(resolve=> {
-            try {
-                this.db.all(sql, [], (err, rows) => {
-                    if (err) {
-                        console.log('Error running sql: ' + sql);
-                        console.log(err);
-                        return resolve(null);
-                    }
-                    else {
-                        //console.log(rows);
-                        for(let i in rows) rows[i].dateAdded = new Date(rows[i].dateAdded);
-                        return resolve(rows);
-                    }
-                });
+            + " from user cross join transactions on user.label = transactions.userAdrLabel "
+            + "AND web3adr = ?;";
+
+        try {
+            const rows = await this.transactionRepository.all(sql, [userWeb3Adr])
+            for (let row of rows) {
+                row.dateAdded = new Date(row.dateAdded);
             }
-            catch(e){
-                console.log('Error executing sql: ' + sql);
-                console.log(err);
-                return resolve(null);
-            }
-        });
+            return rows;
+        }
+        catch (e) {
+            console.error('Error running sql: ' + sql);
+            console.error(err);
+
+            throw new Error("Unable to retrieve deposit history");
+        }
     }
 
-    getLastTxTimestamp(){
+    async getLastTxTimestamp() {
         const sql = "select dateAdded from transactions where type = 'deposit' order by dateAdded desc;";
-       
-        return new Promise(resolve=> {
+
+        return new Promise(resolve => {
             try {
                 this.db.get(sql, [], (err, result) => {
                     if (err) {
-                        console.log('Error running sql: ' + sql);
-                        console.log(err);
-                        return resolve(Date.now());
-                    }
-                    else {
-                        if(result && result.dateAdded) return resolve(result.dateAdded);
-                        else {
+                        console.error('Error running sql: ' + sql);
+                        console.error(err);
+                        resolve(Date.now());
+                    } else {
+                        if (result && result.dateAdded) {
+                            resolve(result.dateAdded);
+                        } else {
                             console.log("No deposit found. Create new timestamp now()");
-                            return resolve(Date.now());
+                            resolve(Date.now());
                         }
                     }
                 });
-            }
-            catch(e){
+            } catch (e) {
                 console.log('Error executing sql: ' + sql);
                 console.log(err);
-                return resolve(Date.now());
+                resolve(Date.now());
             }
         });
     }
-    
-    async confirmDeposit(txHash) {
+
+    async confirmDeposit(txHash, label) {
         try {
             return await this.transactionRepository.update({
                 txHash: txHash,
+                userAdrLabel: label,
                 type: "deposit"
             }, {status: 'confirmed'});
         } catch (e) {
-            console.log(e);
-            return null;
+            console.error("error confirming deposit for %s", txHash)
+            console.error(e);
+            throw e;
         }
     }
- 
-    async updateDeposit(txHash, txId) {
-        console.log("update deposit tx hash "+txHash+", txId "+txId);
-        try {
-            return await this.transactionRepository.update({txHash: txHash, type:"deposit"}, {txId: txId});
-        } catch (e) {
-            console.log(e);
-            return null;
-        }
+
+    async updateDeposit(txHash, txId, label) {
+        console.log(
+            "update deposit tx hash %s, txId %s, label %s",
+            txHash, txId, label
+        );
+        return await this.transactionRepository.update({
+            txHash: txHash,
+            userAdrLabel: label,
+            type: "deposit"
+        }, {txId: txId});
     }
 
     async addTransferTx(userAdrLabel, txHash, valueBtc) {
-        try {
-            return await this.transactionRepository.insertTransferTx({
-                userAdrLabel,
-                txHash,
-                valueBtc,
-                status: 'confirmed'
-            });
-        } catch (e) {
-            console.log(e);
-            return null;
-        }
+        return await this.transactionRepository.insertTransferTx({
+            userAdrLabel,
+            txHash,
+            valueBtc,
+            status: 'confirmed'
+        });
     }
 
     async getPaymentInfo(txId) {
-        console.log("Get payment info for "+txId);
-        try {
-            const tx = await this.transactionRepository.getTransactionByTxId(txId);
-            console.log("tx")
-            console.log(tx);
-            if (!tx || !tx.userAdrLabel || !tx.txHash) return { btcAdr: null, txHash: null };
+        console.log("Get payment info for " + txId);
 
-            const user = await this.getUserByLabel(tx.userAdrLabel);
-            console.log("user")
-            console.log(user);
-            if(!user || !user.btcadr) return { btcAdr: null, txHash: null };
-            return { btcAdr: user.btcadr, txHash: tx.txHash};
-        } catch (e) {
-            console.log(e);
-            return null;
+        const tx = await this.transactionRepository.getTransactionByTxId(txId);
+
+        console.log("tx", tx);
+        if (!tx || !tx.userAdrLabel || !tx.txHash) {
+            return {btcAdr: null, txHash: null};
         }
+
+        const user = await this.getUserByLabel(tx.userAdrLabel);
+        console.log("user", user);
+
+        if (!user || !user.btcadr) {
+            return {btcAdr: null, txHash: null};
+        }
+
+        return {btcAdr: user.btcadr, txHash: tx.txHash};
     }
 
     async getUserLabels(skip = 0, size = 10) {
-        try {
-            const users = await this.userRepository.find({}, {offset: skip, limit: size});
-
-            return (users || []).map(u => u.label);
-        } catch (e) {
-            console.log(e);
-            return [];
-        }
-    }
-
-    /**
-     *
-     * @param { string[] } txHashList
-     * @returns {Promise<unknown>}
-     */
-    async findTx(txHashList) {
-        return await this.transactionRepository.find({
-            txHash: txHashList
+        const users = await this.userRepository.find({}, {
+            offset: skip,
+            limit: size
         });
+
+        return (users || []).map(u => u.label);
     }
+
+    // /**
+    //  * Use with caution, most likely you need to search for both txHash and userAdrLabel to make sure item is unique
+    //  * @param { string[] } txHashList
+    //  * @returns {Promise<unknown>}
+    //  */
+    // async findTx(txHashList) {
+    //     return await this.transactionRepository.find({
+    //         txHash: txHashList
+    //     });
+    // }
 
     async getAllDeposits() {
         return this.transactionRepository.find({
@@ -318,10 +265,13 @@ class DbCtrl {
         })
     }
 
-    async getSumDeposited() {
-        return await this.transactionRepository.sumDeposited();
+    async getSum(type) {
+        return await this.transactionRepository.sumTransacted(type);
     }
 
+    async getTotalNumberOfTransactions(type) {
+        return await this.transactionRepository.countConfirmed(type);
+    }
 }
 
 export default new DbCtrl();
