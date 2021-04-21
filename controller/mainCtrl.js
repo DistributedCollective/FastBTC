@@ -28,6 +28,7 @@ class MainController {
     initSocket(httpServer) {
         console.log("init socket")
         this.io = SocketIO(httpServer, {
+            allowEIO3: true, // false by default
             cors: {
                 origin: "*",
                 methods: ["GET", "POST"]
