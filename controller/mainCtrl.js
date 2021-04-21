@@ -158,7 +158,7 @@ class MainController {
             let days = [];
             const currentDate = new Date();
             for (let d=0; d<=50; d++) {
-                const date = currentDate - d;
+                const date = currentDate.setDate(currentDate.getDate() - d);
                 const deposits = await dbCtrl.getTotalNumberOfTransactions('deposit', date);
                 const depositsTotalAmount = await dbCtrl.getSum('deposits', date);
                 const transfers = await dbCtrl.getTotalNumberOfTransactions('transfer', date);
