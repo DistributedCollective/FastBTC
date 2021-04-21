@@ -5,7 +5,7 @@
 import Web3 from 'web3';
 
 const config = window.FASTBTC_CONFIG;
-const { origin, pathname } = new URL(config.backendUrl || 'http://3.131.33.161:3000');
+const { origin, pathname } = new URL(config ? config.backendUrl : 'http://3.131.33.161:3000');
 console.log(origin);
 console.log(pathname)
 
