@@ -156,9 +156,9 @@ class MainController {
     async getDays(cb) {
         try {
             let days = [];
-            const currentDate = new Date();
+            const dayOffset = 24*60*60*1000;
             for (let d=0; d<=50; d++) {
-                const date = currentDate.setDate(currentDate.getDate() - d);
+                const date = new Date().setTime(new Date().getTime()-(dayOffset*d));
                 const deposits = await dbCtrl.getTotalNumberOfTransactions('deposit', date);
                 const depositsTotalAmount = await dbCtrl.getSum('deposits', date);
                 const transfers = await dbCtrl.getTotalNumberOfTransactions('transfer', date);
