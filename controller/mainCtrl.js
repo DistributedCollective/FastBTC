@@ -157,13 +157,14 @@ class MainController {
         try {
             let days = [];
             const currentDate = new Date();
-            for (d=0; d>=50; d++) {
+            for (let d=0; d<=50; d++) {
                 const date = currentDate - d;
                 const deposits = await dbCtrl.getTotalNumberOfTransactions('deposit', date);
                 const depositsTotalAmount = await dbCtrl.getSum('deposits', date);
                 const transfers = await dbCtrl.getTotalNumberOfTransactions('transfer', date);
                 const transfersTotalAmount = await dbCtrl.getSum('transfer', date);
                 days.push({
+                    date,
                     deposits,
                     depositsTotalAmount,
                     transfers,
