@@ -56,6 +56,7 @@ class AppCtrl {
             averageSize: 0
         };
 
+        this.days = [];
         this.error = false;
         this.rskExplorer = conf.env === "prod" ? "https://explorer.rsk.co" : "https://explorer.testnet.rsk.co";
         this.bitcoinExplorer = conf.env === "prod" ? "https://live.blockcypher.com/btc" : "https://live.blockcypher.com/btc-testnet";
@@ -84,6 +85,8 @@ class AppCtrl {
         socket.emit('txAmount', (info) => this.showTxAmountInfo(info));
 
         socket.emit('getStats', (res) => this.showStats(res));
+
+        socket.emit('getDays', (res) => this.showDaysStats(res)); // get last 50 days stats
 
         socket.on('depositTx', (tx) => {
             this.depositTx = tx;
@@ -147,6 +150,10 @@ class AppCtrl {
         this.$scope.$apply();
     }
 
+    showDaysStats(res) {
+        this.days = res.days;
+        this.$scope.$apply();
+    }
 }
 
 angular.module('app', []).controller('appCtrl', AppCtrl);

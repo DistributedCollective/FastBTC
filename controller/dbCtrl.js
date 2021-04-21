@@ -265,12 +265,12 @@ class DbCtrl {
         })
     }
 
-    async getSum(type) {
-        return await this.transactionRepository.sumTransacted(type);
+    async getSum(type, date) {
+        return await this.transactionRepository.sumTransacted(type, date);
     }
 
-    async getTotalNumberOfTransactions(type) {
-        return await this.transactionRepository.countConfirmed(type);
+    async getTotalNumberOfTransactions(type, date) {
+        return await this.transactionRepository.countConfirmed(type, date);
     }
 }
 

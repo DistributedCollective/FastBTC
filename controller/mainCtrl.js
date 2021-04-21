@@ -38,6 +38,7 @@ class MainController {
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('getStats', (...args) => this.getStats.apply(this, [...args]));
+            socket.on('getDays', (...args) => this.getDays.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.sendTxMinMax.apply(this, [...args]));
             socket.on('getDeposits', (...args) => this.getDbDeposits.apply(this, [...args]));
             socket.on('getTransfers', (...args) => this.getTransfers.apply(this, [...args]));
@@ -146,6 +147,29 @@ class MainController {
             transfers.averageSize = (transfers.totalTransacted / transfers.totalNumber).toFixed(6);
 
             cb({deposits, transfers});
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async getDays(cb) {
+        try {
+            let days = [];
+            const currentDate = new Date();
+            for (d=0; d>=50; d++) {
+                const date = currentDate - d;
+                const deposits = await dbCtrl.getTotalNumberOfTransactions('deposit', date);
+                const depositsTotalAmount = await dbCtrl.getSum('deposits', date);
+                const transfers = await dbCtrl.getTotalNumberOfTransactions('transfer', date);
+                const transfersTotalAmount = await dbCtrl.getSum('transfer', date);
+                days.push({
+                    deposits,
+                    depositsTotalAmount,
+                    transfers,
+                    transfersTotalAmount
+                })
+            }
+            cb({days});
         } catch (e) {
             console.log(e);
         }

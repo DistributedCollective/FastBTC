@@ -48,6 +48,30 @@
         </tr>
         </tbody>
     </table>
+
+    <h1>Transactions per day</h1>
+    <table>
+        <thead>
+        <tr>
+            <th></th>
+            <th>Deposits</th>
+            <th>Amount deposited in BTC</th>
+            <th>Transfers</th>
+            <th>Amount tranfered on RSK</th>
+            <th>TX fees</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="day in days">
+            <td>{{day.date}}</td>
+            <td>{{day.deposits}}</td>
+            <td>{{day.depositsTotalAmount}}</td>
+            <td>{{day.transfers}}</td>
+            <td>{{day.transfersTotalAmount}}</td>
+            <td>{{day.txFees}}</td>
+        </tr>
+        </tbody>
+    </table>
 </div>
 
 <!-- Optional JavaScript -->
