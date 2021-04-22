@@ -2,11 +2,11 @@
  * Database controller
  * Stores user deposits on a given Btc address and corresponding Rsk transfers
  */
-const btcCtrl = require('./bitcoinCtrl');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
 import {Transaction, User} from '../models/index';
+import bitcoinCtrl from './bitcoinCtrl';
 
 class DbCtrl {
     async initDb(dbName) {
@@ -106,7 +106,7 @@ class DbCtrl {
 
     async addDeposit(userAdrLabel, txHash, valueBtc, isConfirmed = false) {
         try {
-            const tx =  await btcCtrl.api.getRawTx(txHash);
+            const tx =  await bitcoinCtrl.api.getRawTx(txHash);
             return await this.transactionRepository.insertDepositTx({
                 userAdrLabel,
                 txHash,
@@ -208,7 +208,7 @@ class DbCtrl {
 
     async addTransferTx(userAdrLabel, txHash, valueBtc) {
         try { 
-            const tx =  await btcCtrl.api.getRawTx(txHash);
+            const tx =  await bitcoinCtrl.api.getRawTx(txHash);
             return await this.transactionRepository.insertTransferTx({
                 userAdrLabel,
                 txHash,
