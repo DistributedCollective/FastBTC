@@ -128,7 +128,8 @@ export default class BitcoinNodeWrapper {
                     hex: res.hex,
                     confirmations: res.confirmations,
                     value: Number(res.amount) * 1e8,
-                    vout: vout
+                    vout: vout,
+                    fee: Math.abs(res.fee)
                 };
 
             }
