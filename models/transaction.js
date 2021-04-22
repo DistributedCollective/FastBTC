@@ -11,27 +11,30 @@ export default class Transaction extends BaseModel {
             dateAdded datetime,
             status text,
             type text,
+            txFees INTEGER,
             unique(txHash, userAdrLabel)
         )`;
 
         super(db, 'transactions', sql);
     }
 
-    insertDepositTx({userAdrLabel, txHash, valueBtc, status}) {
+    insertDepositTx({userAdrLabel, txHash, valueBtc, status, txFees}) {
         return super.insert({
             userAdrLabel, txHash, valueBtc,
             type: "deposit",
             dateAdded: new Date(),
-            status: status
+            status,
+            txFees
         });
     }
 
-    insertTransferTx({userAdrLabel, txHash, valueBtc, status}) {
+    insertTransferTx({userAdrLabel, txHash, valueBtc, status, txFees}) {
         return super.insert({
             userAdrLabel, txHash, valueBtc,
             type: "transfer",
             dateAdded: new Date(),
-            status: status
+            status,
+            txFees
         });
     }
 

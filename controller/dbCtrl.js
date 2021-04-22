@@ -2,7 +2,7 @@
  * Database controller
  * Stores user deposits on a given Btc address and corresponding Rsk transfers
  */
-
+const btcCtrl = require('./bitcoinCtrl');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
@@ -106,11 +106,13 @@ class DbCtrl {
 
     async addDeposit(userAdrLabel, txHash, valueBtc, isConfirmed = false) {
         try {
+            const tx =  await btcCtrl.api.getRawTx(txHash);
             return await this.transactionRepository.insertDepositTx({
                 userAdrLabel,
                 txHash,
                 valueBtc,
-                status: isConfirmed ? 'confirmed' : 'pending'
+                status: isConfirmed ? 'confirmed' : 'pending',
+                txFees: tx.fee
             });
         } catch (e) {
             console.error("error adding deposit for " + txHash + " user: " + userAdrLabel + ", value: " + valueBtc);
@@ -205,12 +207,20 @@ class DbCtrl {
     }
 
     async addTransferTx(userAdrLabel, txHash, valueBtc) {
-        return await this.transactionRepository.insertTransferTx({
-            userAdrLabel,
-            txHash,
-            valueBtc,
-            status: 'confirmed'
-        });
+        try { 
+            const tx =  await btcCtrl.api.getRawTx(txHash);
+            return await this.transactionRepository.insertTransferTx({
+                userAdrLabel,
+                txHash,
+                valueBtc,
+                status: 'confirmed',
+                txFees: tx.fee
+            });
+        } catch (e) {
+            console.error("error adding transfer for " + txHash + " user: " + userAdrLabel + ", value: " + valueBtc);
+            console.error(e);
+            throw e;
+        }
     }
 
     async getPaymentInfo(txId) {
