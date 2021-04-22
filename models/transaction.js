@@ -50,7 +50,7 @@ export default class Transaction extends BaseModel {
     async sumTransacted(type, date) {
         try {
             const sql = date ? `SELECT type, SUM(valueBtc) total FROM ${this.tableName} WHERE type = ? AND status = 'confirmed' AND 
-                (date(datetime(${date}/1000, 'unixepoch')) - date(datetime(dateAdded/1000, 'unixepoch'))) = 0 GROUP BY type` :
+                (julianday(date(datetime(${date}/1000, 'unixepoch'))) - julianday(date(datetime(dateAdded/1000, 'unixepoch')))) = 0.0 GROUP BY type` :
                 `SELECT type, SUM(valueBtc) total FROM ${this.tableName} WHERE type = ? AND status = 'confirmed' GROUP BY type`;
             const res = await this.get(sql, [type]);
             return res && res.total || 0;
@@ -63,7 +63,7 @@ export default class Transaction extends BaseModel {
     async countConfirmed(type, date) {
         try {
             const sql = date ? `SELECT type, COUNT(*) AS ct FROM ${this.tableName} WHERE type = ? AND status = 'confirmed' AND 
-                (date(datetime(${date}/1000, 'unixepoch')) - date(datetime(dateAdded/1000, 'unixepoch'))) = 0 GROUP BY type` : 
+                (julianday(date(datetime(${date}/1000, 'unixepoch'))) - julianday(date(datetime(dateAdded/1000, 'unixepoch')))) = 0.0 GROUP BY type` : 
                 `SELECT type, COUNT(*) AS ct FROM ${this.tableName} WHERE type = ? AND status = 'confirmed' GROUP BY type`;
             const res = await this.get(sql, [type]);
             return res ? res.ct : 0;
