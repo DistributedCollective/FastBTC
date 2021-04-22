@@ -5,6 +5,7 @@ module.exports = {
   mode: 'development',
   entry: {
     main: ['./src/main.js'],
+    dirPagination: ['./src/dirPagination.js'],
     db: ['./src/db.js']
   },
   devtool: 'inline-source-map',

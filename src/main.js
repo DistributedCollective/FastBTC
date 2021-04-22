@@ -1,7 +1,6 @@
 /**
  * App
  */
-
 import Web3 from 'web3';
 
 const config = window.FASTBTC_CONFIG;
@@ -157,6 +156,6 @@ class AppCtrl {
     }
 }
 
-angular.module('app', []).controller('appCtrl', AppCtrl);
+angular.module('app', ['angularUtils.directives.dirPagination']).controller('appCtrl', AppCtrl);
     
 angular.bootstrap(document, ['app']);
