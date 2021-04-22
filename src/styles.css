@@ -7,3 +7,12 @@ table {
     text-align: center;
     vertical-align: middle;
 }
+
+.sort-icon {
+    font-size: 9px;
+}
+
+th {
+    cursor: pointer;
+    text-align: center;
+}

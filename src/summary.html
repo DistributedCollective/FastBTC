@@ -59,15 +59,27 @@
         <thead>
         <tr>
             <th></th>
-            <th>Deposits</th>
-            <th>Amount deposited in BTC</th>
-            <th>Transfers</th>
-            <th>Amount tranfered on RSK</th>
-            <th>TX fees</th>
+            <th ng-click="sort('deposits')">
+                Deposits
+                <span ng-if="sortKey=='deposits'" class="glyphicon sort-icon" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+            </th>
+            <th ng-click="sort('depositsTotalAmount')">
+                Amount deposited in BTC
+                <span ng-if="sortKey=='depositsTotalAmount'" class="glyphicon sort-icon" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+            </th>
+            <th ng-click="sort('transfers')">
+                Transfers
+                <span ng-if="sortKey=='transfers'" class="glyphicon sort-icon" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+            </th>
+            <th ng-click="sort('transfersTotalAmount')">
+                Amount tranfered on RSK
+                <span ng-if="sortKey=='transfersTotalAmount'" class="glyphicon sort-icon" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
+            </th>
+            <th ng-click="sort('txFees')">TX fees</th>
         </tr>
         </thead>
         <tbody>
-        <tr dir-paginate="day in ctrl.days|filter:search|itemsPerPage:10">
+        <tr dir-paginate="day in ctrl.days|orderBy:sortKey:reverse|filter:search|itemsPerPage:10">
             <td>{{day.date}}</td>
             <td>{{day.deposits}}</td>
             <td>{{day.depositsTotalAmount}}</td>
