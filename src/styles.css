@@ -23,3 +23,7 @@ ul {
 .sort-icon {
     font-size: 9px;
 }
+
+th:first-child {
+    cursor: unset;
+}
