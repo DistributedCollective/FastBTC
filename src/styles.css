@@ -1,3 +1,7 @@
+h3 {
+    margin-top: 3em;
+}
+
 form {
     margin-top: 2em;
     margin-bottom: 2em;
@@ -13,6 +17,10 @@ th {
     text-align: center;
 }
 
+th:first-child {
+    cursor: unset;
+}
+
 ul {
     position: absolute;
     left: 50%;
@@ -22,8 +30,4 @@ ul {
 
 .sort-icon {
     font-size: 9px;
-}
-
-th:first-child {
-    cursor: unset;
 }
