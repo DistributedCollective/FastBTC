@@ -58,7 +58,7 @@
     <table class="table table-bordered">
         <thead>
         <tr>
-            <th></th>
+            <th>Date</th>
             <th ng-click="sort('deposits')">
                 Deposits
                 <span ng-if="sortKey=='deposits'" class="glyphicon sort-icon" ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span>
@@ -80,7 +80,7 @@
         </thead>
         <tbody>
         <tr dir-paginate="day in ctrl.days|orderBy:sortKey:reverse|filter:search|itemsPerPage:10">
-            <td>{{day.date}}</td>
+            <td>{{day.day}}</td>
             <td>{{day.deposits}}</td>
             <td>{{day.depositsTotalAmount}}</td>
             <td>{{day.transfers}}</td>

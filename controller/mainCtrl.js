@@ -164,7 +164,11 @@ class MainController {
                 const transfers = await dbCtrl.getTotalNumberOfTransactions('transfer', date);
                 const transfersTotalAmount = await dbCtrl.getSum('transfer', date);
                 days.push({
-                    date: new Date(date).toUTCString(),
+                    day: new Date(date).toLocaleString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                    }),
                     deposits,
                     depositsTotalAmount,
                     transfers,
