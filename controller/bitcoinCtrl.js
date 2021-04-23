@@ -9,14 +9,20 @@ import BitcoinNodeWrapper from "../utils/bitcoinNodeWrapper";
 
 class BitcoinCtrl {
     constructor() {
-        this.onTxDepositedHandler = () => {};
-        this.onPendingDepositHandler = () => {};
+        this.onTxDepositedHandler = async () => {};
+        this.onPendingDepositHandler = async () => {};
         this.isMainNet = conf.env === 'prod';
         this.pubKeys = conf.walletSigs.pubKeys;
         this.cosigners = conf.walletSigs.cosigners;
         this.thresholdConfirmations = conf.thresholdConfirmations;
         this.api = new BitcoinNodeWrapper(conf.node);
         this.network = this.isMainNet ? networks.bitcoin : networks.testnet;
+
+        // stores unknown labels => the times we've complained about them
+        this.unknownLabels = new Map();
+
+        // stores unknown labels => the times we've complained about them
+        this.lastMessages = new Map();
     }
 
     getDerivedPubKeys(index) {
@@ -71,21 +77,40 @@ class BitcoinCtrl {
         this.onTxDepositedHandler = handler;
     }
 
-    async addPendingDepositTx({ address, value, txId, label }) {
+    async addPendingDepositTx({ address, value, txId, label, vout }) {
         try {
             const user = await dbCtrl.getUserByBtcAddress(address);
-            const added = await dbCtrl.getDeposit(txId, label);
+            if (! user) {
+                console.log("no user for address %s", address);
+                return;
+            }
 
-            if (added == null && user != null) {
-                const msg = `user ${user.btcadr} (label ${label}) has a pending deposit, tx ${txId}, value ${(value / 1e8)} BTC`
+            let added = await dbCtrl.getDeposit(txId, label, vout);
+
+            // try finding one with -1 vout, so that we do not mess
+            // the original database!
+            if (added == null) {
+                added = await dbCtrl.getDeposit(txId, label, -1);
+                if (added) {
+                    console.warn(
+                        "found a deposit tx %s for label %s without vout fix",
+                        txId,
+                        label
+                    );
+                }
+            }
+
+            if (added == null) {
+                const msg = `user ${user.btcadr} (label ${label}) has a pending deposit, tx ${txId}/${vout}, value ${(value / 1e8)} BTC`
                 telegramBot.sendMessage(msg);
 
-                await dbCtrl.addDeposit(user.label, txId, value, false);
+                await dbCtrl.addDeposit(user.label, txId, value, false, vout);
 
-                this.onPendingDepositHandler(user.label, {
+                await this.onPendingDepositHandler(user.label, {
                     txHash: txId,
                     value: value,
-                    status: 'pending'
+                    status: 'pending',
+                    vout: vout,
                 });
             }
 
@@ -94,18 +119,23 @@ class BitcoinCtrl {
         }
     }
 
-    async depositTxConfirmed({ address, value, txId, confirmations, label }) {
+    async depositTxConfirmed({ address, value, txId, confirmations, label, vout }) {
         try {
             const user = await dbCtrl.getUserByBtcAddress(address);
-            const confirmedInDB = await dbCtrl.getDeposit(txId, label);
+            let confirmedInDB = await dbCtrl.getDeposit(txId, label, vout);
+            if (! confirmedInDB) {
+                confirmedInDB = await dbCtrl.getDeposit(txId, label, -1);
+            }
 
             if (user != null && (confirmedInDB == null || confirmedInDB.status !== 'confirmed')) {
-                this.onTxDepositedHandler({
+                // it's *async*
+                await this.onTxDepositedHandler({
                     address: user.btcadr,
                     label: user.label,
                     txHash: txId,
                     conf: confirmations,
-                    val: value
+                    val: value,
+                    vout: vout,
                 });
             }
         } catch (e) {
@@ -125,8 +155,6 @@ class BitcoinCtrl {
             null
         );
 
-        console.log("checking deposits - %d confirmation depth by default",
-            conf.maxConfirmationsToTrack);
         const since = await this.api.listDepositsSinceBlock(
             blockBookmark,
             conf.maxConfirmationsToTrack,
@@ -134,7 +162,7 @@ class BitcoinCtrl {
 
         const txList = (since.transactions || []).filter(tx => {
             if (! addrLabels.has(tx.label)) {
-                console.log("ignoring unknown label %s", tx.label);
+                this.complainAboutUnknownLabel(tx.label);
                 return false;
             }
             return true;
@@ -147,9 +175,12 @@ class BitcoinCtrl {
             return summary;
         }, { unconfirmed: 0, confirmed: 0, total: 0 });
 
-        console.log(
-            "%d btc deposits in the window - %d confirmed, %d unconfirmed",
-            summary.total, summary.confirmed, summary.unconfirmed
+        this.logUnique(
+            "btc deposit counts",
+            `${summary.total} btc deposits in the window - `
+            + `${summary.confirmed} confirmed, `
+            + `${summary.unconfirmed} unconfirmed. Minimal scan depth `
+            + `${conf.maxConfirmationsToTrack} blocks`
         )
 
         for (const tx of txList) {
@@ -166,6 +197,7 @@ class BitcoinCtrl {
                     value: tx.value,
                     txId: tx.txId,
                     label: tx.label,
+                    vout: tx.vout,
                 });
             } else if (confirmations >= this.thresholdConfirmations) {
                 await this.depositTxConfirmed({
@@ -174,6 +206,7 @@ class BitcoinCtrl {
                     txId: tx.txId,
                     confirmations: confirmations,
                     label: tx.label,
+                    vout: tx.vout,
                 });
             }
         }
@@ -213,6 +246,24 @@ class BitcoinCtrl {
         this.depositCheckLoop().then(() => {
             console.log("deposit check loop exited (how did that happen?)");
         });
+    }
+
+    complainAboutUnknownLabel(label) {
+        const timeout = this.unknownLabels.get(label)
+
+        if (! timeout || timeout < Date.now()) {
+            console.log("ignoring unknown label %s", label);
+
+            // 1.5 hours
+            this.unknownLabels.set(label, Date.now() + 1.5 * 60 * 60 * 1000);
+        }
+    }
+
+    logUnique(location, message) {
+        if (this.lastMessages.get(location) !== message) {
+            console.log(message);
+            this.lastMessages.set(location, message);
+        }
     }
 }
 

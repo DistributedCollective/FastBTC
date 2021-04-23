@@ -264,6 +264,7 @@ export default class BitcoinNodeWrapper {
                     value: Math.round(Number(tx.amount) * 1e8),
                     confirmations: tx.confirmations,
                     label: tx.label,
+                    vout: tx.vout,
                 }
             });
     }

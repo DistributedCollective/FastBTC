@@ -2,27 +2,16 @@ import BaseModel from './baseModel';
 
 export default class Transaction extends BaseModel {
     constructor(db) {
-        const sql = `CREATE TABLE IF NOT EXISTS transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            userAdrLabel text,
-            txHash text,
-            txId INTEGER,
-            valueBtc INTEGER,
-            dateAdded datetime,
-            status text,
-            type text,
-            unique(txHash, userAdrLabel)
-        )`;
-
-        super(db, 'transactions', sql);
+        super(db, 'transactions');
     }
 
-    insertDepositTx({userAdrLabel, txHash, valueBtc, status}) {
+    insertDepositTx({userAdrLabel, txHash, valueBtc, status, vout}) {
         return super.insert({
             userAdrLabel, txHash, valueBtc,
             type: "deposit",
             dateAdded: new Date(),
-            status: status
+            status: status,
+            vout: vout,
         });
     }
 
@@ -45,7 +34,6 @@ export default class Transaction extends BaseModel {
             return null;
         }
     }
-
     // type should be either 'deposit' or 'tranfer'
     async sumTransacted(type) {
         try {

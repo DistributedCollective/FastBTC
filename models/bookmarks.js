@@ -2,15 +2,7 @@ import BaseModel from './baseModel';
 
 export default class Bookmarks extends BaseModel {
     constructor(db) {
-        const sql = `
-            CREATE TABLE IF NOT EXISTS bookmarks
-            (
-                key   text primary key,
-                value text
-            )
-        `;
-
-        super(db, 'bookmarks', sql);
+        super(db, 'bookmarks');
     }
 
     async getBookmark(key, defaultValue) {

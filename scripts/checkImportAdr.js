@@ -1,10 +1,9 @@
 import dbCtrl from "../controller/dbCtrl";
-import config from "../config/config-test";
+import config from "../config/config";
 import bitcoinCtrl from "../controller/bitcoinCtrl";
 
 (async () => {
     await dbCtrl.initDb(config.dbName);
-    await bitcoinCtrl.init(config);
 
     const users = await dbCtrl.userRepository.find({});
 

@@ -40,7 +40,7 @@ class RskCtrl {
 
         let transferValueSatoshi = Number(amount) - conf.commission; //subtract base fee
 
-        transferValueSatoshi=transferValueSatoshi-(transferValueSatoshi/1000*2); //subtract 0.2% commision
+        transferValueSatoshi=transferValueSatoshi-(transferValueSatoshi/1000*2); //subtract commission
 
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));
         console.log("transferValueSatoshi " + transferValueSatoshi)
@@ -54,8 +54,7 @@ class RskCtrl {
         //eg: user calculates gas fees wrong. the amount displayed on the frontend is to encourage users do not send too little
         //but in case they do it is cheaper for us to simply process the request than deal with a refund
         if (transferValueSatoshi > conf.maxAmount * 2 || transferValueSatoshi <= 10000) {
-            console.error("transfer amount outside limit", { to });
-            console.error("transferValue: " + transferValueSatoshi);
+            console.error("transfer amount outside limit", { to, transferValueSatoshi });
             return {"error": "Your transferred amount exceeded the limit."};
         }
 
@@ -93,9 +92,13 @@ class RskCtrl {
             };
         }
 
+        console.log("getting transaction count")
         const nonce = await this.web3.eth.getTransactionCount(wallet, 'pending');
+
+        console.log("getting gas price")
         this.lastGasPrice = await this.getGasPrice();
 
+        console.log("encoding function call")
         const data = this.web3.eth.abi.encodeFunctionCall({
             name: 'withdrawAdmin',
             type: 'function',
@@ -105,6 +108,7 @@ class RskCtrl {
             ]
         }, [to, val]);
 
+        console.log("submitting transaction");
         try {
             const receipt = await this.multisig.methods.submitTransaction(conf.contractAddress, 0, data).send({
                 from: wallet,
@@ -113,19 +117,19 @@ class RskCtrl {
                 nonce: nonce
             });
 
-            walletManager.decreasePending(wallet);
             return receipt;
         }
 
         catch(e) {
             console.error("Error submitting tx", { to, val });
             console.error(e);
-            return {
+            return { };
+        }
 
-            };
+        finally {
+            walletManager.decreasePending(wallet);
         }
     }
-
 
     /**
      * @notice loads a free wallet from the wallet manager
@@ -139,11 +143,14 @@ class RskCtrl {
             //if I have to wait, any other thread needs to wait as well
             wallet = await walletManager.getFreeWallet(timeout);
             //because the node can't handle too many simultaneous requests
-            await U.wasteTime(0.5);
-            this.mutex.release();
+            //this wait is disabled for now... due to testing
+            //mutex outside
+            //await U.wasteTime(0.5);
         } catch (e) {
-            this.mutex.release();
             console.error(e);
+        }
+        finally {
+            this.mutex.release();
         }
         return wallet;
     }

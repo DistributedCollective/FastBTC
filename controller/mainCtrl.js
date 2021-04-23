@@ -3,6 +3,8 @@
  * Starts all other controllers and handles client communication.
  * Processes btc deposits, takes the client rsk address and sends corresponding btc address, informs the client about the relay process status and sends deposit/error notifications to a telegram group
  */
+import {Mutex} from 'async-mutex';
+
 const SocketIO = require('socket.io');
 import conf from '../config/config';
 import dbCtrl from './dbCtrl';
@@ -15,6 +17,7 @@ class MainController {
 
     async start(server) {
         this.connectingSockets = {}; //object of {[label]: socketId}
+        this.userCreationMutex = new Mutex();
 
         await dbCtrl.initDb(conf.dbName);
         await rskCtrl.init();
@@ -56,8 +59,23 @@ class MainController {
             let user = await dbCtrl.getUserByAddress(address);
 
             if (user == null) {
+                // ensure that we do not have a race with user creation
                 try {
-                    user = await this.addNewUser(address);
+                    user = await this.userCreationMutex.runExclusive(async () => {
+                        // since the outer wasn't mutex-guarded, recheck here with the
+                        // mutex. We do not generally want to synchronize all
+                        // gets of users!
+                        const recheckedUser = await dbCtrl.getUserByAddress(address);
+                        if (recheckedUser) {
+                            return recheckedUser;
+                        }
+
+                        return await this.addNewUser(address);
+                    });
+
+                    if (! user) {
+                        throw new Error(`user creation returned ${user}`)
+                    }
                 }
                 catch (e) {
                     console.log('failed to add user for address %s: %s', address, e)
@@ -179,23 +197,23 @@ class MainController {
     }
 
     async processDeposits(d) {
-        const depositFound = await dbCtrl.getDeposit(d.txHash, d.label);
+        let depositFound = await dbCtrl.getDeposit(d.txHash, d.label, d.vout);
 
         if (depositFound) {
             if (depositFound.status === 'confirmed') {
                 return;
             }
 
-            await dbCtrl.confirmDeposit(d.txHash, d.label);
+            await dbCtrl.confirmDeposit(d.txHash, d.label, d.vout);
         }
 
-        telegramBot.sendMessage( `New BTC deposit confirmed: address ${d.address}, tx ${d.txHash}, value ${d.value / 1e8} BTC`);
+        telegramBot.sendMessage( `New BTC deposit confirmed: address ${d.address}, tx ${d.txHash}/${d.vout}, value ${d.val / 1e8} BTC`);
         if (d.val > conf.maxAmount || d.val <= 10000) {
             telegramBot.sendMessage("Deposit outside the limit!");
         }
 
         if (depositFound == null) {
-            const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, true);
+            const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, true, d.vout);
 
             if (!resDb) {
                 return console.error("Error adding deposit to db");
@@ -249,6 +267,7 @@ class MainController {
         this.emitToUserSocket(userLabel, 'depositTx', {
             status: 'pending',
             txHash: tx.txHash,
+            vout: tx.vout,
             value: (Number(tx.value) / 1e8).toFixed(8)
         });
     }

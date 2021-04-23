@@ -1,10 +1,9 @@
 import _ from 'lodash';
 
 export default class BaseModel {
-    constructor (db, tableName, createTableSQL) {
+    constructor (db, tableName) {
         this.db = db;
         this.tableName = tableName;
-        this.createTableSQL = createTableSQL;
     }
 
     run(sql, params = []) {
@@ -52,11 +51,17 @@ export default class BaseModel {
         });
     }
 
-    async createTable() {
-        const table = await this.run(this.createTableSQL);
-        console.log("Created %s table", this.tableName);
-        console.log(table)
-        return table;
+    async checkTable() {
+        try {
+            console.log("checking %s table", this.tableName);
+            await this.run(`SELECT * FROM ${this.tableName}`);
+        }
+        catch (e) {
+            console.error(
+                `database failed sanity check - table ${tableName} not selectable`, err
+            );
+            process.exit(1);
+        }
     }
 
     /**
