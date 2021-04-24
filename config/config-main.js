@@ -17,7 +17,7 @@ export default {
     maxAmount: 100000000, //sats, = 1 btc
     balanceThreshold: 0.05, //in rbtc
     telegramBot: Object.keys(telegramBot).length > 0 ? telegramBot : null,
-    telegramGroupId: -386620635,
+    telegramGroupId: -1001469142339,
     walletSigs: walletSigs,
     slaves: slaves.main,
     contractAddress: "0xca1C5B1bc55755C5e3b6Ed1afE88ABD7B26F147f".toLowerCase(),
