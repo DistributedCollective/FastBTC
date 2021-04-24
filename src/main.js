@@ -66,6 +66,9 @@ class AppCtrl {
             unexecuted: 0
         };
 
+
+        this.balances = {};
+        this.threshold = 0;
         this.days = [];
         this.error = false;
         this.rskExplorer = conf.env === "prod" ? "https://explorer.rsk.co" : "https://explorer.testnet.rsk.co";
@@ -95,8 +98,10 @@ class AppCtrl {
         socket.emit('txAmount', (info) => this.showTxAmountInfo(info));
 
         socket.emit('getStats', (res) => this.showStats(res));
-
+        socket.emit('getBalances', (res) => this.showBalances(res));
+        socket.emit('getThreshold', (res) => this.showThreshold(res));
         socket.emit('getDays', (res) => this.showDaysStats(res)); // get last 50 days stats
+
 
         socket.on('depositTx', (tx) => {
             this.depositTx = tx;
@@ -162,6 +167,15 @@ class AppCtrl {
         this.$scope.$apply();
     }
 
+
+    showBalances(res) {
+        this.balances = res.balances;
+        this.$scope.$apply();
+    }
+
+    showThreshold(res) {
+        this.threshold = res.threshold;
+    }
     showDaysStats(res) {
         this.days = res.days;
         this.$scope.$apply();

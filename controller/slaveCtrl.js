@@ -3,6 +3,7 @@
  */
 
 import dbCtrl from './dbCtrl';
+import rskCtrl from './rskCtrl';
 import conf from '../config/config';
 import Web3 from 'web3';
 import Util from '../utils/helper';
@@ -131,6 +132,12 @@ class SlaveCtrl {
             }
             return res.status(200).json({btcAdr, txHash, vout});
         }
+    }
+
+    async getCosignersBalances() {
+        return Promise.all(this.cosignersArray.map(async cosignerAddress => {
+            return await rskCtrl.getBalance(cosignerAddress);
+        }))
     }
 }
 

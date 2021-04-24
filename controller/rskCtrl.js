@@ -22,6 +22,12 @@ class RskCtrl {
         this.lastGasPrice = 0;
     }
 
+    async getBalance(adr) {
+        const balWei = await this.web3.eth.getBalance(adr);
+        const balBtc = this.web3.utils.fromWei(balWei, 'ether');
+        return Number(balBtc);
+    }
+
     async getBalanceSats(adr) {
         const balWei = await this.web3.eth.getBalance(adr);
         const balBtc = this.web3.utils.fromWei(balWei, 'ether');

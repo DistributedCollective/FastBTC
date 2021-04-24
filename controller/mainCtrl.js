@@ -12,6 +12,7 @@ import rskCtrl from './rskCtrl';
 import Util from '../utils/helper';
 import telegramBot from '../utils/telegram';
 import bitcoinCtrl from "./bitcoinCtrl";
+import slaveCtrl from './slaveCtrl';
 
 class MainController {
 
@@ -42,6 +43,8 @@ class MainController {
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('getStats', (...args) => this.getStats.apply(this, [...args]));
+            socket.on('getBalances', (...args) => this.getBalances.apply(this, [...args]));
+            socket.on('getThreshold', (...args) => this.getThreshold.apply(this, [...args]));
             socket.on('getDays', (...args) => this.getDays.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.sendTxMinMax.apply(this, [...args]));
             socket.on('getDeposits', (...args) => this.getDbDeposits.apply(this, [...args]));
@@ -166,16 +169,17 @@ class MainController {
 
             multisig = await this.getMultisigStats();
 
-
-            deposits.averageSize = (deposits.totalTransacted / deposits.totalNumber).toFixed(8);
-            transfers.averageSize = (transfers.totalTransacted / transfers.totalNumber).toFixed(8);
-
+            deposits.averageSize = deposits.totalTransacted > 0 ? 
+                (deposits.totalTransacted / deposits.totalNumber).toFixed(6) : 0;
+            transfers.averageSize = transfers.totalTransacted > 0 ?
+                (transfers.totalTransacted / transfers.totalNumber).toFixed(6) : 0;
 
             cb({deposits, transfers, multisig});
         } catch (e) {
             console.log(e);
         }
     }
+
 
     async getDays(cb) {
         try {
@@ -202,6 +206,26 @@ class MainController {
             }
             cb({days});
         } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async getBalances(cb) {
+        try {
+            let balances = {};
+            balances.masterNode = await rskCtrl.getBalance(conf.multisigAddress);
+            balances.slaveNodes = await slaveCtrl.getCosignersBalances();
+
+            cb({balances});
+        } catch(e) {
+            console.log(e);
+        }
+    }
+
+    async getThreshold(cb) {
+        try {
+            cb({threshold: conf.balanceThreshold});
+        } catch(e) {
             console.log(e);
         }
     }
