@@ -2,22 +2,24 @@
 
 Relays Btc to RBtc.
 For every RBtc address provided by the user a BTC deposit addresses (p2sh/p2ms) is generated from a multisig hd wallet (bip32).
-A smart contract* on Rsk provides RBtc which can be withdrawn from an authorized admin wallet**.
+A smart contract[1] on Rsk provides RBtc which can be withdrawn from an authorized admin wallet[2].
 A watcher is listening 24h-7 for incoming transactions on all created Btc deposit addresses. If a new deposit transaction is
 detected a withdraw transaction with the same amount minus a small commision is initiated on the Rsk multisig contract.
-N confirmation nodes*** approve the withdraw request after requesting the Btc transaction hash and address.
+N confirmation nodes[3] approve the withdraw request after requesting the Btc transaction hash and address.
 A sqlite database keeps track of the deposits and withdrawals.
 
-Improvements:
+*Improvements:*
+
 - Include automated Btc->RBtc conversion via 2WP.
 - Eliminate trust on BTC deposits by integrating atomic swaps with the smart contract as counterparty.
 - Improve security: the higher the amount the more confirmations should be waited for.
 
-```
-* https://github.com/DistributedCollective/ManagedWallet/blob/master/contracts/ManagedWallet.sol
-** https://github.com/DistributedCollective/Sovryn-smart-contracts/blob/development/contracts/multisig/MultiSigWallet.sol
-*** https://github.com/DistributedCollective/fastBTC-confirmation-node
-```
+*Links:*
+
+1. https://github.com/DistributedCollective/ManagedWallet/blob/master/contracts/ManagedWallet.sol
+
+2. https://github.com/DistributedCollective/Sovryn-smart-contracts/blob/development/contracts/multisig/MultiSigWallet.sol
+3. https://github.com/DistributedCollective/fastBTC-confirmation-node
 
 ### Requirements
 
@@ -28,13 +30,13 @@ Webpack
 
 ### Install
 
-```sh
-1. npm install
-2. npm run build-client
-3. Create empty directories "logs", "secrets" and "db"
+1. `npm install`
+2. `npm run build-client`
+3. Create empty directories `logs`, `secrets` and `db`
 4. Set the managed wallet and multisig contract addresses in config/[config_mainnet | config_testnet]
-5. Within "secrets" a file accounts.js with the credentials of the admin wallet
+5. Within `secrets` a file `accounts.js` with the credentials of the admin wallet
 
+```javascript
 export default {
     "test": {
         adr: "0x..."
@@ -49,12 +51,12 @@ export default {
 
 You can also choose to encrypt your wallet. If you do so, remember to add your encryption password when running the start command like so:
 
-```
+```sh
 npm run start:main yourpassword
 ```
 `accounts.js` it should then look like:
 
-```sh
+```javascript
 export default {
     "test": {
         adr: "0x..."
@@ -93,7 +95,7 @@ To generate the signing keys run "npm run [genAdminTestnet | genAdminMainnet]" a
 Add secrets/btcNode.js with the credentials of a Btc node for main and testnet
 
 
-```sh
+```javascript
 export default {
     main: {
         url: "",
@@ -111,7 +113,7 @@ export default {
 And last but not least the signer addresses of the confirmation nodes in `secrets/slaves.js`.
 
 
-```sh
+```javascript
 export default {
     test:
         [
