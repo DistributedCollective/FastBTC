@@ -22,7 +22,7 @@ export default {
     slaves: slaves.test,
     contractAddress: "0xcC099752238b1932587bf5793Afeb7d80D04F6e1".toLowerCase(),
     multisigAddress: "0x1D67BDA1144CacDbEFF1782f0E5B43D7B50bbFe0".toLowerCase(),
-     account: accounts["test"],
+    account: accounts["test"],
     node: node.test,
     thresholdConfirmations: 1,
     startIndex: 175, //multisig tx-index from which the node starts confirming withdraw requests 

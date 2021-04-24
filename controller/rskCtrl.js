@@ -20,6 +20,7 @@ class RskCtrl {
         this.multisig = new this.web3.eth.Contract(multisigAbi, conf.multisigAddress);
         walletManager.init(this.web3);
         this.lastGasPrice = 0;
+        this.submissionMutex = new Mutex();
     }
 
     async getBalance(adr) {
@@ -38,7 +39,7 @@ class RskCtrl {
      *
      * @param amount - in satoshi
      * @param to
-     * @returns {Promise<{error: string}|{value: number, txHash: string}>}
+     * @returns {Promise<{error: string}|{value: string, txId: number, txHash: string}>}
      * todo: fix min/max amount update
      */
     async sendRbtc(amount, to) {
@@ -78,7 +79,7 @@ class RskCtrl {
             const hexTransactionId = receipt.events.Submission.raw.topics[1];
             txId = this.web3.utils.hexToNumber(hexTransactionId);
             return {
-                txHash: receipt.transactionHash,
+                txHash: receipt.transactionHash.toString(),
                 txId,
                 value: transferValue
             };
@@ -89,21 +90,7 @@ class RskCtrl {
         }
     }
 
-    async transferFromMultisig(val, to) {
-        console.log("transfer %s to %s", val, to)
-        const wallet = await this.getWallet();
-        if (wallet.length === 0) {
-            return {
-                error: "no wallet available to process the assignment"
-            };
-        }
-
-        console.log("getting transaction count")
-        const nonce = await this.web3.eth.getTransactionCount(wallet, 'pending');
-
-        console.log("getting gas price")
-        this.lastGasPrice = await this.getGasPrice();
-
+    async transferFromMultisigWithWallet(val, to, wallet) {
         console.log("encoding function call")
         const data = this.web3.eth.abi.encodeFunctionCall({
             name: 'withdrawAdmin',
@@ -114,24 +101,78 @@ class RskCtrl {
             ]
         }, [to, val]);
 
+        console.log("getting gas price");
+        this.lastGasPrice = await this.getGasPrice();
+
+        await this.submissionMutex.acquire();
+        console.log("getting transaction count")
+        let nonce = null;
+
+        for (let i = 0; i < 3; i++) {
+            try {
+                nonce = await this.web3.eth.getTransactionCount(wallet, 'pending');
+                break;
+            }
+            catch (e) {
+                console.error("failed to get nonce", e);
+                if (i === 2) {
+                    console.error("bailing out payment of %s to %s", val, to);
+                    this.submissionMutex.release();
+                    return {
+                        "error": "unable to get nonce count from wallet account"
+                    };
+                }
+            }
+        }
+
+        let mutexHeld = true;
         console.log("submitting transaction");
         try {
-            const receipt = await this.multisig.methods.submitTransaction(conf.contractAddress, 0, data).send({
+            const promiEvent = this.multisig.methods.submitTransaction(
+                conf.contractAddress, 0, data
+            ).send(
+            {
                 from: wallet,
                 gas: 1000000,
                 gasPrice: this.lastGasPrice,
                 nonce: nonce
+            }).on("transactionHash", async (transactionHash) => {
+                if (mutexHeld) {
+                    mutexHeld = false;
+                    this.submissionMutex.release();
+                }
+
+                console.log("got RSK transaction hash %s", transactionHash)
             });
 
-            return receipt;
+            return await promiEvent;
         }
-
         catch(e) {
             console.error("Error submitting tx", { to, val });
             console.error(e);
             return { };
         }
+        finally {
+            if (mutexHeld) {
+                mutexHeld = false;
+                this.submissionMutex.release();
+            }
+        }
+    }
 
+    async transferFromMultisig(val, to) {
+        console.log("transfer %s to %s", val, to)
+
+        const wallet = await this.getWallet();
+        if (wallet.length === 0) {
+            return {
+                error: "no wallet available to process the assignment"
+            };
+        }
+
+        try {
+            return await this.transferFromMultisigWithWallet(val, to, wallet);
+        }
         finally {
             walletManager.decreasePending(wallet);
         }
@@ -148,10 +189,6 @@ class RskCtrl {
         try {
             //if I have to wait, any other thread needs to wait as well
             wallet = await walletManager.getFreeWallet(timeout);
-            //because the node can't handle too many simultaneous requests
-            //this wait is disabled for now... due to testing
-            //mutex outside
-            //await U.wasteTime(0.5);
         } catch (e) {
             console.error(e);
         }
