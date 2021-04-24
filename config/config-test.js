@@ -7,7 +7,7 @@ import slaves from '../secrets/slaves';
 export default {
     env: "test",
     serverPort: 3007,
-    backendUrl: "http://localhost:3007",
+    backendUrl: "http://3.129.31.108:3007/",
     appName: "FastBtcV3",
     dbName: "fastbtcv3_test",
     rskNode: "https://testnet.sovryn.app/rpc",
