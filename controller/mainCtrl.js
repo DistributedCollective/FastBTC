@@ -12,6 +12,7 @@ import rskCtrl from './rskCtrl';
 import Util from '../utils/helper';
 import telegramBot from '../utils/telegram';
 import bitcoinCtrl from "./bitcoinCtrl";
+import slaveCtrl from './slaveCtrl';
 
 class MainController {
 
@@ -31,6 +32,7 @@ class MainController {
     initSocket(httpServer) {
         console.log("init socket")
         this.io = SocketIO(httpServer, {
+            allowEIO3: true, // false by default
             cors: {
                 origin: "*",
                 methods: ["GET", "POST"]
@@ -41,6 +43,9 @@ class MainController {
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('getStats', (...args) => this.getStats.apply(this, [...args]));
+            socket.on('getBalances', (...args) => this.getBalances.apply(this, [...args]));
+            socket.on('getThreshold', (...args) => this.getThreshold.apply(this, [...args]));
+            socket.on('getDays', (...args) => this.getDays.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.sendTxMinMax.apply(this, [...args]));
             socket.on('getDeposits', (...args) => this.getDbDeposits.apply(this, [...args]));
             socket.on('getTransfers', (...args) => this.getTransfers.apply(this, [...args]));
@@ -152,18 +157,75 @@ class MainController {
      */
     async getStats(cb) {
         try {
-            let deposits = {}; let transfers = {};
+            let deposits = {}; let transfers = {}; let multisig = {};
 
             deposits.totalTransacted = await dbCtrl.getSum('deposit');
             deposits.totalNumber = await dbCtrl.getTotalNumberOfTransactions('deposit');
+            deposits.unprocessed = await dbCtrl.getNumberOfUnprocessedTransactions('deposit');
+
             transfers.totalTransacted = await dbCtrl.getSum('transfer');
             transfers.totalNumber = await dbCtrl.getTotalNumberOfTransactions('transfer');
+            transfers.unprocessed = await dbCtrl.getNumberOfUnprocessedTransactions('transfer');
 
-            deposits.averageSize = (deposits.totalTransacted / deposits.totalNumber).toFixed(8);
-            transfers.averageSize = (transfers.totalTransacted / transfers.totalNumber).toFixed(8);
+            multisig = await this.getMultisigStats();
 
-            cb({deposits, transfers});
+            deposits.averageSize = deposits.totalTransacted > 0 ? 
+                (deposits.totalTransacted / deposits.totalNumber).toFixed(6) : 0;
+            transfers.averageSize = transfers.totalTransacted > 0 ?
+                (transfers.totalTransacted / transfers.totalNumber).toFixed(6) : 0;
+
+            cb({deposits, transfers, multisig});
         } catch (e) {
+            console.log(e);
+        }
+    }
+
+
+    async getDays(cb) {
+        try {
+            let days = [];
+            const dayOffset = 24*60*60*1000;
+            for (let d=0; d<=50; d++) {
+                const date = new Date().setTime(new Date().getTime()-(dayOffset*d));
+                const deposits = await dbCtrl.getTotalNumberOfTransactions('deposit', date);
+                const depositsTotalAmount = await dbCtrl.getSum('deposits', date);
+                const transfers = await dbCtrl.getTotalNumberOfTransactions('transfer', date);
+                const transfersTotalAmount = await dbCtrl.getSum('transfer', date);
+                days.push({
+                    day: new Date(date).toLocaleString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                    }),
+                    deposits,
+                    depositsTotalAmount,
+                    transfers,
+                    transfersTotalAmount,
+                    txFees: null
+                })
+            }
+            cb({days});
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async getBalances(cb) {
+        try {
+            let balances = {};
+            balances.masterNode = await rskCtrl.getBalance(conf.multisigAddress);
+            balances.slaveNodes = await slaveCtrl.getCosignersBalances();
+
+            cb({balances});
+        } catch(e) {
+            console.log(e);
+        }
+    }
+
+    async getThreshold(cb) {
+        try {
+            cb({threshold: conf.balanceThreshold});
+        } catch(e) {
             console.log(e);
         }
     }
@@ -213,7 +275,8 @@ class MainController {
         }
 
         if (depositFound == null) {
-            const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, true, d.vout);
+            const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val/1e8, true);
+
 
             if (!resDb) {
                 console.error("Error adding deposit to db");
@@ -243,8 +306,10 @@ class MainController {
             return;
         }
 
+
         await dbCtrl.updateDeposit(d.txHash, resTx.txId, d.label, d.vout);
         await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val);
+
 
         console.log("Successfully sent " + d.val + " to " + user.web3adr);
         console.log(resTx);
@@ -272,6 +337,36 @@ class MainController {
             vout: tx.vout,
             value: (Number(tx.value) / 1e8).toFixed(8)
         });
+    }
+
+    async getMultisigStats(){
+        let confirmed = 0; let executed = 0; let unexecuted = 0;
+        try{
+            const numberOfTransactions = await rskCtrl.multisig.methods["getTransactionCount"](true, true).call();
+            if(!numberOfTransactions) {
+                await Util.wasteTime(5) 
+            }
+            for(let txId = conf.startIndex; txId < numberOfTransactions; txId++){
+                try {
+                    const isConfirmed = await rskCtrl.multisig.methods["isConfirmed"](txId).call();
+                    const txObj = await rskCtrl.multisig.methods["transactions"](txId).call();
+                    if (isConfirmed) confirmed++;
+                    if (txObj.executed) executed++;
+                    if (isConfirmed && !txObj.executed) {
+                        console.log(txId+": is confirmed: "+isConfirmed+" but unexecuted");
+                        unexecuted++;
+                    }
+                } catch(e) {
+                    console.log(e);
+                    continue;
+                }
+            }
+            return { confirmed, executed, unexecuted };
+        }
+        catch(e){
+            console.error("Error getting confirmed info");
+            console.error(e);
+        }
     }
 }
 

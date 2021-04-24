@@ -15,6 +15,7 @@ export default {
     commission: 500, //in sats
     minAmount: 10000, //sats, = 0.001 btc
     maxAmount: 1000000, //sats, = 0.1 btc
+    balanceThreshold: 0.05, //in rbtc
     telegramBot: Object.keys(telegramBot).length > 0 ? telegramBot : null,
     telegramGroupId: -523868176,
     walletSigs: walletSigs,
@@ -24,5 +25,6 @@ export default {
     account: accounts["test"],
     node: node.test,
     thresholdConfirmations: 1,
+    startIndex: 175, //multisig tx-index from which the node starts confirming withdraw requests 
     maxConfirmationsToTrack: 6,
 };

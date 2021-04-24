@@ -40,14 +40,14 @@ class BitcoinCtrl {
         console.log("create payment address key for "+index+" "+label);
         const publicKeys = this.getDerivedPubKeys(index);
 
-        const payment = payments.p2sh({
+        const payment = payments.p2wsh({
             network: this.network,
             redeem: payments.p2ms({
                 m: this.cosigners,
                 pubkeys: publicKeys,
                 network: this.network
             })
-        });
+        });  
         payment.label = label;
         await this.api.importNewAddress([payment]);
 
@@ -57,7 +57,7 @@ class BitcoinCtrl {
     async checkAddress(index, label, createdDate, rescan = false) {
         const publicKeys = this.getDerivedPubKeys(index);
 
-        const payment = payments.p2sh({
+        const payment = payments.p2wsh({
             network: this.network,
             redeem: payments.p2ms({
                 m: this.cosigners,
@@ -80,6 +80,7 @@ class BitcoinCtrl {
     async addPendingDepositTx({ address, value, txId, label, vout }) {
         try {
             const user = await dbCtrl.getUserByBtcAddress(address);
+
             if (! user) {
                 console.log("no user for address %s", address);
                 return;
@@ -102,6 +103,7 @@ class BitcoinCtrl {
 
             if (added == null) {
                 const msg = `user ${user.btcadr} (label ${label}) has a pending deposit, tx ${txId}/${vout}, value ${(value / 1e8)} BTC`
+
                 telegramBot.sendMessage(msg);
 
                 await dbCtrl.addDeposit(user.label, txId, value, false, vout);
