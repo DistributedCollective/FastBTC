@@ -275,8 +275,7 @@ class MainController {
         }
 
         if (depositFound == null) {
-            const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val/1e8, true);
-
+            const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, true);
 
             if (!resDb) {
                 console.error("Error adding deposit to db");
