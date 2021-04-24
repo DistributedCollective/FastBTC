@@ -31,6 +31,7 @@ class MainController {
     initSocket(httpServer) {
         console.log("init socket")
         this.io = SocketIO(httpServer, {
+            allowEIO3: true, // false by default
             cors: {
                 origin: "*",
                 methods: ["GET", "POST"]
@@ -41,6 +42,7 @@ class MainController {
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('getStats', (...args) => this.getStats.apply(this, [...args]));
+            socket.on('getDays', (...args) => this.getDays.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.sendTxMinMax.apply(this, [...args]));
             socket.on('getDeposits', (...args) => this.getDbDeposits.apply(this, [...args]));
             socket.on('getTransfers', (...args) => this.getTransfers.apply(this, [...args]));
@@ -163,6 +165,35 @@ class MainController {
             transfers.averageSize = (transfers.totalTransacted / transfers.totalNumber).toFixed(8);
 
             cb({deposits, transfers});
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async getDays(cb) {
+        try {
+            let days = [];
+            const dayOffset = 24*60*60*1000;
+            for (let d=0; d<=50; d++) {
+                const date = new Date().setTime(new Date().getTime()-(dayOffset*d));
+                const deposits = await dbCtrl.getTotalNumberOfTransactions('deposit', date);
+                const depositsTotalAmount = await dbCtrl.getSum('deposits', date);
+                const transfers = await dbCtrl.getTotalNumberOfTransactions('transfer', date);
+                const transfersTotalAmount = await dbCtrl.getSum('transfer', date);
+                days.push({
+                    day: new Date(date).toLocaleString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                    }),
+                    deposits,
+                    depositsTotalAmount,
+                    transfers,
+                    transfersTotalAmount,
+                    txFees: null
+                })
+            }
+            cb({days});
         } catch (e) {
             console.log(e);
         }
