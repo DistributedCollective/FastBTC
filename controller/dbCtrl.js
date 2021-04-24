@@ -189,12 +189,13 @@ class DbCtrl {
         });
     }
 
-    async confirmDeposit(txHash, label) {
+    async confirmDeposit(txHash, label, vout) {
         try {
             return await this.transactionRepository.update({
                 txHash: txHash,
                 userAdrLabel: label,
-                type: "deposit"
+                type: "deposit",
+                vout: vout,
             }, {status: 'confirmed'});
         } catch (e) {
             console.error("error confirming deposit for %s", txHash)
@@ -203,7 +204,7 @@ class DbCtrl {
         }
     }
 
-    async updateDeposit(txHash, txId, label) {
+    async updateDeposit(txHash, txId, label, vout) {
         console.log(
             "update deposit tx hash %s, txId %s, label %s",
             txHash, txId, label
@@ -211,7 +212,8 @@ class DbCtrl {
         return await this.transactionRepository.update({
             txHash: txHash,
             userAdrLabel: label,
-            type: "deposit"
+            vout: vout,
+            type: "deposit",
         }, {txId: txId});
     }
 

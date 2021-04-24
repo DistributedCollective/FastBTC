@@ -216,13 +216,15 @@ class MainController {
             const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, true, d.vout);
 
             if (!resDb) {
-                return console.error("Error adding deposit to db");
+                console.error("Error adding deposit to db");
+                return;
             }
         }
 
         const user = await dbCtrl.getUserByLabel(d.label);
         if (!user) {
-            return console.error("Error finding user");
+            console.error("Error finding user");
+            return;
         }
 
         this.emitToUserSocket(user.label, 'depositTx', {
@@ -241,7 +243,7 @@ class MainController {
             return;
         }
 
-        await dbCtrl.updateDeposit(d.txHash, resTx.txId, d.label);
+        await dbCtrl.updateDeposit(d.txHash, resTx.txId, d.label, d.vout);
         await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val);
 
         console.log("Successfully sent " + d.val + " to " + user.web3adr);

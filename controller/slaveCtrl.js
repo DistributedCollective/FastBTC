@@ -118,16 +118,7 @@ class SlaveCtrl {
 
             // vout can be zero!!!
             if (!btcAdr || !txHash || vout == null) {
-                cnt++;
-                console.error("Error retrieving user payment info. %d attempt", cnt);
-
-                if (cnt === 5) {
-                    return res.status(403).json("Error retrieving user payment info");
-                }
-                else {
-                    await Util.wasteTime(1);
-                    continue;
-                }
+                return res.status(403).json("Error retrieving user payment info");
             }
             return res.status(200).json({btcAdr, txHash, vout});
         }

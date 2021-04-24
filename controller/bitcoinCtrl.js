@@ -128,14 +128,18 @@ class BitcoinCtrl {
             }
 
             if (user != null && (confirmedInDB == null || confirmedInDB.status !== 'confirmed')) {
-                // it's *async*
-                await this.onTxDepositedHandler({
+                // it's *async* - but let's do it like this anyway
+                this.onTxDepositedHandler({
                     address: user.btcadr,
                     label: user.label,
                     txHash: txId,
                     conf: confirmations,
                     val: value,
                     vout: vout,
+                }).catch(e => {
+                    console.error('tx deposit handling met an error:', e);
+                }).then(function () {
+                    console.log('tx deposit handled successfully')
                 });
             }
         } catch (e) {
