@@ -1,0 +1,15 @@
+{
+    "sql-file" : true,
+    "dev": {
+        "driver": "sqlite3",
+        "filename": "db/fastbtcv3_test.db"
+    },
+    "testnet": {
+        "driver": "sqlite3",
+        "filename": "db/fastbtcv3_test.db"
+    },
+    "mainnet": {
+        "driver": "sqlite3",
+        "filename": "db/fastbtcv3_main.db"
+    }
+}
