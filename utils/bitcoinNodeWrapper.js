@@ -160,12 +160,13 @@ export default class BitcoinNodeWrapper {
                 };
             });
 
-            const res = await this.call('importmulti', [req, {rescan: false}]);
+            const res = await this.call("importmulti", [req, {rescan: false}]);
 
             console.log("import addr", res);
         } catch (e) {
             console.error("error importing address");
             console.error(e);
+            throw e;
         }
     }
 
@@ -195,7 +196,6 @@ export default class BitcoinNodeWrapper {
             if (addressInfo && (addressInfo.labels || []).indexOf(label) < 0) {
                 await this.call('setlabel', [payment.address, label]);
             }
-
 
             return true;
         } catch (e) {
@@ -253,27 +253,59 @@ export default class BitcoinNodeWrapper {
         }
     }
 
+    mapAndFilterTxs(txList) {
+        return (txList || [])
+            .filter(tx => tx && tx.category === 'receive')
+            .map(tx => {
+                return {
+                    txId: tx.txid,
+                    blockNumber: tx.blockheight,
+                    address: tx.address,
+                    value: Math.round(Number(tx.amount) * 1e8),
+                    confirmations: tx.confirmations,
+                    label: tx.label,
+                    vout: tx.vout,
+                }
+            });
+    }
+
     async listReceivedTxsByLabel(label, count = 100) {
         try {
             const txList = await this.call('listtransactions', [label, count, 0, true]);
-
-            const received = (txList || []).map(tx => {
-                if (tx && tx.category === 'receive') {
-                    return {
-                        txId: tx.txid,
-                        blockNumber: tx.blockheight,
-                        address: tx.address,
-                        value: Number(tx.amount) * 1e8,
-                        confirmations: tx.confirmations
-                    };
-                }
-            })
-
-            return received.filter(tx => tx != null);
-
+            return this.mapAndFilterTxs(txList);
         } catch (e) {
             console.error(e);
             return [];
+        }
+    }
+
+    /**
+     * List deposits made since the given block hash
+     *
+     * @param since the starting block after which changes are considered
+     * @param confirmations affects the lastblock of the return value -
+     *  it will be the block has *confirmations block* behind
+     * @returns {Promise<{lastblock, removed: *[], transactions: *[]}>}
+     */
+    async listDepositsSinceBlock(since, confirmations) {
+        try {
+            const rv = await this.call('listsinceblock',
+                [since || '', confirmations, true, true]
+            );
+
+            return {
+                transactions: this.mapAndFilterTxs(rv.transactions),
+                removed: rv.removed || [],
+                lastblock: rv.lastblock,
+            };
+        }
+        catch (e) {
+            console.error(e);
+            return {
+                "transactions": [],
+                "removed": [],
+                "lastblock": since,
+            };
         }
     }
 }

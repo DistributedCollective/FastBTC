@@ -114,8 +114,10 @@ class SlaveCtrl {
                 console.log(e);
                 response = {};
             }
-            const {btcAdr, txHash} = response;
-            if (!btcAdr || !txHash) {
+            const {btcAdr, txHash, vout} = response;
+
+            // vout can be zero!!!
+            if (!btcAdr || !txHash || vout == null) {
                 cnt++;
                 console.error("Error retrieving user payment info. %d attempt", cnt);
 
@@ -127,7 +129,7 @@ class SlaveCtrl {
                     continue;
                 }
             }
-            return res.status(200).json({btcAdr, txHash});
+            return res.status(200).json({btcAdr, txHash, vout});
         }
     }
 }

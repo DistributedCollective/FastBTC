@@ -1,14 +1,17 @@
 # Fast-Btc-Relay
 
-Relays Btc to RBtc. 
+Relays Btc to RBtc.
 For every RBtc address provided by the user a BTC deposit addresses (p2sh/p2ms) is generated from a multisig hd wallet (bip32).
 A smart contract* on Rsk provides RBtc which can be withdrawn from an authorized admin wallet**.
-A watcher is listening 24h-7 for incoming transactions on all created Btc deposit addresses. If a new deposit transaction is detected a withdraw transaction with the same amount minus a small commision is initiated on the Rsk multisig contract. N confirmation nodes*** approve the withdraw request after requesting the Btc transaction hash and address. A sqlite database keeps track of the deposits and withdrawals.
+A watcher is listening 24h-7 for incoming transactions on all created Btc deposit addresses. If a new deposit transaction is
+detected a withdraw transaction with the same amount minus a small commision is initiated on the Rsk multisig contract.
+N confirmation nodes*** approve the withdraw request after requesting the Btc transaction hash and address.
+A sqlite database keeps track of the deposits and withdrawals.
 
 Improvements:
 - Include automated Btc->RBtc conversion via 2WP.
 - Eliminate trust on BTC deposits by integrating atomic swaps with the smart contract as counterparty.
-- Improve security: the higher the amount the more confirmations should be waited for. 
+- Improve security: the higher the amount the more confirmations should be waited for.
 
 ```
 * https://github.com/DistributedCollective/ManagedWallet/blob/master/contracts/ManagedWallet.sol
@@ -18,9 +21,9 @@ Improvements:
 
 ### Requirements
 
-NodeJs > 13.1  
-Nodemon  
-Webpack  
+NodeJs > 13.1
+Nodemon
+Webpack
 
 
 ### Install
@@ -29,7 +32,7 @@ Webpack
 1. npm install
 2. npm run build-client
 3. Create empty directories "logs", "secrets" and "db"
-4. Set the managed wallet and multisig contract addresses in config/[config_mainnet | config_testnet] 
+4. Set the managed wallet and multisig contract addresses in config/[config_mainnet | config_testnet]
 5. Within "secrets" a file accounts.js with the credentials of the admin wallet
 
 export default {
@@ -48,7 +51,7 @@ You can also choose to encrypt your wallet. If you do so, remember to add your e
 
 ```
 npm run start:main yourpassword
-``` 
+```
 `accounts.js` it should then look like:
 
 ```sh
@@ -69,8 +72,8 @@ and secrets/telegram.js for telegram notifications on successful deposits/withdr
 ```
 export default "bot-token-id";
 ```
-  
-Add walletSigs.main.js  and walletSigs.test.js for the multisigs hd wallet  
+
+Add walletSigs.main.js  and walletSigs.test.js for the multisigs hd wallet
 
 ```sh
 export default {
@@ -80,11 +83,11 @@ export default {
         "tpub..."
     ],
     cosigners:2
-} 
+}
 ```
 In case only one network is used add the other one with the example data from above.
 
-To generate the signing keys run "npm run [genAdminTestnet | genAdminMainnet]" and add the xpub from the output to pubKeys array. 
+To generate the signing keys run "npm run [genAdminTestnet | genAdminMainnet]" and add the xpub from the output to pubKeys array.
 
 
 Add secrets/btcNode.js with the credentials of a Btc node for main and testnet
@@ -105,7 +108,7 @@ export default {
 }
 ```
 
-And last but not least the signer addresses of the confirmation nodes in secrets/slaves.js
+And last but not least the signer addresses of the confirmation nodes in `secrets/slaves.js`.
 
 
 ```sh
@@ -124,7 +127,18 @@ export default {
 ```
 
 
+### Initializing / upgrading the db
 
+The migrations are handled by `db-migrate`. Run
+
+```sh
+node_modules/db-migrate/bin/db-migrate --env dev up
+```
+
+to initialize/upgrade the database.
+
+Alternatively there are environment aliases `testnet` and `mainnet`. The migrations are not
+currently run automatically. The environments and db locations are configured in `database.json`.
 
 
 ### Start
@@ -132,7 +146,8 @@ export default {
 ```sh
 npm run start [mainnet | testnet] [walletpassword]
 ```
-Check the frontend at http://your-ip:port/ 
+
+Check the frontend at http://your-ip:port/
 
 
 License

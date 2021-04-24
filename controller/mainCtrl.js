@@ -3,6 +3,8 @@
  * Starts all other controllers and handles client communication.
  * Processes btc deposits, takes the client rsk address and sends corresponding btc address, informs the client about the relay process status and sends deposit/error notifications to a telegram group
  */
+import {Mutex} from 'async-mutex';
+
 const SocketIO = require('socket.io');
 import conf from '../config/config';
 import dbCtrl from './dbCtrl';
@@ -15,14 +17,15 @@ class MainController {
 
     async start(server) {
         this.connectingSockets = {}; //object of {[label]: socketId}
+        this.userCreationMutex = new Mutex();
 
         await dbCtrl.initDb(conf.dbName);
         await rskCtrl.init();
         this.initSocket(server);
-        bitcoinCtrl.checkDepositTxs().catch(console.error);
 
         bitcoinCtrl.setPendingDepositHandler(this.onPendingDeposit.bind(this));
         bitcoinCtrl.setTxDepositedHandler(this.processDeposits.bind(this));
+        bitcoinCtrl.startDepositCheckLoop();
     }
 
     initSocket(httpServer) {
@@ -39,6 +42,7 @@ class MainController {
             socket.on('getDepositAddress', (...args) => this.getDepositAddress.apply(this, [socket, ...args]));
             socket.on('getDepositHistory', (...args) => this.getDepositHistory.apply(this, [...args]));
             socket.on('getStats', (...args) => this.getStats.apply(this, [...args]));
+            socket.on('getDays', (...args) => this.getDays.apply(this, [...args]));
             socket.on('txAmount', (...args) => this.sendTxMinMax.apply(this, [...args]));
             socket.on('getDeposits', (...args) => this.getDbDeposits.apply(this, [...args]));
             socket.on('getTransfers', (...args) => this.getTransfers.apply(this, [...args]));
@@ -57,8 +61,23 @@ class MainController {
             let user = await dbCtrl.getUserByAddress(address);
 
             if (user == null) {
+                // ensure that we do not have a race with user creation
                 try {
-                    user = await this.addNewUser(address);
+                    user = await this.userCreationMutex.runExclusive(async () => {
+                        // since the outer wasn't mutex-guarded, recheck here with the
+                        // mutex. We do not generally want to synchronize all
+                        // gets of users!
+                        const recheckedUser = await dbCtrl.getUserByAddress(address);
+                        if (recheckedUser) {
+                            return recheckedUser;
+                        }
+
+                        return await this.addNewUser(address);
+                    });
+
+                    if (! user) {
+                        throw new Error(`user creation returned ${user}`)
+                    }
                 }
                 catch (e) {
                     console.log('failed to add user for address %s: %s', address, e)
@@ -81,8 +100,7 @@ class MainController {
                 }
             }
 
-            console.log("returning user");
-            console.log(user);
+            console.log("returning user", user);
             return cb(null, user);
 
         } catch (e) {
@@ -148,12 +166,41 @@ class MainController {
 
             multisig = await this.getMultisigStats();
 
-            deposits.averageSize = deposits.totalTransacted ?
-                Math.abs((deposits.totalTransacted / deposits.totalNumber).toFixed(6)) : 0;
-            transfers.averageSize = transfers.totalTransacted > 0 ? 
-                Math.abs((transfers.totalTransacted / transfers.totalNumber).toFixed(6)) : 0;
+
+            deposits.averageSize = (deposits.totalTransacted / deposits.totalNumber).toFixed(8);
+            transfers.averageSize = (transfers.totalTransacted / transfers.totalNumber).toFixed(8);
+
 
             cb({deposits, transfers, multisig});
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async getDays(cb) {
+        try {
+            let days = [];
+            const dayOffset = 24*60*60*1000;
+            for (let d=0; d<=50; d++) {
+                const date = new Date().setTime(new Date().getTime()-(dayOffset*d));
+                const deposits = await dbCtrl.getTotalNumberOfTransactions('deposit', date);
+                const depositsTotalAmount = await dbCtrl.getSum('deposits', date);
+                const transfers = await dbCtrl.getTotalNumberOfTransactions('transfer', date);
+                const transfersTotalAmount = await dbCtrl.getSum('transfer', date);
+                days.push({
+                    day: new Date(date).toLocaleString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                    }),
+                    deposits,
+                    depositsTotalAmount,
+                    transfers,
+                    transfersTotalAmount,
+                    txFees: null
+                })
+            }
+            cb({days});
         } catch (e) {
             console.log(e);
         }
@@ -188,23 +235,24 @@ class MainController {
     }
 
     async processDeposits(d) {
-        const depositFound = await dbCtrl.getDeposit(d.txHash, d.label);
+        let depositFound = await dbCtrl.getDeposit(d.txHash, d.label, d.vout);
 
         if (depositFound) {
             if (depositFound.status === 'confirmed') {
                 return;
             }
 
-            await dbCtrl.confirmDeposit(d.txHash, d.label);
+            await dbCtrl.confirmDeposit(d.txHash, d.label, d.vout);
         }
 
-        telegramBot.sendMessage("New BTC deposit arrived: " + JSON.stringify(d));
+        telegramBot.sendMessage( `New BTC deposit confirmed: address ${d.address}, tx ${d.txHash}/${d.vout}, value ${d.val / 1e8} BTC`);
         if (d.val > conf.maxAmount || d.val <= 10000) {
             telegramBot.sendMessage("Deposit outside the limit!");
         }
 
         if (depositFound == null) {
             const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val/1e8, true);
+
 
             if (!resDb) {
                 return console.error("Error adding deposit to db");
@@ -218,7 +266,7 @@ class MainController {
 
         this.emitToUserSocket(user.label, 'depositTx', {
             txHash: d.txHash,
-            value: (d.val / 1e8).toFixed(6),
+            value: (d.val / 1e8).toFixed(8),
             status: 'confirmed'
         });
 
@@ -240,12 +288,10 @@ class MainController {
 
         this.emitToUserSocket(user.label, "transferTx", {
             txHash: resTx.txHash,
-            value: Number(resTx.value).toFixed(6)
+            value: Number(resTx.value).toFixed(8)
         });
-        const msg = Number(resTx.value).toFixed(6) + " Rsk withdrawal initiated for " + user.web3adr;
-        if (telegramBot) {
-            telegramBot.sendMessage(`${msg} ${conf.blockExplorer}/tx/${resTx.txHash}`);
-        }
+        const msg = Number(resTx.value).toFixed(8) + " Rsk withdrawal initiated for " + user.web3adr;
+        telegramBot.sendMessage(`${msg} ${conf.blockExplorer}/tx/${resTx.txHash}`);
     }
 
     emitToUserSocket(userLabel, event, data) {
@@ -260,7 +306,8 @@ class MainController {
         this.emitToUserSocket(userLabel, 'depositTx', {
             status: 'pending',
             txHash: tx.txHash,
-            value: (Number(tx.value) / 1e8).toFixed(6)
+            vout: tx.vout,
+            value: (Number(tx.value) / 1e8).toFixed(8)
         });
     }
 

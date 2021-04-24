@@ -1,7 +1,6 @@
 /**
  * App
  */
-
 import Web3 from 'web3';
 
 const config = window.FASTBTC_CONFIG;
@@ -35,6 +34,10 @@ class AppCtrl {
             }
         };
 
+        $scope.sort = function(keyname){
+            $scope.sortKey = keyname;   //set the sortKey to the param passed
+            $scope.reverse = !$scope.reverse; //if true make it false and vice versa
+        }
 
         this.$scope = $scope;
         this.$timeout = $timeout;
@@ -63,6 +66,7 @@ class AppCtrl {
             unexecuted: 0
         };
 
+        this.days = [];
         this.error = false;
         this.rskExplorer = conf.env === "prod" ? "https://explorer.rsk.co" : "https://explorer.testnet.rsk.co";
         this.bitcoinExplorer = conf.env === "prod" ? "https://live.blockcypher.com/btc" : "https://live.blockcypher.com/btc-testnet";
@@ -91,6 +95,8 @@ class AppCtrl {
         socket.emit('txAmount', (info) => this.showTxAmountInfo(info));
 
         socket.emit('getStats', (res) => this.showStats(res));
+
+        socket.emit('getDays', (res) => this.showDaysStats(res)); // get last 50 days stats
 
         socket.on('depositTx', (tx) => {
             this.depositTx = tx;
@@ -156,8 +162,12 @@ class AppCtrl {
         this.$scope.$apply();
     }
 
+    showDaysStats(res) {
+        this.days = res.days;
+        this.$scope.$apply();
+    }
 }
 
-angular.module('app', []).controller('appCtrl', AppCtrl);
+angular.module('app', ['angularUtils.directives.dirPagination']).controller('appCtrl', AppCtrl);
     
 angular.bootstrap(document, ['app']);
