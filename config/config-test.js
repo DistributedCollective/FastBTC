@@ -24,5 +24,6 @@ export default {
     account: accounts["test"],
     node: node.test,
     thresholdConfirmations: 1,
+    startIndex: 175, //multisig tx-index from which the node starts confirming withdraw requests 
     maxConfirmationsToTrack: 6,
 };

@@ -291,6 +291,10 @@ class DbCtrl {
     async setBookmark(key, value) {
         return await this.bookmarkRepository.setBookmark(key, value);
     }
+
+    async getNumberOfUnprocessedTransactions(type) {
+        return await this.transactionRepository.countUnprocessed(type);
+    }
 }
 
 export default new DbCtrl();

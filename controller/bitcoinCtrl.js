@@ -80,6 +80,7 @@ class BitcoinCtrl {
     async addPendingDepositTx({ address, value, txId, label, vout }) {
         try {
             const user = await dbCtrl.getUserByBtcAddress(address);
+
             if (! user) {
                 console.log("no user for address %s", address);
                 return;
@@ -102,6 +103,7 @@ class BitcoinCtrl {
 
             if (added == null) {
                 const msg = `user ${user.btcadr} (label ${label}) has a pending deposit, tx ${txId}/${vout}, value ${(value / 1e8)} BTC`
+
                 telegramBot.sendMessage(msg);
 
                 await dbCtrl.addDeposit(user.label, txId, value, false, vout);

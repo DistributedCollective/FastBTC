@@ -30,6 +30,7 @@
             <th></th>
             <th>Total transacted</th>
             <th>Number of transactions</th>
+            <th>Number of unprocessed transactions</th>
             <th>Average size</th>
         </tr>
         </thead>
@@ -38,16 +39,19 @@
             <td>Transfers</td>
             <td>{{ctrl.transfers.totalTransacted}}</td>
             <td>{{ctrl.transfers.totalNumber}}</td>
+            <td>{{ctrl.transfers.unprocessed}}</td>
             <td>{{ctrl.transfers.averageSize}}</td>
         </tr>
         <tr>
             <td>Deposits</td>
             <td>{{ctrl.deposits.totalTransacted}}</td>
             <td>{{ctrl.deposits.totalNumber}}</td>
+            <td>{{ctrl.deposits.unprocessed}}</td>
             <td>{{ctrl.deposits.averageSize}}</td>
         </tr>
         </tbody>
     </table>
+
 
     <h3>Transactions per day</h3>
     <form class="form-inline">
@@ -90,6 +94,7 @@
         </tbody>
     </table>
     <dir-pagination-controls max-size="10" direction-links="true" boundary-links="true"></dir-pagination-controls>
+
 </div>
 
 <!-- Optional JavaScript -->

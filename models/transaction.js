@@ -50,12 +50,24 @@ export default class Transaction extends BaseModel {
 
     async countConfirmed(type, date) {
         try {
+
             const sql = date ? `SELECT type, COUNT(*) AS ct FROM ${this.tableName} WHERE type = ? AND status = 'confirmed' AND 
                 (julianday(date(datetime(${date}/1000, 'unixepoch'))) - julianday(date(datetime(dateAdded/1000, 'unixepoch')))) = 0.0 GROUP BY type` : 
                 `SELECT type, COUNT(*) AS ct FROM ${this.tableName} WHERE type = ? AND status = 'confirmed' GROUP BY type`;
             const res = await this.get(sql, [type]);
+
             return res ? res.ct : 0;
         } catch (e) {
+            console.error(e);
+            return 0;
+        }
+    }
+
+    async countUnprocessed(type) {
+        try { 
+            const res = await this.get(`SELECT type, COUNT(*) AS ct FROM ${this.tableName} WHERE type = ? AND txId = NULL AND id > 100 AND status = 'confirmed' GROUP BY type`, [type]);
+            return res ? res.ct : 0;
+        } catch(e) {
             console.error(e);
             return 0;
         }

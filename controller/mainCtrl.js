@@ -154,17 +154,24 @@ class MainController {
      */
     async getStats(cb) {
         try {
-            let deposits = {}; let transfers = {};
+            let deposits = {}; let transfers = {}; let multisig = {};
 
             deposits.totalTransacted = await dbCtrl.getSum('deposit');
             deposits.totalNumber = await dbCtrl.getTotalNumberOfTransactions('deposit');
+            deposits.unprocessed = await dbCtrl.getNumberOfUnprocessedTransactions('deposit');
+
             transfers.totalTransacted = await dbCtrl.getSum('transfer');
             transfers.totalNumber = await dbCtrl.getTotalNumberOfTransactions('transfer');
+            transfers.unprocessed = await dbCtrl.getNumberOfUnprocessedTransactions('transfer');
+
+            multisig = await this.getMultisigStats();
+
 
             deposits.averageSize = (deposits.totalTransacted / deposits.totalNumber).toFixed(8);
             transfers.averageSize = (transfers.totalTransacted / transfers.totalNumber).toFixed(8);
 
-            cb({deposits, transfers});
+
+            cb({deposits, transfers, multisig});
         } catch (e) {
             console.log(e);
         }
@@ -244,7 +251,8 @@ class MainController {
         }
 
         if (depositFound == null) {
-            const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, true, d.vout);
+            const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val/1e8, true);
+
 
             if (!resDb) {
                 return console.error("Error adding deposit to db");
@@ -273,7 +281,7 @@ class MainController {
         }
 
         await dbCtrl.updateDeposit(d.txHash, resTx.txId, d.label);
-        await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val);
+        await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val/1e8);
 
         console.log("Successfully sent " + d.val + " to " + user.web3adr);
         console.log(resTx);
@@ -301,6 +309,36 @@ class MainController {
             vout: tx.vout,
             value: (Number(tx.value) / 1e8).toFixed(8)
         });
+    }
+
+    async getMultisigStats(){
+        let confirmed = 0; let executed = 0; let unexecuted = 0;
+        try{
+            const numberOfTransactions = await rskCtrl.multisig.methods["getTransactionCount"](true, true).call();
+            if(!numberOfTransactions) {
+                await Util.wasteTime(5) 
+            }
+            for(let txId = conf.startIndex; txId < numberOfTransactions; txId++){
+                try {
+                    const isConfirmed = await rskCtrl.multisig.methods["isConfirmed"](txId).call();
+                    const txObj = await rskCtrl.multisig.methods["transactions"](txId).call();
+                    if (isConfirmed) confirmed++;
+                    if (txObj.executed) executed++;
+                    if (isConfirmed && !txObj.executed) {
+                        console.log(txId+": is confirmed: "+isConfirmed+" but unexecuted");
+                        unexecuted++;
+                    }
+                } catch(e) {
+                    console.log(e);
+                    continue;
+                }
+            }
+            return { confirmed, executed, unexecuted };
+        }
+        catch(e){
+            console.error("Error getting confirmed info");
+            console.error(e);
+        }
     }
 }
 
