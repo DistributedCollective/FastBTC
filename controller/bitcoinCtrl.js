@@ -40,14 +40,14 @@ class BitcoinCtrl {
         console.log("create payment address key for "+index+" "+label);
         const publicKeys = this.getDerivedPubKeys(index);
 
-        const payment = payments.p2sh({
+        const payment = payments.p2wsh({
             network: this.network,
             redeem: payments.p2ms({
                 m: this.cosigners,
                 pubkeys: publicKeys,
                 network: this.network
             })
-        });
+        });  
         payment.label = label;
         await this.api.importNewAddress([payment]);
 
@@ -57,7 +57,7 @@ class BitcoinCtrl {
     async checkAddress(index, label, createdDate, rescan = false) {
         const publicKeys = this.getDerivedPubKeys(index);
 
-        const payment = payments.p2sh({
+        const payment = payments.p2wsh({
             network: this.network,
             redeem: payments.p2ms({
                 m: this.cosigners,
