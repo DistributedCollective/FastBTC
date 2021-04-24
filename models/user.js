@@ -2,13 +2,7 @@ import BaseModel from './baseModel';
 
 export default class User extends BaseModel {
     constructor(db) {
-        super(db, 'user', `CREATE TABLE IF NOT EXISTS user (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            web3adr text,
-            btcadr text,
-            label text UNIQUE ,
-            dateAdded datetime
-            )`);
+        super(db, 'user');
     }
 
     insert({web3adr, btcadr, label}) {

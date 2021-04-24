@@ -6,7 +6,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-import {Transaction, User} from '../models/index';
+import {Bookmarks, Transaction, User} from '../models/index';
 
 class DbCtrl {
     async initDb(dbName) {
@@ -34,10 +34,12 @@ class DbCtrl {
         try {
             this.userRepository = new User(this.db);
             this.transactionRepository = new Transaction(this.db);
+            this.bookmarkRepository = new Bookmarks(this.db);
 
-            await this.userRepository.createTable();
-            await this.transactionRepository.createTable();
-        } catch (e) {
+            for (let repository of [this.userRepository, this.transactionRepository, this.bookmarkRepository]) {
+                await repository.checkTable();
+            }
+       } catch (e) {
             console.error(e);
         }
     }
@@ -104,13 +106,14 @@ class DbCtrl {
     //     }
     // }
 
-    async addDeposit(userAdrLabel, txHash, valueBtc, isConfirmed = false) {
+    async addDeposit(userAdrLabel, txHash, valueBtc, isConfirmed = false, vout = -1) {
         try {
             return await this.transactionRepository.insertDepositTx({
                 userAdrLabel,
                 txHash,
                 valueBtc,
-                status: isConfirmed ? 'confirmed' : 'pending'
+                status: isConfirmed ? 'confirmed' : 'pending',
+                vout
             });
         } catch (e) {
             console.error("error adding deposit for " + txHash + " user: " + userAdrLabel + ", value: " + valueBtc);
@@ -119,15 +122,23 @@ class DbCtrl {
         }
     }
 
-    async getDeposit(txHash, label = '') {
+    async getDeposit(txHash, label, vout) {
         const criteria = {
             txHash: txHash,
-            type: "deposit"
+            type: "deposit",
+            vout: vout,
         };
+
         if (label) {
-            criteria['userAdrLabel'] = label;
+            criteria.userAdrLabel = label;
         }
 
+        const found = await this.transactionRepository.findOne(criteria);
+        if (found || vout === -1) {
+            return found;
+        }
+
+        criteria.vout = -1;
         return await this.transactionRepository.findOne(criteria);
     }
 
@@ -227,10 +238,10 @@ class DbCtrl {
         console.log("user", user);
 
         if (!user || !user.btcadr) {
-            return {btcAdr: null, txHash: null};
+            return {btcAdr: null, txHash: null, vout: null};
         }
 
-        return {btcAdr: user.btcadr, txHash: tx.txHash};
+        return {btcAdr: user.btcadr, txHash: tx.txHash, vout: tx.vout};
     }
 
     async getUserLabels(skip = 0, size = 10) {
@@ -271,6 +282,14 @@ class DbCtrl {
 
     async getTotalNumberOfTransactions(type) {
         return await this.transactionRepository.countConfirmed(type);
+    }
+
+    async getBookmark(key, defaultValue) {
+        return await this.bookmarkRepository.getBookmark(key, defaultValue);
+    }
+
+    async setBookmark(key, value) {
+        return await this.bookmarkRepository.setBookmark(key, value);
     }
 }
 
