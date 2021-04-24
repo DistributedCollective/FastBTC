@@ -1,7 +1,6 @@
 /**
  * App
  */
-
 import Web3 from 'web3';
 
 const config = window.FASTBTC_CONFIG;
@@ -35,6 +34,10 @@ class AppCtrl {
             }
         };
 
+        $scope.sort = function(keyname){
+            $scope.sortKey = keyname;   //set the sortKey to the param passed
+            $scope.reverse = !$scope.reverse; //if true make it false and vice versa
+        }
 
         this.$scope = $scope;
         this.$timeout = $timeout;
@@ -48,16 +51,25 @@ class AppCtrl {
         this.deposits = {
             totalTransacted: 0,
             totalNumber: 0,
+            unprocessed: 0,
             averageSize: 0
         };
         this.transfers = {
             totalTransacted: 0,
             totalNumber: 0,
+            unprocessed: 0,
             averageSize: 0
         };
+        this.multisig = {
+            confirmed: 0,
+            executed: 0,
+            unexecuted: 0
+        };
+
 
         this.balances = {};
         this.threshold = 0;
+        this.days = [];
         this.error = false;
         this.rskExplorer = conf.env === "prod" ? "https://explorer.rsk.co" : "https://explorer.testnet.rsk.co";
         this.bitcoinExplorer = conf.env === "prod" ? "https://live.blockcypher.com/btc" : "https://live.blockcypher.com/btc-testnet";
@@ -86,10 +98,10 @@ class AppCtrl {
         socket.emit('txAmount', (info) => this.showTxAmountInfo(info));
 
         socket.emit('getStats', (res) => this.showStats(res));
-
         socket.emit('getBalances', (res) => this.showBalances(res));
-
         socket.emit('getThreshold', (res) => this.showThreshold(res));
+        socket.emit('getDays', (res) => this.showDaysStats(res)); // get last 50 days stats
+
 
         socket.on('depositTx', (tx) => {
             this.depositTx = tx;
@@ -151,8 +163,10 @@ class AppCtrl {
     showStats(res) {
         this.deposits = res.deposits;
         this.transfers = res.transfers;
+        this.multisig = res.multisig;
         this.$scope.$apply();
     }
+
 
     showBalances(res) {
         this.balances = res.balances;
@@ -161,10 +175,13 @@ class AppCtrl {
 
     showThreshold(res) {
         this.threshold = res.threshold;
+    }
+    showDaysStats(res) {
+        this.days = res.days;
         this.$scope.$apply();
     }
 }
 
-angular.module('app', []).controller('appCtrl', AppCtrl);
+angular.module('app', ['angularUtils.directives.dirPagination']).controller('appCtrl', AppCtrl);
     
 angular.bootstrap(document, ['app']);

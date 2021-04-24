@@ -2,27 +2,16 @@ import BaseModel from './baseModel';
 
 export default class Transaction extends BaseModel {
     constructor(db) {
-        const sql = `CREATE TABLE IF NOT EXISTS transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            userAdrLabel text,
-            txHash text,
-            txId INTEGER,
-            valueBtc INTEGER,
-            dateAdded datetime,
-            status text,
-            type text,
-            unique(txHash, userAdrLabel)
-        )`;
-
-        super(db, 'transactions', sql);
+        super(db, 'transactions');
     }
 
-    insertDepositTx({userAdrLabel, txHash, valueBtc, status}) {
+    insertDepositTx({userAdrLabel, txHash, valueBtc, status, vout}) {
         return super.insert({
             userAdrLabel, txHash, valueBtc,
             type: "deposit",
             dateAdded: new Date(),
-            status: status
+            status: status,
+            vout: vout,
         });
     }
 
@@ -45,11 +34,13 @@ export default class Transaction extends BaseModel {
             return null;
         }
     }
-
     // type should be either 'deposit' or 'tranfer'
-    async sumTransacted(type) {
+    async sumTransacted(type, date) {
         try {
-            const res = await this.get(`SELECT type, SUM(valueBtc) total FROM ${this.tableName} WHERE type = ? AND status = 'confirmed' GROUP BY type`, [type]);
+            const sql = date ? `SELECT type, SUM(valueBtc) total FROM ${this.tableName} WHERE type = ? AND status = 'confirmed' AND 
+                (julianday(date(datetime(${date}/1000, 'unixepoch'))) - julianday(date(datetime(dateAdded/1000, 'unixepoch')))) = 0.0 GROUP BY type` :
+                `SELECT type, SUM(valueBtc) total FROM ${this.tableName} WHERE type = ? AND status = 'confirmed' GROUP BY type`;
+            const res = await this.get(sql, [type]);
             return res && res.total || 0;
         } catch (e) {
             console.error(e);
@@ -57,11 +48,22 @@ export default class Transaction extends BaseModel {
         }
     }
 
-    async countConfirmed(type) {
+    async countConfirmed(type, date) {
         try {
             const res = await this.get(`SELECT type, COUNT(*) FROM ${this.tableName} WHERE type = ? AND status = 'confirmed' GROUP BY type`, [type]);
             return res ? res['COUNT(*)'] : 0;
+
         } catch (e) {
+            console.error(e);
+            return 0;
+        }
+    }
+
+    async countUnprocessed(type) {
+        try { 
+            const res = await this.get(`SELECT type, COUNT(*) AS ct FROM ${this.tableName} WHERE type = ? AND txId = NULL AND id > 100 AND status = 'confirmed' GROUP BY type`, [type]);
+            return res ? res.ct : 0;
+        } catch(e) {
             console.error(e);
             return 0;
         }

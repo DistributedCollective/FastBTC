@@ -4,10 +4,19 @@ const CopyPlugin = require('copy-webpack-plugin');
 module.exports = {
   mode: 'development',
   entry: {
-    main: ['./src/main.js'],
-    db: ['./src/db.js']
+    main: ['./src/main.js', './src/styles.css'],
+    dirPagination: ['./src/dirPagination.js'],
+    db: ['./src/db.js'],
   },
   devtool: 'inline-source-map',
+  module: {
+    rules: [
+      {
+        test: /\.css$/i,
+        use: ["style-loader", "css-loader"],
+      },
+    ],
+  },
   plugins: [
     new CopyPlugin({
       patterns: [
