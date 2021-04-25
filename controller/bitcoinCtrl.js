@@ -5,7 +5,7 @@ import dbCtrl from "./dbCtrl";
 import U from '../utils/helper';
 import telegramBot from '../utils/telegram';
 import BitcoinNodeWrapper from "../utils/bitcoinNodeWrapper";
-
+import loggingUtil from '../utils/loggingUtil';
 
 class BitcoinCtrl {
     constructor() {
@@ -20,9 +20,6 @@ class BitcoinCtrl {
 
         // stores unknown labels => the times we've complained about them
         this.unknownLabels = new Map();
-
-        // stores unknown labels => the times we've complained about them
-        this.lastMessages = new Map();
     }
 
     getDerivedPubKeys(index) {
@@ -181,7 +178,7 @@ class BitcoinCtrl {
             return summary;
         }, { unconfirmed: 0, confirmed: 0, total: 0 });
 
-        this.logUnique(
+        loggingUtil.logUnique(
             "btc deposit counts",
             `${summary.total} btc deposits in the window - `
             + `${summary.confirmed} confirmed, `
@@ -262,13 +259,6 @@ class BitcoinCtrl {
 
             // 1.5 hours
             this.unknownLabels.set(label, Date.now() + 1.5 * 60 * 60 * 1000);
-        }
-    }
-
-    logUnique(location, message) {
-        if (this.lastMessages.get(location) !== message) {
-            console.log(message);
-            this.lastMessages.set(location, message);
         }
     }
 }
