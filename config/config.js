@@ -13,11 +13,10 @@ try {
     console.log("attempting to load overrides from %s", overrideModule);
     const extraConfig = require(overrideModule);
     config = {...config, ...extraConfig['default']}
-    console.log("success");
+    console.log("override config successfully merged");
 }
 catch (e) {
-    console.log("override module not available");
+    console.log("override module not available: %s", e.toString());
 }
 
-console.log(config);
 export default config;
