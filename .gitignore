@@ -4,6 +4,7 @@ dist
 secrets/*
 db
 logs
+config/config*.override.js
 package-lock.json
 utils/tx.json
 utils/tx.csv
