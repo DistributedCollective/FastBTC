@@ -12,7 +12,7 @@
     "withdrawBtcTestnet": "node -r esm scripts/withdrawBtc.js testnet",
     "withdrawRskMainnet": "node -r esm scripts/withdrawRsk.js mainnet",
     "withdrawRskTestnet": "node -r esm scripts/withdrawRsk.js testnet",
-    "build-client": "npx webpack --config ./webpack.config.js && cp src/index.html dist/index.html",
+    "build-client": "npx webpack --config ./webpack.config.js",
     "watch-client": "webpack --watch --config ./webpack.config.js",
     "test-rsk": "mocha -r esm tests/test_rskCtrl.js --timeout 2500000"
   },

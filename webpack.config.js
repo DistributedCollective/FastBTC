@@ -36,6 +36,10 @@ module.exports = {
           from: 'src/summary.html',
           to: ''
         },
+        {
+          from: 'src/styles.css',
+          to: ''
+        },
       ],
     }),
   ],
