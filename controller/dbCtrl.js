@@ -66,7 +66,7 @@ class DbCtrl {
 
     async addUser(web3adr, btcAddress, label) {
         return await this.userRepository.insert({
-            web3adr,
+            web3adr: web3adr.toLowerCase(),
             btcadr: btcAddress,
             label
         });
@@ -148,7 +148,9 @@ class DbCtrl {
             + "AND web3adr = ?;";
 
         try {
-            const rows = await this.transactionRepository.all(sql, [userWeb3Adr])
+            const rows = await this.transactionRepository.all(
+                sql, [userWeb3Adr.toLowerCase()
+            ])
             for (let row of rows) {
                 row.dateAdded = new Date(row.dateAdded);
             }

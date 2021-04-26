@@ -3,6 +3,7 @@
  */
 import conf from '../config/config';
 import U from '../utils/helper';
+import {Mutex} from 'async-mutex';
 
 class WalletManager {
     /**
@@ -11,6 +12,7 @@ class WalletManager {
      */
     init(web3) {
         this.wallet = {};
+        this.mutex = new Mutex();
 
         let pKey = conf.account.pKey;
         if (!pKey) {
@@ -28,16 +30,23 @@ class WalletManager {
 
     /**
      * returns a wallet with less than 4 pending transactions
-     * @param {*} timeout the maximum waiting time  in ms
+     * @param {*} timeout the maximum waiting time in ms when
+     * holding the mutex
      */
     async getFreeWallet(timeout) {
         const stopAt = Date.now() + timeout;
-        while (Date.now() < stopAt) {
-            if (this.wallet.pending < 4) {
-                this.wallet.pending++;
-                return this.wallet.address;
+        const release = await this.mutex.acquire();
+        try {
+            while (Date.now() < stopAt) {
+                if (this.wallet.pending < 4) {
+                    this.wallet.pending++;
+                    return this.wallet.address;
+                }
+                await U.wasteTime(0.5);
             }
-            await U.wasteTime(5);
+        }
+        finally {
+            release();
         }
 
         console.log("no free wallet after %d ms", timeout)
