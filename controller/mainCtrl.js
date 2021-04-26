@@ -305,10 +305,8 @@ class MainController {
             return;
         }
 
-
         await dbCtrl.updateDeposit(d.txHash, resTx.txId, d.label, d.vout);
         await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val);
-
 
         console.log("Successfully sent " + d.val + " to " + user.web3adr);
         console.log(resTx);
@@ -339,7 +337,10 @@ class MainController {
     }
 
     async getMultisigStats(){
-        let confirmed = 0; let executed = 0; let unexecuted = 0;
+        let confirmed = 0;
+        let executed = 0;
+        let unexecuted = 0;
+
         try{
             const numberOfTransactions = await rskCtrl.multisig.methods["getTransactionCount"](true, true).call();
             if(!numberOfTransactions) {
@@ -349,8 +350,12 @@ class MainController {
                 try {
                     const isConfirmed = await rskCtrl.multisig.methods["isConfirmed"](txId).call();
                     const txObj = await rskCtrl.multisig.methods["transactions"](txId).call();
-                    if (isConfirmed) confirmed++;
-                    if (txObj.executed) executed++;
+                    if (isConfirmed) {
+                        confirmed++;
+                    }
+                    if (txObj.executed) {
+                        executed++;
+                    }
                     if (isConfirmed && !txObj.executed) {
                         console.log(txId+": is confirmed: "+isConfirmed+" but unexecuted");
                         unexecuted++;

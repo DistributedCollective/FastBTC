@@ -7,7 +7,7 @@ export default class User extends BaseModel {
 
     insert({web3adr, btcadr, label}) {
         return super.insert({
-            web3adr,
+            web3adr: web3adr.toLowerCase(),
             btcadr,
             label,
             dateAdded: new Date()
@@ -35,8 +35,8 @@ export default class User extends BaseModel {
 
     findByAddress(address) {
         return super.get(
-            `SELECT *FROM ${this.tableName} WHERE web3adr = ? COLLATE NOCASE`,
-            [address]
+            `SELECT * FROM ${this.tableName} WHERE web3adr = ?`,
+            [address.toLowerCase()]
         );
     }
 }
