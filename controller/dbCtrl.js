@@ -47,14 +47,25 @@ class DbCtrl {
     /**
      * Helpers
      **/
-    async getUserByAddress(adr) {
+    async getUserByAddress(adr, bech32Only=false) {
         const user = await this.userRepository.findByAddress(adr);
+
+        if (bech32Only && user) {
+            let btcAdr = user.btcadr;
+
+            // the user does not have bech32 address - force new user creation
+            if (btcAdr && ! (btcAdr.startsWith('bc') || btcAdr.startsWith('tb'))) {
+                console.log('found a user, but the user does not have bech32 address');
+                return null;
+            }
+        }
 
         if (user) {
             console.log("getUserByAddress: user found", user);
         } else {
             console.log("getUserByAddress: no user found");
         }
+
         return user;
     }
 
@@ -66,7 +77,7 @@ class DbCtrl {
 
     async addUser(web3adr, btcAddress, label) {
         return await this.userRepository.insert({
-            web3adr: web3adr.toLowerCase(),
+            web3adr: web3adr.toString().toLowerCase(),
             btcadr: btcAddress,
             label
         });
@@ -149,8 +160,9 @@ class DbCtrl {
 
         try {
             const rows = await this.transactionRepository.all(
-                sql, [userWeb3Adr.toLowerCase()
-            ])
+                sql, [userWeb3Adr.toString().toLowerCase()]
+            )
+
             for (let row of rows) {
                 row.dateAdded = new Date(row.dateAdded);
             }
