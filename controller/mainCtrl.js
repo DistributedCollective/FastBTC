@@ -61,7 +61,7 @@ class MainController {
                 return cb({error: "Address is empty"});
             }
 
-            let user = await dbCtrl.getUserByAddress(address);
+            let user = await dbCtrl.getUserByAddress(address, true);
 
             if (user == null) {
                 // ensure that we do not have a race with user creation
@@ -70,7 +70,7 @@ class MainController {
                         // since the outer wasn't mutex-guarded, recheck here with the
                         // mutex. We do not generally want to synchronize all
                         // gets of users!
-                        const recheckedUser = await dbCtrl.getUserByAddress(address);
+                        const recheckedUser = await dbCtrl.getUserByAddress(address, true);
                         if (recheckedUser) {
                             return recheckedUser;
                         }

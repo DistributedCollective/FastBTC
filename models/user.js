@@ -35,8 +35,9 @@ export default class User extends BaseModel {
 
     findByAddress(address) {
         return super.get(
-            `SELECT * FROM ${this.tableName} WHERE web3adr = ?`,
-            [address.toLowerCase()]
+            // the descending ordering will give the latest one first...
+            `SELECT * FROM ${this.tableName} WHERE web3adr = ? ORDER BY id DESC`,
+            [address.toString().toLowerCase()]
         );
     }
 }
