@@ -11,9 +11,9 @@ var web3 = new Web3(config.nodeProvider);
 import U from '../utils/helper';
 
 const gasSatoshi = 50;
-const keyPrivateKey = "tprv8ZgxMBicQKsPe2DbCHzPWRdSKcKzNEEQZL937uphUyEAFiBUWi5LPNLZuTAudp62hXXTDFt2jWTKnuvA1zoACbRNBkeQZ6FB2W54qsZ2rAM";
-const key2PrivateKey = "tprv8ZgxMBicQKsPfDaTXNDjPwKPehR6dPwvDAuv28TfWkzm6BcsAZXnCZ2d99xbw4BMskay5eKMqdwAAwCCMfVHpBdBySr1z4PBMfL45ZihjLh";
-const key3PrivateKey = "tprv8ZgxMBicQKsPdKrpMMySPDFSp8xc8yTC5J9kY6WUAXWtBNtWbWBRMqBJRUmvnQw83BgV722KfNE7nx1NQjwWbhb5SHpXr1YgCtySSXZD29a";
+const keyPrivateKey = "tprv8fsQTfzxTrtYaBeAUGrFoUMeJiiF6PGVMK6KrTeFKMySrRNE7d5csnwxbSma9jZnUpjmG58NyiDFM5BhrZtoYEzDgbSXanDaev7LQVyDurS";
+const key2PrivateKey = "tprv8fxQstaUiWDjRkESrtcoFoYcPCtoFu4VDPVyCAYc4eheQeedBcDpKPdfj7ApbBidav5hw9nVJtpAvmbjzfv4CoFSLKj32o2YGR7oTacJy3E";
+const key3PrivateKey = "tprv8ggzMi47JhNk2ALSrrNfPRkoqpBTSjKsWpcZatsvipDGDJj4ohtyFweACsLxAti71D4jKSUsPRLxtigzfkQ9S3KNgrmjY181aonFmu6nhJc";
 const cosigners = 2;
 
 console.log("Withdraw on "+config.env+ " network");
@@ -22,7 +22,7 @@ console.log("Withdraw on "+config.env+ " network");
 const txAmount = 3000;
 const TX_FEES = 3000;
 // const { origin, pathname } = new URL('https://testnet.sovryn.app/genesis/');
-const { origin, pathname } = new URL('http://localhost:3008/');
+const { origin, pathname } = new URL('http://localhost:3007/');
 
 const socket = io(origin, {
     reconnectionDelayMax: 10000,
@@ -38,7 +38,6 @@ init();
 
 async function init() {
     await DbCtrl.initDb(config.dbName);
-    await bitcoinCtrl.init();
 
     createNewDepositeAddress();
 }
@@ -54,12 +53,12 @@ async function createNewDepositeAddress() {
     // const remainDeposits = config.maxDepositsAllocation - depositSum;
     // const nrUsers = Math.floor(remainDeposits / (depositAmount * 1e8));
     const depositAmount = 0.0001;
-    const nrUsers = 1000;
+    const nrUsers = 3;
 
     console.log("will deposit for %s users", nrUsers);
 
     let accts = createAccount(nrUsers);
-    const fromUser = {btcadr: '2N2waMD8dtSiTcE8AVSu5uJJDHnPe2FDdA8', id: 1};
+    const fromUser = {btcadr: 'tb1qmtpgj200ctfnx83s97990uzmwzhwr507h9jga75vjysge0r7ereqk0wnnc', id: 9};
 
     const { payment: userPayment } = await getPaymentAdr(fromUser.id);
     if (userPayment.address !== fromUser.btcadr) {
@@ -99,7 +98,7 @@ function getAdr(adr){
         // console.log("get adr", adr);
         const email = Math.random().toString(24).slice(3) + "@test.com";
 
-        socket.emit("getDepositAddress", adr, email, (res, res2) => {
+        socket.emit("getDepositAddress", adr, (res, res2) => {
             if(res&&res.error) {
                 console.error("Error retrieving history");
                 console.error(res);
@@ -172,7 +171,7 @@ async function depositToUser(fromUser, fromPayment, toUser, amount) {
 async function getPaymentAdr(index) {
     let publicKeys = bitcoinCtrl.getDerivedPubKeys(index);
 
-    const payment = payments.p2sh({
+    const payment = payments.p2wsh({
         network: bitcoinCtrl.network,
         redeem: payments.p2ms({
             m: cosigners,
@@ -208,8 +207,8 @@ async function getInputsData (payment) {
                             hash: utxo.transactionHash,
                             index: utxo.index,
                             nonWitnessUtxo: Buffer.from(tx.hex, 'hex'),
-                            //witnessScript: payment.redeem.output,
-                            redeemScript: payment.redeem.output,
+                            witnessScript: payment.redeem.output,
+                            //redeemScript: payment.redeem.output,
                         }
                         // console.log("input found")
                         // console.log(input)
