@@ -100,18 +100,20 @@ class SlaveCtrl {
     // }
 
     async returnPayment(req, res) {
-        console.log("Return btc address");
+        const txId = req.body.txId;
+        console.log("Return btc address for txId %d", txId);
         console.log(req.body)
-        let cnt = 0;
+
+        let retries = 0;
 
         // dirty quickfix for payment undefined response from db
         while (true) {
             let response;
             try {
-                response = await dbCtrl.getPaymentInfo(req.body.txId);
+                response = await dbCtrl.getPaymentInfo(txId);
             }
             catch (e) {
-                console.log("error getting payment info")
+                console.log("error getting payment info for txId %d", txId)
                 console.log(e);
                 response = {};
             }
@@ -121,6 +123,7 @@ class SlaveCtrl {
             if (!btcAdr || !txHash || vout == null) {
                 return res.status(403).json("Error retrieving user payment info");
             }
+
             return res.status(200).json({btcAdr, txHash, vout});
         }
     }

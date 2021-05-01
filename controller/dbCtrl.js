@@ -218,7 +218,7 @@ class DbCtrl {
         }
     }
 
-    async updateDeposit(txHash, txId, label, vout) {
+    async updateDeposit(txHash, vout, txId, label) {
         console.log(
             "update deposit tx hash %s, txId %s, label %s",
             txHash, txId, label
@@ -241,7 +241,7 @@ class DbCtrl {
     }
 
     async getPaymentInfo(txId) {
-        console.log("Get payment info for " + txId);
+        console.log("Get payment info for txId " + txId);
 
         const tx = await this.transactionRepository.getTransactionByTxId(txId);
 
@@ -251,7 +251,7 @@ class DbCtrl {
         }
 
         const user = await this.getUserByLabel(tx.userAdrLabel);
-        console.log("user", user);
+        console.log("payment user: ", user);
 
         if (!user || !user.btcadr) {
             return {btcAdr: null, txHash: null, vout: null};

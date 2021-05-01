@@ -57,7 +57,7 @@ class RskCtrl {
             return { "error": "Not enough balance left. Please contact the admin support@sovryn.app" };
         }
 
-        //hardcoded min amount here instead of using the value from config because it makes only trouble beeing strict with this amount
+        //hardcoded min amount here instead of using the value from config because it makes only trouble being strict with this amount
         //eg: user calculates gas fees wrong. the amount displayed on the frontend is to encourage users do not send too little
         //but in case they do it is cheaper for us to simply process the request than deal with a refund
         if (transferValueSatoshi > conf.maxAmount * 2 || transferValueSatoshi <= 10000) {
