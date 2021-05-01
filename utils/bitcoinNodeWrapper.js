@@ -171,7 +171,6 @@ export default class BitcoinNodeWrapper {
     }
 
     /**
-     *
      * @param {Payment} payment
      * @param {Date} createdDate
      */
