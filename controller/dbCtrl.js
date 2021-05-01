@@ -168,7 +168,7 @@ class DbCtrl {
             }
             return rows;
         }
-        catch (e) {
+        catch (err) {
             console.error('Error running sql: ' + sql);
             console.error(err);
 
