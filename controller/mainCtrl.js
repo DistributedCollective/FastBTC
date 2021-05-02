@@ -53,7 +53,7 @@ class MainController {
     }
 
     /**
-     * Loads a users btc address or creates a new user entry in the database
+     * Loads a user's BTC address or creates a new user entry in the database
      */
     async getDepositAddress(socket, address, cb) {
         try {
@@ -305,7 +305,7 @@ class MainController {
             return;
         }
 
-        await dbCtrl.updateDeposit(d.txHash, resTx.txId, d.label, d.vout);
+        await dbCtrl.updateDeposit(d.txHash, d.vout, resTx.txId, d.label);
         await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val);
 
         console.log("Successfully sent " + d.val + " to " + user.web3adr);
