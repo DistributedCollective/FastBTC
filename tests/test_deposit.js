@@ -19,8 +19,8 @@ const cosigners = 2;
 console.log("Withdraw on "+config.env+ " network");
 
 
-const txAmount = 3000;
-const TX_FEES = 3000;
+const depositAmount = 0.0001;
+const nrUsers = 5;
 // const { origin, pathname } = new URL('https://testnet.sovryn.app/genesis/');
 const { origin, pathname } = new URL('http://localhost:3007/');
 
@@ -43,17 +43,6 @@ async function init() {
 }
 
 async function createNewDepositeAddress() {
-    // let depositSum = await DbCtrl.transactionRepository.sumTransacted('deposit');
-    //
-    // if (depositSum > config.maxDepositsAllocation) {
-    //   console.log("Total deposited transactions (%s) is exceed the max allocation", depositSum/1e8);
-    //   return;
-    // }
-    //
-    // const remainDeposits = config.maxDepositsAllocation - depositSum;
-    // const nrUsers = Math.floor(remainDeposits / (depositAmount * 1e8));
-    const depositAmount = 0.0001;
-    const nrUsers = 3;
 
     console.log("will deposit for %s users", nrUsers);
 
@@ -75,6 +64,7 @@ async function createNewDepositeAddress() {
         console.log("user address res", user);
 
         await depositToUser(fromUser, userPayment, user, depositAmount);
+        await U.wasteTime(5);
     }
 }
 
@@ -115,13 +105,14 @@ function getAdr(adr){
 
 
 async function depositToUser(fromUser, fromPayment, toUser, amount) {
-
+    console.log("deposit to "+toUser.btcadr);
   try {
     const psbt = new Psbt({network: bitcoinCtrl.network});
     const fee = getFee(psbt.inputCount, 2, gasSatoshi);
     const amountSat = amount*1e8;
 
     const {inputs, bal} = await getInputsData(fromPayment);
+    console.log("Received inputs");
 
     if (inputs && inputs.length > 0 && bal > fee + amountSat) {
       psbt.addInputs(inputs);
@@ -150,7 +141,9 @@ async function depositToUser(fromUser, fromPayment, toUser, amount) {
 
       const hash = psbt.extractTransaction().toHex();
 
+      console.log("Tx created")
       const tx = await bitcoinCtrl.api.sendRawTransaction(hash);
+      console.log("Tx pushed");
 
       if (tx) {
         console.log("Deposited %sBTC to user %s, tx %s", amount, toUser.btcadr, tx);
