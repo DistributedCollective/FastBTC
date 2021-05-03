@@ -139,6 +139,7 @@ class RskCtrl {
             }).on("transactionHash", async (transactionHash) => {
                 if (mutexHeld) {
                     mutexHeld = false;
+                    await U.wasteTime(3);
                     this.submissionMutex.release();
                 }
 
