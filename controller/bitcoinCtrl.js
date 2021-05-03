@@ -12,7 +12,7 @@ class BitcoinCtrl {
     constructor() {
         this.onTxDepositedHandler = async () => {};
         this.onPendingDepositHandler = async () => {};
-        conf.env="prod"
+        
         this.isMainNet = conf.env === 'prod';
         this.pubKeys = conf.walletSigs.pubKeys;
         this.cosigners = conf.walletSigs.cosigners;
@@ -27,7 +27,6 @@ class BitcoinCtrl {
     getDerivedPubKeys(index) {
         let publicKeys = this.pubKeys.map(key => {
             const k = this.zpubToXpub(key);
-            console.log(k);
             const node = bip32.fromBase58(k, this.network);
             const child = node.derive(0).derive(index);
             return child.publicKey.toString('hex');
@@ -47,7 +46,7 @@ class BitcoinCtrl {
     async createAddress(index, label) {
         console.log("create payment address key for "+index+" "+label);
         const publicKeys = this.getDerivedPubKeys(index);
-        console.log(this.network)
+        
         const payment = payments.p2wsh({
             network: this.network,
             redeem: payments.p2ms({

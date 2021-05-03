@@ -7,15 +7,14 @@ import config from "../config/config";
 describe("BitcoinCtrl", async () => {
     before(async () => {
         dbCtrl.initDb(config.dbName);
-        await bitcoinCtrl.init();
     })
-/* 
+
     it("should create a new address", async () => {
         const address = await bitcoinCtrl.createAddress(0);
 
         assert(address && bitcoin.address.fromBech32(address).data != null);
     });
-*/
+/*
     it('should return wallet deposits for given address', async () => {
         const tx = await bitcoinCtrl.api.getAddressDetail([""], null);
         console.log("--------")
