@@ -6,11 +6,13 @@ import U from '../utils/helper';
 import telegramBot from '../utils/telegram';
 import BitcoinNodeWrapper from "../utils/bitcoinNodeWrapper";
 import loggingUtil from '../utils/loggingUtil';
+var b58 = require('bs58check')
 
 class BitcoinCtrl {
     constructor() {
         this.onTxDepositedHandler = async () => {};
         this.onPendingDepositHandler = async () => {};
+        conf.env="prod"
         this.isMainNet = conf.env === 'prod';
         this.pubKeys = conf.walletSigs.pubKeys;
         this.cosigners = conf.walletSigs.cosigners;
@@ -24,7 +26,9 @@ class BitcoinCtrl {
 
     getDerivedPubKeys(index) {
         let publicKeys = this.pubKeys.map(key => {
-            const node = bip32.fromBase58(key, this.network);
+            const k = this.zpubToXpub(key);
+            console.log(k);
+            const node = bip32.fromBase58(k, this.network);
             const child = node.derive(0).derive(index);
             return child.publicKey.toString('hex');
         });
@@ -33,10 +37,17 @@ class BitcoinCtrl {
         return publicKeys;
     }
 
+    zpubToXpub(zpub) {
+        var data = b58.decode(zpub)
+        data = data.slice(4)
+        data = Buffer.concat([Buffer.from('0488b21e','hex'), data])
+        return b58.encode(data)
+      }
+
     async createAddress(index, label) {
         console.log("create payment address key for "+index+" "+label);
         const publicKeys = this.getDerivedPubKeys(index);
-
+        console.log(this.network)
         const payment = payments.p2wsh({
             network: this.network,
             redeem: payments.p2ms({

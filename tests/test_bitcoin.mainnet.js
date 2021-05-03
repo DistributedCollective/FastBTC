@@ -7,7 +7,6 @@ import config from "../config/config-main";
 describe("BitcoinCtrl Mainnet", async () => {
     before(async () => {
         await dbCtrl.initDb(config.dbName);
-        await bitcoinCtrl.init(config);
     });
 
     let address = "";  
@@ -18,13 +17,15 @@ describe("BitcoinCtrl Mainnet", async () => {
        console.log(block);
        assert(block > 0);
     });
-/*
+
     it("should create a btc address", async () => {
-        address = await bitcoinCtrl.createAddress(0);
-        console.log(address)
+        for(let i=0;i<3;i++) {
+            address = await bitcoinCtrl.createAddress(i, "xiuvjeklo");
+            console.log(address)
+        }
 
         assert(address && bitcoin.address.fromBech32(address).data != null);
-    });*/
+    });
 
 
     /*
