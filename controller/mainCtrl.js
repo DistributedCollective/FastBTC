@@ -267,9 +267,22 @@ class MainController {
             }
 
             // stopgap fix to ensure that it goes to db.
-            await dbCtrl.confirmDeposit(d.txHash, d.label, d.vout);
-            await dbCtrl.confirmDeposit(d.txHash, d.label, depositFound.vout);
+            if (depositFound.vout === -1) {
+                await dbCtrl.confirmDeposit(d.txHash, d.label, depositFound.vout);
+
+                telegramBot.sendMessage(`OLD ADDRESS / VOUT -1 SEEN: ${d.txHash}, ${d.label} - NOT PROCESSING FURTHER`);
+                return;
+            }
+            else {
+                if (depositFound.vout !== d.vout) {
+                    throw new Error(`This should not happen, vouts not matching ${depositFound.vout} != ${d.vout}, ${depositFound.id}`);
+                }
+
+                await dbCtrl.confirmDeposit(d.txHash, d.label, d.vout);
+            }
+
         }
+
 
         telegramBot.sendMessage( `New BTC deposit confirmed: address ${d.address}, tx ${d.txHash}/${d.vout}, value ${d.val / 1e8} BTC`);
         if (d.val > conf.maxAmount || d.val <= 10000) {
