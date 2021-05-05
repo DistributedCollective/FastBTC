@@ -320,7 +320,6 @@ class MainController {
             return;
         }
 
-        await dbCtrl.updateDeposit(d.txHash, depositFound.vout, resTx.txId, d.label);
         await dbCtrl.updateDeposit(d.txHash, d.vout, resTx.txId, d.label);
         await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val);
 
