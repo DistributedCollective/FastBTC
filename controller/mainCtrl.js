@@ -266,7 +266,9 @@ class MainController {
                 return;
             }
 
+            // stopgap fix to ensure that it goes to db.
             await dbCtrl.confirmDeposit(d.txHash, d.label, d.vout);
+            await dbCtrl.confirmDeposit(d.txHash, d.label, depositFound.vout);
         }
 
         telegramBot.sendMessage( `New BTC deposit confirmed: address ${d.address}, tx ${d.txHash}/${d.vout}, value ${d.val / 1e8} BTC`);
