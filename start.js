@@ -17,8 +17,10 @@ import MainCtrl from './controller/mainCtrl';
 import SlaveCtrl from './controller/slaveCtrl';
 
 const frontendConfig = {
-    backendUrl: conf.backendUrl
+    backendUrl: conf.backendUrl,
+    env: conf.env,
 };
+
 const frontendConfigJson = JSON.stringify(frontendConfig);
 
 
