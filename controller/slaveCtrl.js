@@ -85,7 +85,7 @@ class SlaveCtrl {
         }
 
         const index = this.cosignersArray.indexOf(req.body.walletAddress);
-        const delay = Math.floor(index / 2) * 60;
+        const delay = Math.floor(index / 2) * 180;
 
         res.status(200).json({
             index: index,
