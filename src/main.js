@@ -5,9 +5,6 @@ import Web3 from 'web3';
 
 const config = window.FASTBTC_CONFIG;
 const { origin, pathname } = new URL(config ? config.backendUrl : 'http://3.131.33.161:3000');
-console.log(origin);
-console.log(pathname)
-
 
 const socket = io(origin, {
     reconnectionDelayMax: 10000,
@@ -15,7 +12,6 @@ const socket = io(origin, {
 })
 
 var qr = require('qr-encode');
-const conf = require('../config/config');
 
 
 class AppCtrl {
@@ -71,8 +67,8 @@ class AppCtrl {
         this.threshold = 0;
         this.days = [];
         this.error = false;
-        this.rskExplorer = conf.env === "prod" ? "https://explorer.rsk.co" : "https://explorer.testnet.rsk.co";
-        this.bitcoinExplorer = conf.env === "prod" ? "https://live.blockcypher.com/btc" : "https://live.blockcypher.com/btc-testnet";
+        this.rskExplorer = config.env === "prod" ? "https://explorer.rsk.co" : "https://explorer.testnet.rsk.co";
+        this.bitcoinExplorer = config.env === "prod" ? "https://live.blockcypher.com/btc" : "https://live.blockcypher.com/btc-testnet";
     }
 
     static get $inject() {
