@@ -19,6 +19,7 @@ import SlaveCtrl from './controller/slaveCtrl';
 const frontendConfig = {
     backendUrl: conf.backendUrl,
     env: conf.env,
+    blockExplorer: conf.blockExplorer,
 };
 
 const frontendConfigJson = JSON.stringify(frontendConfig);

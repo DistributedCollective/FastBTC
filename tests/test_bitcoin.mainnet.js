@@ -2,7 +2,10 @@ import * as bitcoin from 'bitcoinjs-lib';
 const assert = require('assert');
 import bitcoinCtrl from "../controller/bitcoinCtrl";
 import dbCtrl from "../controller/dbCtrl";
-import config from "../config/config-main";
+import config from "../config/config";
+
+console.log("argv[2]", process.argv[2])
+console.log(config.env)
 
 describe("BitcoinCtrl Mainnet", async () => {
     before(async () => {
@@ -20,7 +23,13 @@ describe("BitcoinCtrl Mainnet", async () => {
 
     it("should create a btc address", async () => {
         for(let i=0;i<3;i++) {
-            address = await bitcoinCtrl.createAddress(i, "xiuvjeklo");
+            try {
+                address = await bitcoinCtrl.createAddress(i, "xiuvjeklo");
+            } catch (e) {
+                console.log("error was thrown");
+                console.error(e);
+                throw e;
+            }
             console.log(address)
         }
 

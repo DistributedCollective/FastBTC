@@ -1,13 +1,13 @@
 const fs = require('fs');
 import conf from '../config/config';
-import apiKey from './secrets/apiKey';
+import apiKey from '../secrets/apiKey';
 const axios = require('axios');
 
 async function getDb() {
     console.log("download db");
     try {
         axios({
-            url: "http://3.13.8.41:3009/getDb", 
+            url: "http://3.131.33.161:3000/getDb",
             headers: {
                 Authorization: apiKey
             },
