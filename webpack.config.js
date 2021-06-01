@@ -7,6 +7,7 @@ module.exports = {
     main: ['./src/main.js', './src/styles.css'],
     dirPagination: ['./src/dirPagination.js'],
     db: ['./src/db.js'],
+    users: ['./src/users.js'],
   },
   devtool: 'inline-source-map',
   module: {
@@ -34,6 +35,10 @@ module.exports = {
         },
         {
           from: 'src/summary.html',
+          to: ''
+        },
+        {
+          from: 'src/users.html',
           to: ''
         },
         {

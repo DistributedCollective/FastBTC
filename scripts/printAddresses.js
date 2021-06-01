@@ -47,4 +47,5 @@ async function printAddresses(){
     }
 }
 
-printAddresses();
+console.log(config.env)
+printAddresses().catch((err) => { console.log(err); });

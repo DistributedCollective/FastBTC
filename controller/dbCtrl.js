@@ -311,6 +311,29 @@ class DbCtrl {
     async getNumberOfUnprocessedTransactions(type) {
         return await this.transactionRepository.countUnprocessed(type);
     }
+
+    async getUsersByAddress(address) {
+        const sql = "select id, web3adr, btcadr, label, dateAdded"
+            + " from user where web3adr like lower(?) or btcadr like ?;";
+
+        try {
+            const rows = await this.userRepository.all(
+                sql, [address.toString(), address.toString()]
+            );
+
+            for (let row of rows) {
+                row.dateAdded = new Date(row.dateAdded);
+            }
+
+            return rows;
+        }
+        catch (err) {
+            console.error('Error running sql: ' + sql);
+            console.error(err);
+
+            throw new Error("Unable to retrieve deposit history");
+        }
+    }
 }
 
 export default new DbCtrl();

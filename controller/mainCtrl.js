@@ -49,6 +49,7 @@ class MainController {
             socket.on('txAmount', (...args) => this.sendTxMinMax.apply(this, [...args]));
             socket.on('getDeposits', (...args) => this.getDbDeposits.apply(this, [...args]));
             socket.on('getTransfers', (...args) => this.getTransfers.apply(this, [...args]));
+            socket.on('getUsersByAddress', (...args) => this.getUsersByAddress.apply(this, [...args]));
         });
     }
 
@@ -255,6 +256,15 @@ class MainController {
             cb(list || []);
         } catch (e) {
             console.error(e);
+        }
+    }
+
+    async getUsersByAddress(address, cb) {
+        try {
+            const list = await dbCtrl.getUsersByAddress(address);
+            cb(list || []);
+        } catch(e) {
+            console.log(e);
         }
     }
 

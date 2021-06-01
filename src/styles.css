@@ -31,3 +31,11 @@ ul {
 .sort-icon {
     font-size: 9px;
 }
+
+table.user-search-table td.mono {
+    font-family: monospace !important;
+}
+
+table.user-search-table, table.user-search-table th {
+    text-align: left;
+}
