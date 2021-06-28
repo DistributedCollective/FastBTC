@@ -42,6 +42,15 @@
           <div id="qrCode" style="margin-top:20px;"></div>
         </div>
       </div>
+      <div class="row">
+        <label class="col-3">Deposit address signatures: </label>
+        <div class="col-9">
+          <table class="signatures">
+              <tr><th>Signer</th><th>Signature</th></tr>
+              <tr ng-repeat="signature in ctrl.user.signatures"><td><code>{{signature.signer}}</code></td><td><code>{{signature.signature}}</code></td></tr>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div class="ng-hide" ng-show="ctrl.user != null" style="margin-top: 20px">

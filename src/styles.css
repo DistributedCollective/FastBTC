@@ -12,6 +12,26 @@ table {
     vertical-align: middle;
 }
 
+table.signatures, table.signatures td, table.signatures th {
+    text-align: left;
+    vertical-align: middle;
+    width: 100%;
+}
+
+table.signatures th:first-child,
+table.signatures td:first-child  {
+    width: 33%;
+}
+
+table.signatures th, table.signatures td {
+    max-width: 0;
+    width: 66%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
 th {
     cursor: pointer;
     text-align: center;

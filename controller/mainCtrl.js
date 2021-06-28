@@ -4,8 +4,6 @@
  * Processes btc deposits, takes the client rsk address and sends corresponding btc address, informs the client about the relay process status and sends deposit/error notifications to a telegram group
  */
 import {Mutex} from 'async-mutex';
-
-const SocketIO = require('socket.io');
 import conf from '../config/config';
 import dbCtrl from './dbCtrl';
 import rskCtrl from './rskCtrl';
@@ -13,6 +11,9 @@ import Util from '../utils/helper';
 import telegramBot from '../utils/telegram';
 import bitcoinCtrl from "./bitcoinCtrl";
 import slaveCtrl from './slaveCtrl';
+import AddressMappingSigner from '../utils/addressMappingSigner';
+
+const SocketIO = require('socket.io');
 
 class MainController {
 
@@ -23,6 +24,8 @@ class MainController {
         await dbCtrl.initDb(conf.dbName);
         await rskCtrl.init();
         this.initSocket(server);
+
+        this.addressMappingSigner = new AddressMappingSigner()
 
         bitcoinCtrl.setPendingDepositHandler(this.onPendingDeposit.bind(this));
         bitcoinCtrl.setTxDepositedHandler(this.processDeposits.bind(this));
@@ -36,7 +39,7 @@ class MainController {
             cors: {
                 origin: "*",
                 methods: ["GET", "POST"]
-              }
+            }
         });
 
         this.io.on('connection', socket => {
@@ -58,7 +61,7 @@ class MainController {
      */
     async getDepositAddress(socket, address, cb) {
         try {
-            if (! address) {
+            if (!address) {
                 return cb({error: "Address is empty"});
             }
 
@@ -79,37 +82,63 @@ class MainController {
                         return await this.addNewUser(address);
                     });
 
-                    if (! user) {
+                    if (!user) {
                         throw new Error(`user creation returned ${user}`)
                     }
-                }
-                catch (e) {
+                } catch (e) {
                     console.log('failed to add user for address %s: %s', address, e)
-                    return cb({ error: "Cannot add the user to the database. Try again later." });
+                    return cb({error: "Cannot add the user to the database. Try again later."});
                 }
             }
 
             this.connectingSockets[user.label] = socket.id;
-
             if (user.btcadr) {
                 await bitcoinCtrl.checkAddress(user.id, user.label, new Date(user.dateAdded));
             } else {
                 const btcAdr = await bitcoinCtrl.createAddress(user.id, user.label);
                 if (btcAdr) {
-                    await dbCtrl.userRepository.update({ id: user.id }, { btcadr: btcAdr });
+                    await dbCtrl.userRepository.update({id: user.id}, {btcadr: btcAdr});
                     user = await dbCtrl.getUserByAddress(address);
                 } else {
                     console.error("Error creating btc deposit address for user " + address);
-                    return cb({ error: "Can not get new BTC deposit address" });
+                    return cb({error: "Can not get new BTC deposit address"});
                 }
             }
 
-            console.log("returning user", user);
-            return cb(null, user);
+            const signatures = (await dbCtrl.getDepositAddressSignatures(user.btcadr)).map(
+                (s) => {
+                    return {signer: s.signer, signature: s.signature}
+                })
 
+            if (! signatures.some((e) => e.signer === rskCtrl.from.toLowerCase())) {
+                const signature = await this.addressMappingSigner.signAddressMapping(
+                    user.btcadr,
+                    user.web3adr
+                );
+
+                await dbCtrl.depositAddressSignatureRepository.insert({
+                    deposit_address_id: user.id,
+                    signer: rskCtrl.from.toLowerCase(),
+                    signature: signature,
+                    created: new Date(),
+                });
+
+                signatures.push({
+                    signer: rskCtrl.from.toLowerCase(),
+                    signature: signature
+                });
+            }
+
+            const response = {
+                ...user,
+                signatures: signatures
+            };
+
+            console.log("returning response", response);
+            return cb(null, response);
         } catch (e) {
             console.error(e);
-            cb({ error: "Server error. Please contact the admin community@sovryn.app" });
+            cb({error: "Server error. Please contact the admin community@sovryn.app"});
         }
     }
 
@@ -119,14 +148,13 @@ class MainController {
      */
     async getDepositHistory(address, cb) {
         if (address == null || address === '') {
-            return cb({ error: "Address is empty" });
+            return cb({error: "Address is empty"});
         }
 
         const hist = await dbCtrl.getDepositHistory(address);
         if (hist && hist.length > 0) {
             cb(hist);
-        }
-        else {
+        } else {
             cb([]);
         }
     }
@@ -158,7 +186,9 @@ class MainController {
      */
     async getStats(cb) {
         try {
-            let deposits = {}; let transfers = {}; let multisig = {};
+            let deposits = {};
+            let transfers = {};
+            let multisig = {};
 
             deposits.totalTransacted = await dbCtrl.getSum('deposit');
             deposits.totalNumber = await dbCtrl.getTotalNumberOfTransactions('deposit');
@@ -170,7 +200,7 @@ class MainController {
 
             multisig = await this.getMultisigStats();
 
-            deposits.averageSize = deposits.totalTransacted > 0 ? 
+            deposits.averageSize = deposits.totalTransacted > 0 ?
                 (deposits.totalTransacted / deposits.totalNumber).toFixed(6) : 0;
             transfers.averageSize = transfers.totalTransacted > 0 ?
                 (transfers.totalTransacted / transfers.totalNumber).toFixed(6) : 0;
@@ -185,9 +215,9 @@ class MainController {
     async getDays(cb) {
         try {
             let days = [];
-            const dayOffset = 24*60*60*1000;
-            for (let d=0; d<=50; d++) {
-                const date = new Date().setTime(new Date().getTime()-(dayOffset*d));
+            const dayOffset = 24 * 60 * 60 * 1000;
+            for (let d = 0; d <= 50; d++) {
+                const date = new Date().setTime(new Date().getTime() - (dayOffset * d));
                 const deposits = await dbCtrl.getTotalNumberOfTransactions('deposit', date);
                 const depositsTotalAmount = await dbCtrl.getSum('deposits', date);
                 const transfers = await dbCtrl.getTotalNumberOfTransactions('transfer', date);
@@ -218,7 +248,7 @@ class MainController {
             balances.slaveNodes = await slaveCtrl.getCosignersBalances();
 
             cb({balances});
-        } catch(e) {
+        } catch (e) {
             console.log(e);
         }
     }
@@ -226,7 +256,7 @@ class MainController {
     async getThreshold(cb) {
         try {
             cb({threshold: conf.balanceThreshold});
-        } catch(e) {
+        } catch (e) {
             console.log(e);
         }
     }
@@ -246,7 +276,7 @@ class MainController {
             cb(total);
         } catch (e) {
             console.error(e);
-            cb({ error: "Something's wrong" })
+            cb({error: "Something's wrong"})
         }
     }
 
@@ -263,7 +293,7 @@ class MainController {
         try {
             const list = await dbCtrl.getUsersByAddress(address);
             cb(list || []);
-        } catch(e) {
+        } catch (e) {
             console.log(e);
         }
     }
@@ -282,19 +312,16 @@ class MainController {
 
                 telegramBot.sendMessage(`OLD ADDRESS / VOUT -1 SEEN: ${d.txHash}, ${d.label} - NOT PROCESSING FURTHER`);
                 return;
-            }
-            else {
+            } else {
                 if (depositFound.vout !== d.vout) {
                     throw new Error(`This should not happen, vouts not matching ${depositFound.vout} != ${d.vout}, ${depositFound.id}`);
                 }
 
                 await dbCtrl.confirmDeposit(d.txHash, d.label, d.vout);
             }
-
         }
 
-
-        telegramBot.sendMessage( `New BTC deposit confirmed: address ${d.address}, tx ${d.txHash}/${d.vout}, value ${d.val / 1e8} BTC`);
+        telegramBot.sendMessage(`New BTC deposit confirmed: address ${d.address}, tx ${d.txHash}/${d.vout}, value ${d.val / 1e8} BTC`);
         if (d.val > conf.maxAmount || d.val <= 10000) {
             telegramBot.sendMessage("Deposit outside the limit!");
         }
@@ -361,17 +388,23 @@ class MainController {
         });
     }
 
-    async getMultisigStats(){
+    async verifyDepositAddressSignature(btcAddress, web3Address, signer, signature) {
+        const recovered = await this.addressMappingSigner.getSigningAddress(btcAddress, web3Address, signature);
+        console.log("recovered signer", recovered);
+        return recovered.toLowerCase() === signer.toLowerCase();
+    }
+
+    async getMultisigStats() {
         let confirmed = 0;
         let executed = 0;
         let unexecuted = 0;
 
-        try{
+        try {
             const numberOfTransactions = await rskCtrl.multisig.methods["getTransactionCount"](true, true).call();
-            if(!numberOfTransactions) {
-                await Util.wasteTime(5) 
+            if (!numberOfTransactions) {
+                await Util.wasteTime(5)
             }
-            for(let txId = conf.startIndex; txId < numberOfTransactions; txId++){
+            for (let txId = conf.startIndex; txId < numberOfTransactions; txId++) {
                 try {
                     const isConfirmed = await rskCtrl.multisig.methods["isConfirmed"](txId).call();
                     const txObj = await rskCtrl.multisig.methods["transactions"](txId).call();
@@ -382,17 +415,16 @@ class MainController {
                         executed++;
                     }
                     if (isConfirmed && !txObj.executed) {
-                        console.log(txId+": is confirmed: "+isConfirmed+" but unexecuted");
+                        console.log(txId + ": is confirmed: " + isConfirmed + " but unexecuted");
                         unexecuted++;
                     }
-                } catch(e) {
+                } catch (e) {
                     console.log(e);
                     continue;
                 }
             }
-            return { confirmed, executed, unexecuted };
-        }
-        catch(e){
+            return {confirmed, executed, unexecuted};
+        } catch (e) {
             console.error("Error getting confirmed info");
             console.error(e);
         }
