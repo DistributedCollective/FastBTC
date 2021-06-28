@@ -6,7 +6,12 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-import {Bookmarks, Transaction, User} from '../models/index';
+import {
+    Bookmarks,
+    DepositAddressSignature,
+    Transaction,
+    User
+} from '../models/index';
 
 class DbCtrl {
     async initDb(dbName) {
@@ -35,26 +40,33 @@ class DbCtrl {
             this.userRepository = new User(this.db);
             this.transactionRepository = new Transaction(this.db);
             this.bookmarkRepository = new Bookmarks(this.db);
+            this.depositAddressSignatureRepository = new DepositAddressSignature(this.db);
 
-            for (let repository of [this.userRepository, this.transactionRepository, this.bookmarkRepository]) {
+            for (let repository of [
+                this.userRepository,
+                this.transactionRepository,
+                this.bookmarkRepository,
+                this.depositAddressSignatureRepository
+            ]) {
                 await repository.checkTable();
             }
-       } catch (e) {
+        } catch (e) {
             console.error(e);
+            process.exit(1);
         }
     }
 
     /**
      * Helpers
      **/
-    async getUserByAddress(adr, bech32Only=false) {
+    async getUserByAddress(adr, bech32Only = false) {
         const user = await this.userRepository.findByAddress(adr);
 
         if (bech32Only && user) {
             let btcAdr = user.btcadr;
 
             // the user does not have bech32 address - force new user creation
-            if (btcAdr && ! (btcAdr.startsWith('bc') || btcAdr.startsWith('tb'))) {
+            if (btcAdr && !(btcAdr.startsWith('bc') || btcAdr.startsWith('tb'))) {
                 console.log('found a user, but the user does not have bech32 address');
                 return null;
             }
@@ -87,6 +99,38 @@ class DbCtrl {
         return await this.userRepository.findOne({
             btcadr: adr
         });
+    }
+
+    async getDepositAddressSignatures(btcAddress) {
+        return await this.depositAddressSignatureRepository.all(`
+            SELECT deposit_address_signature.*
+            FROM deposit_address_signature
+                     JOIN user ON (user.id =
+                                   deposit_address_signature.deposit_address_id)
+            WHERE user.btcAdr = ?
+        `, [btcAddress]);
+    }
+
+    async getUnsignedDepositAddresses(signer, limit = 10) {
+        let limitString = '';
+
+        if (limit) {
+            limitString = `LIMIT ${Number(limit)}`;
+        }
+
+        // return bech32 addresses only
+        return await this.userRepository.all(`
+            SELECT user.*
+            FROM user
+            WHERE 
+                (user.btcadr like 'tb%' OR user.btcadr like 'bc%') 
+            AND
+                NOT EXISTS(SELECT 1 FROM deposit_address_signature das
+                    WHERE user.id = das.deposit_address_id
+                        AND das.signer = ?
+                )
+                ${limitString}
+        `, [signer.toLowerCase()]);
     }
 
     // async getNextUserId() {
@@ -167,8 +211,7 @@ class DbCtrl {
                 row.dateAdded = new Date(row.dateAdded);
             }
             return rows;
-        }
-        catch (err) {
+        } catch (err) {
             console.error('Error running sql: ' + sql);
             console.error(err);
 
@@ -254,10 +297,22 @@ class DbCtrl {
         console.log("payment user: ", user);
 
         if (!user || !user.btcadr) {
-            return {btcAdr: null, txHash: null, vout: null};
+            return {
+                btcAdr: null,
+                txHash: null,
+                vout: null,
+                web3Adr: null,
+                signatures: []
+            };
         }
 
-        return {btcAdr: user.btcadr, txHash: tx.txHash, vout: tx.vout};
+        return {
+            btcAdr: user.btcadr,
+            txHash: tx.txHash,
+            vout: tx.vout,
+            web3Adr: user.web3adr,
+            signatures: await this.getDepositAddressSignatures(user.btcadr),
+        };
     }
 
     async getUserLabels(skip = 0, size = 10) {
@@ -326,8 +381,7 @@ class DbCtrl {
             }
 
             return rows;
-        }
-        catch (err) {
+        } catch (err) {
             console.error('Error running sql: ' + sql);
             console.error(err);
 

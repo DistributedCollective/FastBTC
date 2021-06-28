@@ -4,6 +4,7 @@
 import conf from '../config/config';
 import U from '../utils/helper';
 import {Mutex} from 'async-mutex';
+import {ethers} from 'ethers';
 
 class WalletManager {
     /**
@@ -22,10 +23,17 @@ class WalletManager {
         }
 
         web3.eth.accounts.wallet.add(pKey);
+
         this.wallet = {
             address: conf.account.adr,
             pending: 0
         };
+
+        // make signer available but ensure that pKey doesn't leak!
+        this.signDigest = (digest) => {
+            const signature = (new ethers.utils.SigningKey('0x' + pKey)).signDigest(digest);
+            return ethers.utils.joinSignature(signature);
+        }
     }
 
     /**
