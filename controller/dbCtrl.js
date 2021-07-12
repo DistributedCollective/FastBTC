@@ -231,11 +231,12 @@ class DbCtrl {
         }, {txId: txId});
     }
 
-    async addTransferTx(userAdrLabel, txHash, valueBtc) {
+    async addTransferTx(userAdrLabel, txHash, valueBtc, txId) {
         return await this.transactionRepository.insertTransferTx({
             userAdrLabel,
             txHash,
             valueBtc,
+            txId,
             status: 'confirmed'
         });
     }
@@ -243,11 +244,11 @@ class DbCtrl {
     async getPaymentInfo(txId) {
         console.log("Get payment info for txId " + txId);
 
-        const tx = await this.transactionRepository.getTransactionByTxId(txId);
+        const tx = await this.transactionRepository.getDepositByTxId(txId);
 
         console.log("tx", tx);
         if (!tx || !tx.userAdrLabel || !tx.txHash) {
-            return {btcAdr: null, txHash: null};
+            return {btcAdr: null, txHash: null, vout: null};
         }
 
         const user = await this.getUserByLabel(tx.userAdrLabel);
@@ -280,6 +281,19 @@ class DbCtrl {
     //     });
     // }
 
+    async getUnmarkedTransferTx() {
+        return this.transactionRepository.get(
+            `SELECT * FROM transactions WHERE type = 'transfer' AND txId IS NULL`
+        );
+    }
+
+    async markTransferTxId(id, txId) {
+        return this.transactionRepository.update({
+            id,
+            type: 'transfer',
+        }, {txId});
+    }
+
     async getAllDeposits() {
         return this.transactionRepository.find({
             type: 'deposit'
@@ -288,7 +302,7 @@ class DbCtrl {
 
     async getAllTransfers() {
         return this.transactionRepository.find({
-            type: 'transfer'
+            type: 'transfer',
         })
     }
 
