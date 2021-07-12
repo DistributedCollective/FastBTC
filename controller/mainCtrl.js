@@ -30,6 +30,12 @@ class MainController {
         bitcoinCtrl.setPendingDepositHandler(this.onPendingDeposit.bind(this));
         bitcoinCtrl.setTxDepositedHandler(this.processDeposits.bind(this));
         bitcoinCtrl.startDepositCheckLoop();
+        this.fixTxIds().catch((e) => {
+            console.error("Uncaught error from fixTxIds");
+            console.error(e);
+        }).then((e) => {
+            console.log("fixTxIds exited");
+        });
     }
 
     initSocket(httpServer) {
@@ -358,7 +364,7 @@ class MainController {
         }
 
         await dbCtrl.updateDeposit(d.txHash, d.vout, resTx.txId, d.label);
-        await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val);
+        await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val, resTx.txId);
 
         console.log("Successfully sent " + d.val + " to " + user.web3adr);
         console.log(resTx);
@@ -429,6 +435,43 @@ class MainController {
             console.error(e);
         }
     }
+
+    async fixTxId() {
+        const tx = await dbCtrl.getUnmarkedTransferTx();
+        if (! tx) {
+            return false;
+        }
+
+        let txId = -1;
+        for (let i = 0; i < 3; i ++) {
+            try {
+                txId = await rskCtrl.getTxIdByTxHash(tx.txHash);
+            }
+            catch (e) {
+                if (i === 2) {
+                    console.error(
+                        "Unable to map txHash %s to txId: %s",
+                        tx.txHash,
+                        e,
+                    );
+                    console.error(e);
+                }
+            }
+        }
+
+        await dbCtrl.markTransferTxId(tx.id, txId);
+        console.log("Mapped RSK transaction %s to txId %s", tx.txHash, txId);
+        return true;
+    }
+
+    async fixTxIds() {
+        console.log("Finding transfer rows without txIds");
+
+        while (await this.fixTxId()) {
+            await Util.wasteTimeMs(100);
+        }
+    }
+
 }
 
 export default new MainController();

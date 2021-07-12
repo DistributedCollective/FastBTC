@@ -36,6 +36,20 @@ class RskCtrl {
     }
 
     /**
+     * Get txId from logs, from the Submission events.
+     * @param receipt a transaction receipt
+     * @returns {null|number} the txId or null.
+     */
+    getTxIdFromLogs(receipt) {
+        if (receipt && receipt.transactionHash && receipt.events && receipt.events.Submission) {
+            const hexTransactionId = receipt.events.Submission.raw.topics[1];
+            return this.web3.utils.hexToNumber(hexTransactionId);
+        }
+
+        return null;
+    }
+
+    /**
      *
      * @param amount - in satoshi
      * @param to
@@ -71,13 +85,10 @@ class RskCtrl {
         console.log("wei amount " + weiAmount)
 
         const receipt = await this.transferFromMultisig(weiAmount, to);
-        let txId;
+        const txId = this.getTxIdFromLogs(receipt);
 
-        if (receipt && receipt.transactionHash && receipt.events && receipt.events.Submission) {
+        if (txId != null) {
             console.log("Successfully transferred " + amount + " to " + to);
-
-            const hexTransactionId = receipt.events.Submission.raw.topics[1];
-            txId = this.web3.utils.hexToNumber(hexTransactionId);
             return {
                 txHash: receipt.transactionHash.toString(),
                 txId,
@@ -220,6 +231,22 @@ class RskCtrl {
                 }
             }
         }
+    }
+
+    async getTxIdByTxHash(txHash) {
+        const receipt = await this.web3.eth.getTransactionReceipt(txHash);
+        const eventOpts = this.multisig._generateEventOptions("allEvents");
+        const eventDecoder = this.multisig._decodeEventABI.bind(eventOpts.event);
+        const events = receipt.logs.map(l => eventDecoder({ ...l }));
+
+        for (const e of events) {
+            if (e.event === 'Submission') {
+                const hexTransactionId = e.raw.topics[1];
+                return this.web3.utils.hexToNumber(hexTransactionId);
+            }
+        }
+
+        return null;
     }
 }
 
