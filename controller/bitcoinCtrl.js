@@ -1,11 +1,11 @@
-import { bip32, networks, payments } from 'bitcoinjs-lib';
+import {bip32, networks, payments} from 'bitcoinjs-lib';
 import conf from '../config/config';
-import * as _ from 'lodash';
 import dbCtrl from "./dbCtrl";
 import U from '../utils/helper';
 import telegramBot from '../utils/telegram';
 import BitcoinNodeWrapper from "../utils/bitcoinNodeWrapper";
 import loggingUtil from '../utils/loggingUtil';
+
 var b58 = require('bs58check')
 
 class BitcoinCtrl {
@@ -37,9 +37,14 @@ class BitcoinCtrl {
     }
 
     zpubToXpub(zpub) {
-        var data = b58.decode(zpub)
-        data = data.slice(4)
-        data = Buffer.concat([Buffer.from('0488b21e','hex'), data])
+        let data = b58.decode(zpub).slice(4)
+
+        if (zpub.startsWith('Vpub') || zpub.startsWith('vpub')) {
+            data = Buffer.concat([Buffer.from('043587cf', 'hex'), data])
+        } else {
+            data = Buffer.concat([Buffer.from('0488b21e', 'hex'), data])
+        }
+
         return b58.encode(data)
       }
 
