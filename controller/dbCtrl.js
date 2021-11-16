@@ -129,7 +129,8 @@ class DbCtrl {
                     WHERE user.id = das.deposit_address_id
                         AND das.signer = ?
                 )
-                ${limitString}
+            ORDER BY id DESC
+            ${limitString}
         `, [signer.toLowerCase()]);
     }
 
