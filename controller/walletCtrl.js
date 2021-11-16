@@ -22,16 +22,21 @@ class WalletManager {
             ).privateKey;
         }
 
+        if (!pKey || !/^0x/.test(pKey)) {
+            console.error("The RSK private key must be defined and start with 0x");
+            throw new Error("Invalid RSK private key, must start with 0x");
+        }
+
         web3.eth.accounts.wallet.add(pKey);
 
         this.wallet = {
             address: conf.account.adr,
-            pending: 0
+            pending: 0,
         };
 
         // make signer available but ensure that pKey doesn't leak!
         this.signDigest = (digest) => {
-            const signature = (new ethers.utils.SigningKey('0x' + pKey)).signDigest(digest);
+            const signature = (new ethers.utils.SigningKey(pKey)).signDigest(digest);
             return ethers.utils.joinSignature(signature);
         }
     }
