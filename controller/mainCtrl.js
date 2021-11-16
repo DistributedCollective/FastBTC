@@ -71,7 +71,8 @@ class MainController {
                 return cb({error: "Address is empty"});
             }
 
-            address = address.toLowerCase();
+            // hem, the address is given as an array of 1 string
+            address = address.toString().toLowerCase();
             if (! /^0x[a-f0-9]{40}$/.test(address)) {
                 return cb({error: "Malformed RSK address"});
             }
