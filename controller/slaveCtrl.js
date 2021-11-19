@@ -98,7 +98,7 @@ class SlaveCtrl {
     }
 
     async addAddressMappingSignature(req, res) {
-        const from = req.body.walletAddress;
+        const from = req.body.walletAddress.toLowerCase();
         const signature = req.body.signature;
         const web3Address = req.body.web3Address;
         const btcAddress = req.body.btcAddress;
@@ -119,7 +119,7 @@ class SlaveCtrl {
 
         await dbCtrl.depositAddressSignatureRepository.insert({
             deposit_address_id: user.id,
-            signer: from,
+            signer: from.toLowerCase(),
             signature: signature,
             created: new Date(),
         });
