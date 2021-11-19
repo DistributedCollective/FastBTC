@@ -173,7 +173,7 @@ class SlaveCtrl {
 
             // vout can be zero!!!
             if (!btcAdr || !txHash || vout == null) {
-                return res.status(403).json("Error retrieving user payment info");
+                return res.status(404).json("Error retrieving user payment info");
             }
 
             return res.status(200).json({
