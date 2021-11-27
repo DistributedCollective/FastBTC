@@ -29,19 +29,19 @@
 
   <div class="container">
     <div class="ng-hide" ng-show="ctrl.user != null">
-      <div class="row" ng-show="/^0x/.test(ctrl.user.web3adr)">
+      <div class="row" ng-show="ctrl.user.web3adr.startsWith('0x')">
         <label class="col-3">Your RSK address: </label>
         <div class="col-6">
           <a href="{{ctrl.rskExplorer}}/address/{{ctrl.user.web3adr}}" target="_blank">{{ctrl.user.web3adr}}</a>
         </div>
       </div>
-      <div class="row" ng-show="/^bsc:0x/.test(ctrl.user.web3adr)">
+      <div class="row" ng-show="ctrl.user.web3adr.startsWith('bsc:')">
         <label class="col-3">Your BSC address: </label>
         <div class="col-6">
           <a href="{{ctrl.rskExplorer}}/address/{{ctrl.user.web3adr}}" target="_blank">{{ctrl.user.web3adr.replace('bsc:', '')}}</a>
         </div>
       </div>
-      <div class="row" ng-show="/^bsctest:0x/.test(ctrl.user.web3adr)">
+      <div class="row" ng-show="ctrl.user.web3adr.startsWith('bsctest:')">
         <label class="col-3">Your BSC testnet address: </label>
         <div class="col-6">
           <a href="{{ctrl.rskExplorer}}/address/{{ctrl.user.web3adr}}" target="_blank">{{ctrl.user.web3adr.replace('bsctest:', '')}}</a>
