@@ -19,13 +19,31 @@ const MESSAGE_TYPES = {
 
 export default class AddressMappingSigner {
     async createTemplateForMapping(btcAddress, web3Address) {
+        const rskChainId = await rskCtrl.web3.eth.getChainId();
+        let targetChainId = rskChainId;
+        if (web3Address.startsWith('bsc:')) {
+            // binance mainnet
+            targetChainId = 0x38;
+            if (rskChainId !== 30) {
+                throw new Error("Trying to target BSC mainnet with RSK testnet?");
+            }
+            web3Address = web3Address.replace('bsct:', '');
+        }
+        else if (web3Address.startsWith('bsctest:')) {
+            targetChainId = 0x61;
+            if (rskChainId !== 31) {
+                throw new Error("Trying to target BSC testnet with RSK mainnet?");
+            }
+            web3Address = web3Address.replace('bsctest:', '');
+        }
+
         return {
             "types": MESSAGE_TYPES,
             "primaryType": "DepositAddressMapping",
             "domain": {
                 "name": "Sovryn FastBTC Bridge",
                 "version": "1",
-                "chainId": await rskCtrl.web3.eth.getChainId(),
+                "chainId": targetChainId,
                 "verifyingContract": conf.multisigAddress.toLowerCase(),
             },
             "message": {

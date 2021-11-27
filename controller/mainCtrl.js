@@ -73,8 +73,8 @@ class MainController {
 
             // hem, the address is given as an array of 1 string
             address = address.toString().toLowerCase();
-            if (! /^0x[a-f0-9]{40}$/.test(address)) {
-                return cb({error: "Malformed RSK address"});
+            if (! /(?:bsc|bsctest:)?^0x[a-f0-9]{40}$/.test(address)) {
+                return cb({error: "Malformed EVM address"});
             }
 
             let user = await dbCtrl.getUserByAddress(address, true);

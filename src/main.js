@@ -16,16 +16,21 @@ var qr = require('qr-encode');
 
 class AppCtrl {
     constructor($scope, $window, $timeout) {
-        console.log("1")
-        const p=this;
+        const p = this;
         $window.onload = async function() {
             console.log("loaded")
             if (window.ethereum) {
                 console.log("web3 found")
                 window.web3 = new Web3(window.ethereum);
                 await window.ethereum.enable();
+
+                // it is a list though
                 p.address = await window.web3.eth.getAccounts();
 
+                // prefix with bsc: if forced
+                if (config.forcedBSC) {
+                    p.address = p.address.map(a => 'bsctest:' + a);
+                }
                 p.start();
             }
         };
@@ -77,15 +82,19 @@ class AppCtrl {
 
     start() {
         console.log("started");
-          this.showLoading = true;
+        this.showLoading = true;
+        var userInfo = null;
         socket.emit("getDepositAddress", this.address, (err, res) => {
             console.log("response");
             console.log(res);
 
             if (res && res.btcadr) {
+                userInfo = res;
                 this.showUserInfo(res);
             } else {
-                this.showError(err && err.error || "Something's wrong. Please try again!")
+                if (! userInfo) {
+                    this.showError(err && err.error || "Something's wrong. Please try again!")
+                }
             }
 
             this.$scope.$apply();
@@ -114,7 +123,6 @@ class AppCtrl {
         });
 
         socket.on('txAmount', (info) => this.showTxAmountInfo(info));
-
     }
 
     showMessage(msg, isError = true) {
@@ -162,7 +170,6 @@ class AppCtrl {
         this.multisig = res.multisig;
         this.$scope.$apply();
     }
-
 
     showBalances(res) {
         this.balances = res.balances;
