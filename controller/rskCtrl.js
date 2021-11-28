@@ -61,7 +61,8 @@ class RskCtrl {
 
         let transferValueSatoshi = Number(amount) - conf.commission; //subtract base fee
 
-        transferValueSatoshi=transferValueSatoshi-(transferValueSatoshi/1000*2); //subtract commission
+        transferValueSatoshi = transferValueSatoshi
+            - (transferValueSatoshi / 1000 * 2); //subtract commission
 
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));
         console.log("transferValueSatoshi " + transferValueSatoshi)
@@ -102,15 +103,35 @@ class RskCtrl {
     }
 
     async transferFromMultisigWithWallet(val, to, wallet) {
-        console.log("encoding function call")
-        const data = this.web3.eth.abi.encodeFunctionCall({
-            name: 'withdrawAdmin',
-            type: 'function',
-            inputs: [
-                {"name": "receiver", "type": "address"},
-                {"name": "amount",   "type": "uint256"}
-            ]
-        }, [to, val]);
+        const isBscTransfer = to.startsWith(conf.bscPrefix);
+        console.log(`encoding function call: transfer ${val} wei to ${to}: type ${isBscTransfer ? 'bsc': 'rsk'}`);
+
+        let data;
+        if (! isBscTransfer) {
+            data = this.web3.eth.abi.encodeFunctionCall({
+                name: 'withdrawAdmin',
+                type: 'function',
+                inputs: [
+                    {"name": "receiver", "type": "address"},
+                    {"name": "amount", "type": "uint256"}
+                ]
+            }, [to, val]);
+
+        }
+        else {
+            const receiver = to.replace(conf.bscPrefix, '');
+            const extraData = this.web3.eth.abi.encodeParameter('address', receiver.toLowerCase());
+            data = this.web3.eth.abi.encodeFunctionCall({
+                name: 'transferToBridge',
+                type: 'function',
+                inputs: [
+                    {"name": "bridge", "type": "address"},
+                    {"name": "receiver", "type": "address"},
+                    {"name": "amount",   "type": "uint256"},
+                    {"name": "extraData", "type": "bytes"},
+                ]
+            }, [conf.bscBridgeAddress, conf.bscAggregatorAddress, val, extraData]);
+        }
 
         console.log("getting gas price");
         this.lastGasPrice = await this.getGasPrice();

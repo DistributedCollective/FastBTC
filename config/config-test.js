@@ -20,8 +20,13 @@ export default {
     telegramGroupId: -523868176,
     walletSigs: walletSigs,
     slaves: slaves.test,
-    contractAddress: "0xcC099752238b1932587bf5793Afeb7d80D04F6e1".toLowerCase(),
+
     multisigAddress: "0x1D67BDA1144CacDbEFF1782f0E5B43D7B50bbFe0".toLowerCase(),
+    contractAddress: "0x8dC7B212692b3E36aF7E8202F06516d0dB3Bf1B6".toLowerCase(),
+    bscBridgeAddress: "0x2b2bcad081fa773dc655361d1bb30577caa556f8".toLowerCase(),
+    bscAggregatorAddress: "0xe2C2fbAa4407fa8BB0Dbb7a6a32aD36f8bA484aE".toLowerCase(),
+    bscPrefix: 'bsctest:̈́',
+
     account: accounts["test"],
     node: node.test,
     thresholdConfirmations: 1,
