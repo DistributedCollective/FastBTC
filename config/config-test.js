@@ -25,7 +25,7 @@ export default {
     contractAddress: "0x8dC7B212692b3E36aF7E8202F06516d0dB3Bf1B6".toLowerCase(),
     bscBridgeAddress: "0x2b2bcad081fa773dc655361d1bb30577caa556f8".toLowerCase(),
     bscAggregatorAddress: "0xe2C2fbAa4407fa8BB0Dbb7a6a32aD36f8bA484aE".toLowerCase(),
-    bscPrefix: 'bsctest:̈́',
+    bscPrefix: 'bsctest:',
 
     account: accounts["test"],
     node: node.test,
