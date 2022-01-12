@@ -1,9 +1,6 @@
 /**
  * Relays Btc to Rbtc.
  */
-
-require('log-timestamp');
-
 const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
