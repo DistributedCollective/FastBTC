@@ -14,6 +14,7 @@ class SlaveCtrl {
         // a cosigner is the slave node watching for withdraw requests that need confirmation
         this.cosignersArray = [];
         this.web3 = new Web3(conf.rskNode);
+        this.remoteLastLogged = new Map();
     }
 
     async start(app) {
@@ -27,32 +28,33 @@ class SlaveCtrl {
     authenticate(req, res, next) {
         const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-        if (ip) {
-            console.log('got connection from ', ip);
+        if (ip && (! this.remoteLastLogged.has(ip) || this.remoteLastLogged.get(ip) + 600 * 1000 < +new Date)) {
+            console.log("got connection from %s (shown only once every 10 minutes per address)", ip);
+            this.remoteLastLogged.set(ip, +new Date);
         }
 
         if (!req.body.message) {
-            console.error("slave: message is missing");
+            console.error("slave (%s): message is missing", ip);
             return res.status(403).json({error: "Message is missing"});
         }
 
         if (!req.body.message.startsWith("Hi master")) {
-            console.error("slave: invalid message");
+            console.error("slave (%s): invalid message", ip);
             return res.status(403).json({error: "Invalid message"});
         }
 
         if (!req.body.signedMessage) {
-            console.error("slave: signature missing");
+            console.error("slave (%s): signature missing", ip);
             return res.status(403).json({error: "Signature is missing"});
         }
 
         if (!req.body.walletAddress) {
-            console.error("slave: wallet address missing");
+            console.error("slave (%s): wallet address missing", ip);
             return res.status(403).json({error: "Wallet address is missing"});
         }
 
         if (conf.slaves.indexOf(req.body.walletAddress.toLowerCase()) === -1) {
-            console.error("slave: not authorized wallet address");
+            console.error("slave (%s): not authorized wallet address", ip);
             return res.status(403).json({error: "You are not allowed to access this service"});
         }
 
@@ -63,7 +65,7 @@ class SlaveCtrl {
         );
 
         if (!signatureVerified) {
-            console.error("slave: invalid signature");
+            console.error("slave (%s): invalid signature", ip);
             return res.status(403).json({Error: "Error verifying signature"});
         }
 
