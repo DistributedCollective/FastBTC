@@ -27,7 +27,7 @@ export default class AddressMappingSigner {
             if (rskChainId !== 30) {
                 throw new Error("Trying to target BSC mainnet with RSK testnet?");
             }
-            web3Address = web3Address.replace('bsct:', '');
+            web3Address = web3Address.replace('bsc:', '');
         }
         else if (web3Address.startsWith('bsctest:')) {
             targetChainId = 0x61;

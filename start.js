@@ -17,9 +17,7 @@ const frontendConfig = {
     backendUrl: conf.backendUrl,
     env: conf.env,
     blockExplorer: conf.blockExplorer,
-
-    // TODO: must change.
-    forcedBSC: true,
+    forcedBSC: false,
 };
 
 const frontendConfigJson = JSON.stringify(frontendConfig);

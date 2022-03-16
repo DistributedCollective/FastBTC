@@ -186,5 +186,5 @@ class AppCtrl {
 }
 
 angular.module('app', ['angularUtils.directives.dirPagination']).controller('appCtrl', AppCtrl);
-    
+
 angular.bootstrap(document, ['app']);

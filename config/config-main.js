@@ -20,8 +20,11 @@ export default {
     telegramGroupId: -1001469142339, 
     walletSigs: walletSigs,
     slaves: slaves.main,
-    contractAddress: "0xca1C5B1bc55755C5e3b6Ed1afE88ABD7B26F147f".toLowerCase(),
+    contractAddress: '0xC9e14126E5796e999890a4344b8e4c99Ac7002A1'.toLowerCase(),
+    bscBridgeAddress: '0x1CcAd820B6d031B41C54f1F3dA11c0d48b399581'.toLowerCase(), // RSK network RSK-BSC bridge
+    bscAggregatorAddress: '0xF300e09958cEE25453da4D7405045c43bFec602f'.toLowerCase(),  // BSC network BTCs aggregator
     multisigAddress: "0x0f279e810B95E0d425622b9b40D7bCD0B5C4B19d".toLowerCase(),
+    bscPrefix: 'bsc:',
     account: accounts["main"],
     node: node.main,
     thresholdConfirmations: 1,
