@@ -25,7 +25,7 @@ class MainController {
         await rskCtrl.init();
         this.initSocket(server);
 
-        this.addressMappingSigner = new AddressMappingSigner()
+        this.addressMappingSigner = new AddressMappingSigner();
 
         bitcoinCtrl.setPendingDepositHandler(this.onPendingDeposit.bind(this));
         bitcoinCtrl.setTxDepositedHandler(this.processDeposits.bind(this));
@@ -73,7 +73,7 @@ class MainController {
 
             // hem, the address is given as an array of 1 string
             address = address.toString().toLowerCase();
-            if (! /^(?:bsc|bsctest:)?0x[a-f0-9]{40}$/.test(address)) {
+            if (! RegExp(`^(?:${conf.bscPrefix})?0x[a-f0-9]{40}$`).test(address)) {
                 return cb({error: "Malformed EVM address"});
             }
 
@@ -150,7 +150,7 @@ class MainController {
             return cb(null, response);
         } catch (e) {
             console.error(e);
-            cb({error: "Server error. Please contact the admin community@sovryn.app"});
+            return cb({error: "Server error. Please contact the admin community@sovryn.app"});
         }
     }
 
