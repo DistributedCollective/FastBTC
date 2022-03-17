@@ -118,7 +118,8 @@ export default class BitcoinNodeWrapper {
 
                 const vout = (res.details || []).map(el => {
                     return {
-                        value: Number(el.amount) * 1e8,
+                        // sats, so round!
+                        value: Math.round(Number(el.amount) * 1e8),
                         address: el.address,
                         vout: el.vout
                     }
@@ -127,7 +128,8 @@ export default class BitcoinNodeWrapper {
                 return {
                     hex: res.hex,
                     confirmations: res.confirmations,
-                    value: Number(res.amount) * 1e8,
+                    // sats, so round!
+                    value: Math.round(Number(res.amount) * 1e8),
                     vout: vout
                 };
 
