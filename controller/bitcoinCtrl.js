@@ -39,7 +39,7 @@ class BitcoinCtrl {
     zpubToXpub(zpub) {
         let data = b58.decode(zpub).slice(4)
 
-        if (zpub.startsWith('Vpub') || zpub.startsWith('vpub')) {
+        if (zpub.startsWith('Vpub') || zpub.startsWith('vpub') || zpub.startsWith('tpub') || zpub.startsWith('Tpub')) {
             data = Buffer.concat([Buffer.from('043587cf', 'hex'), data])
         } else {
             data = Buffer.concat([Buffer.from('0488b21e', 'hex'), data])
