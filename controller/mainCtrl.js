@@ -412,7 +412,7 @@ class MainController {
         let unexecuted = 0;
 
         try {
-            const numberOfTransactions = await rskCtrl.multisig.methods["getTransactionCount"](true, true).call();
+            const numberOfTransactions = await rskCtrl.multisig.methods.transactionCount().call();
             if (!numberOfTransactions) {
                 await Util.wasteTime(5)
             }
