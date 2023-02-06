@@ -53,16 +53,20 @@ class RskCtrl {
      *
      * @param amount - in satoshi
      * @param to
+     * @param extra extra data for event
      * @returns {Promise<{error: string}|{value: string, txId: number, txHash: string}>}
      * todo: fix min/max amount update
      */
-    async sendRbtc(amount, to) {
+    async sendRbtc(amount, to, extra = {}) {
         console.log("Trying to send " + amount + " to: " + to);
 
         let transferValueSatoshi = Number(amount) - conf.commission; //subtract base fee
 
-        transferValueSatoshi = transferValueSatoshi
-            - (transferValueSatoshi / 1000 * 2); //subtract commission
+        const variableFeeSatoshi = (transferValueSatoshi / 1000 * 2);
+        transferValueSatoshi -= variableFeeSatoshi; //subtract commission
+
+        // fixed fee + dynamic fee
+        const totalFeeSatoshi = conf.commission + variableFeeSatoshi;
 
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));
         console.log("transferValueSatoshi " + transferValueSatoshi)
@@ -83,9 +87,14 @@ class RskCtrl {
         const transferValue = (transferValueSatoshi / 1e8).toString();
         console.log("transfer value " + transferValue)
         const weiAmount = this.web3.utils.toWei(transferValue, 'ether');
+        const weiFee = this.web3.utils.toWei((totalFeeSatoshi / 1e8).toString(), 'ether');
         console.log("wei amount " + weiAmount)
+        console.log("wei fee    " + weiFee)
 
-        const receipt = await this.transferFromMultisig(weiAmount, to);
+        const receipt = await this.transferFromMultisig(weiAmount, to, {
+            ...extra,
+            fee: weiFee,
+        });
         const txId = this.getTxIdFromLogs(receipt);
 
         if (txId != null) {
@@ -102,21 +111,39 @@ class RskCtrl {
         }
     }
 
-    async transferFromMultisigWithWallet(val, to, wallet) {
+    async transferFromMultisigWithWallet(val, to, wallet, extra = {}) {
         const isBscTransfer = to.startsWith(conf.bscPrefix);
-        console.log(`encoding function call: transfer ${val} wei to ${to}: type ${isBscTransfer ? 'bsc': 'rsk'}`);
+        console.log(`encoding function call: transfer ${val} wei to ${to}: type ${isBscTransfer ? 'bsc': 'rsk'}, extra: ${JSON.stringify(extra)}`);
 
         let data;
         if (! isBscTransfer) {
-            data = this.web3.eth.abi.encodeFunctionCall({
-                name: 'withdrawAdmin',
-                type: 'function',
-                inputs: [
-                    {"name": "receiver", "type": "address"},
-                    {"name": "amount", "type": "uint256"}
-                ]
-            }, [to, val]);
-
+            if (extra.txHash && extra.vout != null && extra.fee != null) {
+                let txHash = extra.txHash;
+                if (!txHash.startsWith('0x')) {
+                    txHash = '0x' + txHash;
+                }
+                data = this.web3.eth.abi.encodeFunctionCall({
+                    name: 'transferToUser',
+                    type: 'function',
+                    inputs: [
+                        {"name": "receiver", "type": "address"},
+                        {"name": "amount", "type": "uint256"},
+                        {"name": "fee", "type": "uint256"},
+                        {"name": "btcTxHash", "type": "bytes32"},
+                        {"name": "btcTxVout", "type": "uint256"},
+                    ]
+                }, [to, val, extra.fee, txHash, extra.vout]);
+            } else {
+                console.warn("txHash/vout/fee not provided, falling back to withdrawAdmin");
+                data = this.web3.eth.abi.encodeFunctionCall({
+                    name: 'withdrawAdmin',
+                    type: 'function',
+                    inputs: [
+                        {"name": "receiver", "type": "address"},
+                        {"name": "amount", "type": "uint256"}
+                    ]
+                }, [to, val]);
+            }
         }
         else {
             const receiver = to.replace(conf.bscPrefix, '');
@@ -193,7 +220,7 @@ class RskCtrl {
         }
     }
 
-    async transferFromMultisig(val, to) {
+    async transferFromMultisig(val, to, extra={}) {
         console.log("transfer %s to %s", val, to)
 
         const wallet = await this.getWallet();
@@ -204,7 +231,7 @@ class RskCtrl {
         }
 
         try {
-            return await this.transferFromMultisigWithWallet(val, to, wallet);
+            return await this.transferFromMultisigWithWallet(val, to, wallet, extra);
         }
         finally {
             walletManager.decreasePending(wallet);
