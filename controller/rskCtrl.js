@@ -61,15 +61,15 @@ class RskCtrl {
         console.log("Trying to send " + amount + " to: " + to);
 
         let transferValueSatoshi = Number(amount) - conf.commission; //subtract base fee
-
-        const variableFeeSatoshi = (transferValueSatoshi / 1000 * 2);
-        transferValueSatoshi -= variableFeeSatoshi; //subtract commission
-
-        // fixed fee + dynamic fee
-        const totalFeeSatoshi = conf.commission + variableFeeSatoshi;
+        transferValueSatoshi -= (transferValueSatoshi / 1000 * 2); //subtract commission
 
         transferValueSatoshi = Number(Math.max(transferValueSatoshi, 0).toFixed(0));
+
+        // Calculate the fee like this, to avoid rounding errors
+        const totalFeeSatoshi = Number(amount) - transferValueSatoshi;
+
         console.log("transferValueSatoshi " + transferValueSatoshi)
+        console.log("totalFeeSatoshi " + transferValueSatoshi);
         const bal = await this.getBalanceSats(conf.contractAddress);
         if (bal < amount) {
             console.error("Not enough balance left on the wallet " + this.from + " bal = " + bal, { to });
