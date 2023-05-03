@@ -311,7 +311,8 @@ class MainController {
     }
 
     async processDeposits(d) {
-        let depositFound = await dbCtrl.getDeposit(d.txHash, d.label, d.vout);
+        // the label parameter is not used any more
+        let depositFound = await dbCtrl.getDeposit(d.txHash, null, d.vout);
 
         if (depositFound) {
             if (depositFound.status === 'confirmed') {
@@ -320,16 +321,13 @@ class MainController {
 
             // stopgap fix to ensure that it goes to db.
             if (depositFound.vout === -1) {
-                await dbCtrl.confirmDeposit(d.txHash, d.label, depositFound.vout);
-
-                telegramBot.sendMessage(`OLD ADDRESS / VOUT -1 SEEN: ${d.txHash}, ${d.label} - NOT PROCESSING FURTHER`);
-                return;
+                throw new Error(`This should not happen, transactions with vout -1 no longer confirmable`);
             } else {
                 if (depositFound.vout !== d.vout) {
                     throw new Error(`This should not happen, vouts not matching ${depositFound.vout} != ${d.vout}, ${depositFound.id}`);
                 }
 
-                await dbCtrl.confirmDeposit(d.txHash, d.label, d.vout);
+                await dbCtrl.confirmDeposit(d.txHash, null, d.vout);
             }
         }
 
@@ -338,19 +336,20 @@ class MainController {
             telegramBot.sendMessage("Deposit outside the limit!");
         }
 
+        const user = await dbCtrl.getUserByBtcAddress(d.address);
+        if (!user) {
+            console.error("Error finding user");
+            return;
+        }
+
         if (depositFound == null) {
-            const resDb = await dbCtrl.addDeposit(d.label, d.txHash, d.val, true, d.vout);
+            // real user label from user.label
+            const resDb = await dbCtrl.addDeposit(user.label, d.txHash, d.val, true, d.vout);
 
             if (!resDb) {
                 console.error("Error adding deposit to db");
                 return;
             }
-        }
-
-        const user = await dbCtrl.getUserByLabel(d.label);
-        if (!user) {
-            console.error("Error finding user");
-            return;
         }
 
         this.emitToUserSocket(user.label, 'depositTx', {
@@ -369,8 +368,8 @@ class MainController {
             return;
         }
 
-        await dbCtrl.updateDeposit(d.txHash, d.vout, resTx.txId, d.label);
-        await dbCtrl.addTransferTx(d.label, resTx.txHash, d.val, resTx.txId);
+        await dbCtrl.updateDeposit(d.txHash, d.vout, resTx.txId, user.label);
+        await dbCtrl.addTransferTx(user.label, resTx.txHash, d.val, resTx.txId);
 
         console.log("Successfully sent " + d.val + " to " + user.web3adr);
         console.log(resTx);

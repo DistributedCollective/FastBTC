@@ -98,6 +98,8 @@ class BitcoinCtrl {
                 return;
             }
 
+            label = user.label;
+
             let added = await dbCtrl.getDeposit(txId, label, vout);
 
             // try finding one with -1 vout, so that we do not mess
@@ -105,11 +107,13 @@ class BitcoinCtrl {
             if (added == null) {
                 added = await dbCtrl.getDeposit(txId, label, -1);
                 if (added) {
-                    console.warn(
+                    console.error(
                         "found a deposit tx %s for label %s without vout fix",
                         txId,
                         label
                     );
+
+                    throw new Error("found a deposit tx without vout fix");
                 }
             }
 
@@ -167,7 +171,7 @@ class BitcoinCtrl {
      * Otherwise check it is confirmed when has more than [thresholdConfirmations] confirmations
      */
     async checkDepositTxs() {
-        const addrLabels = new Set(await dbCtrl.getUserLabels(-1, -1));
+        const addresses = new Set(await dbCtrl.getUserAddresses(-1, -1));
         const blockBookmark = await dbCtrl.getBookmark(
             "block_bookmark",
             null
@@ -179,8 +183,8 @@ class BitcoinCtrl {
         );
 
         const txList = (since.transactions || []).filter(tx => {
-            if (! addrLabels.has(tx.label)) {
-                this.complainAboutUnknownLabel(tx.label);
+            if (! addresses.has(tx.address)) {
+                this.complainAboutUnknownLabel(tx.address);
                 return false;
             }
             return true;
@@ -204,8 +208,8 @@ class BitcoinCtrl {
         for (const tx of txList) {
             const confirmations = tx && tx.confirmations;
 
-            if (! addrLabels.has(tx.label)) {
-                console.log("ignoring unknown label %s", tx.label);
+            if (! addresses.has(tx.address)) {
+                console.log("ignoring unknown address %s", tx.address);
                 continue;
             }
 
