@@ -359,7 +359,10 @@ class MainController {
         });
 
         console.log("about to send R-BTC")
-        const resTx = await rskCtrl.sendRbtc(d.val, user.web3adr);
+        const resTx = await rskCtrl.sendRbtc(d.val, user.web3adr, {
+            txHash: d.txHash,
+            vout: d.vout,
+        });
         if (resTx.error) {
             console.error("Error transfering funds to " + user.web3adr);
             console.error(resTx.error);
