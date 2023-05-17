@@ -251,7 +251,7 @@ class DbCtrl {
         if (label != null) {
             throw new Error("label parameter no longer used but was specified");
         }
-        if (vout !== -1) {
+        if (vout == -1) {
             throw new Error("vout must be defined in order to confirm deposit");
         }
         try {
