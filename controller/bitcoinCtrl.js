@@ -20,8 +20,8 @@ class BitcoinCtrl {
         this.api = new BitcoinNodeWrapper(conf.node);
         this.network = this.isMainNet ? networks.bitcoin : networks.testnet;
 
-        // stores unknown labels => the times we've complained about them
-        this.unknownLabels = new Map();
+        // stores unknown addresses => the times we've complained about them
+        this.unknownAddresses = new Map();
     }
 
     getDerivedPubKeys(index) {
@@ -184,7 +184,7 @@ class BitcoinCtrl {
 
         const txList = (since.transactions || []).filter(tx => {
             if (! addresses.has(tx.address)) {
-                this.complainAboutUnknownLabel(tx.address);
+                this.complainAboutAddressLabel(tx.address);
                 return false;
             }
             return true;
@@ -270,14 +270,14 @@ class BitcoinCtrl {
         });
     }
 
-    complainAboutUnknownLabel(label) {
-        const timeout = this.unknownLabels.get(label)
+    complainAboutUnknownAddress(addresse) {
+        const timeout = this.unknownAddresses.get(address)
 
         if (! timeout || timeout < Date.now()) {
-            console.log("ignoring unknown label %s", label);
+            console.log("ignoring unknown address %s", address);
 
             // 1.5 hours
-            this.unknownLabels.set(label, Date.now() + 1.5 * 60 * 60 * 1000);
+            this.unknownAddresses.set(address, Date.now() + 1.5 * 60 * 60 * 1000);
         }
     }
 }

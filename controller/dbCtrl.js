@@ -337,7 +337,7 @@ class DbCtrl {
             limit: size
         });
 
-        return (users || []).map(u => u.address);
+        return (users || []).map(u => u.btcadr);
     }
 
 
