@@ -20,8 +20,8 @@ class BitcoinCtrl {
         this.api = new BitcoinNodeWrapper(conf.node);
         this.network = this.isMainNet ? networks.bitcoin : networks.testnet;
 
-        // stores unknown labels => the times we've complained about them
-        this.unknownLabels = new Map();
+        // stores unknown addresses => the times we've complained about them
+        this.unknownAddresses = new Map();
     }
 
     getDerivedPubKeys(index) {
@@ -98,6 +98,8 @@ class BitcoinCtrl {
                 return;
             }
 
+            label = user.label;
+
             let added = await dbCtrl.getDeposit(txId, label, vout);
 
             // try finding one with -1 vout, so that we do not mess
@@ -105,11 +107,13 @@ class BitcoinCtrl {
             if (added == null) {
                 added = await dbCtrl.getDeposit(txId, label, -1);
                 if (added) {
-                    console.warn(
+                    console.error(
                         "found a deposit tx %s for label %s without vout fix",
                         txId,
                         label
                     );
+
+                    throw new Error("found a deposit tx without vout fix");
                 }
             }
 
@@ -167,7 +171,7 @@ class BitcoinCtrl {
      * Otherwise check it is confirmed when has more than [thresholdConfirmations] confirmations
      */
     async checkDepositTxs() {
-        const addrLabels = new Set(await dbCtrl.getUserLabels(-1, -1));
+        const addresses = new Set(await dbCtrl.getUserAddresses(-1, -1));
         const blockBookmark = await dbCtrl.getBookmark(
             "block_bookmark",
             null
@@ -179,8 +183,8 @@ class BitcoinCtrl {
         );
 
         const txList = (since.transactions || []).filter(tx => {
-            if (! addrLabels.has(tx.label)) {
-                this.complainAboutUnknownLabel(tx.label);
+            if (! addresses.has(tx.address)) {
+                this.complainAboutAddressLabel(tx.address);
                 return false;
             }
             return true;
@@ -204,8 +208,8 @@ class BitcoinCtrl {
         for (const tx of txList) {
             const confirmations = tx && tx.confirmations;
 
-            if (! addrLabels.has(tx.label)) {
-                console.log("ignoring unknown label %s", tx.label);
+            if (! addresses.has(tx.address)) {
+                console.log("ignoring unknown address %s", tx.address);
                 continue;
             }
 
@@ -266,14 +270,14 @@ class BitcoinCtrl {
         });
     }
 
-    complainAboutUnknownLabel(label) {
-        const timeout = this.unknownLabels.get(label)
+    complainAboutUnknownAddress(addresse) {
+        const timeout = this.unknownAddresses.get(address)
 
         if (! timeout || timeout < Date.now()) {
-            console.log("ignoring unknown label %s", label);
+            console.log("ignoring unknown address %s", address);
 
             // 1.5 hours
-            this.unknownLabels.set(label, Date.now() + 1.5 * 60 * 60 * 1000);
+            this.unknownAddresses.set(address, Date.now() + 1.5 * 60 * 60 * 1000);
         }
     }
 }

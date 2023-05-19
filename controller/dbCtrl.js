@@ -185,9 +185,9 @@ class DbCtrl {
             vout: vout,
         };
 
-        if (label) {
-            criteria.userAdrLabel = label;
-        }
+        // if (label) {
+        //     criteria.userAdrLabel = label;
+        // }
 
         const found = await this.transactionRepository.findOne(criteria);
         if (found || vout === -1) {
@@ -248,10 +248,15 @@ class DbCtrl {
     }
 
     async confirmDeposit(txHash, label, vout) {
+        if (label != null) {
+            throw new Error("label parameter no longer used but was specified");
+        }
+        if (vout == -1) {
+            throw new Error("vout must be defined in order to confirm deposit");
+        }
         try {
             return await this.transactionRepository.update({
                 txHash: txHash,
-                userAdrLabel: label,
                 type: "deposit",
                 vout: vout,
             }, {status: 'confirmed'});
@@ -325,6 +330,16 @@ class DbCtrl {
 
         return (users || []).map(u => u.label);
     }
+
+    async getUserAddresses(skip = 0, size = 10) {
+        const users = await this.userRepository.find({}, {
+            offset: skip,
+            limit: size
+        });
+
+        return (users || []).map(u => u.btcadr);
+    }
+
 
     // /**
     //  * Use with caution, most likely you need to search for both txHash and userAdrLabel to make sure item is unique
