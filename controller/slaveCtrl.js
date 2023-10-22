@@ -139,7 +139,7 @@ class SlaveCtrl {
         }
 
         const index = this.cosignersArray.indexOf(req.body.walletAddress);
-        const delay = (Math.floor(index / 2) + 1) * 60;
+        const delay = (index + 1) * 60;
 
         res.status(200).json({
             index: index,
@@ -189,7 +189,7 @@ class SlaveCtrl {
 
             // vout can be zero!!!
             if (!btcAdr || !txHash || vout == null) {
-
+                console.error("The requested transaction id %d is not known to master, responding with 404", txId);
                 return res.status(404).json("Error retrieving user payment info");
             }
 
