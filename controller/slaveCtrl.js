@@ -139,7 +139,7 @@ class SlaveCtrl {
         }
 
         const index = this.cosignersArray.indexOf(req.body.walletAddress);
-        const delay = Math.floor(index / 2) * 60;
+        const delay = (Math.floor(index / 2) + 1) * 60;
 
         res.status(200).json({
             index: index,
@@ -162,6 +162,20 @@ class SlaveCtrl {
 
         // dirty quickfix for payment undefined response from db
         while (true) {
+            // we do not know about such transaction yet?!
+            try {
+                if (txId > await dbCtrl.getLastDepositTxId()) {
+                    console.log("Got a future txId %d, responding with 409", txId);
+
+                    // HTTP 409 conflict!
+                    return res.status(409).json("The given txId is not yet known to the master");
+                }
+            }
+            catch (e) {
+                console.error("error fetching last deposit txid", txId)
+                console.error(e);
+            }
+
             let response;
             try {
                 response = await dbCtrl.getPaymentInfo(txId);
@@ -175,6 +189,7 @@ class SlaveCtrl {
 
             // vout can be zero!!!
             if (!btcAdr || !txHash || vout == null) {
+
                 return res.status(404).json("Error retrieving user payment info");
             }
 

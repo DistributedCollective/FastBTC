@@ -35,6 +35,18 @@ export default class Transaction extends BaseModel {
             return null;
         }
     }
+
+    async getLastDepositTxId() {
+        try {
+            const res = await super.get("SELECT max(txId) lastTxId FROM transactions");
+            return res.lastTxId;
+        }
+        catch (e) {
+            console.log("Failed to fetch last tx id");
+            console.error(e);
+        }
+    }
+
     // type should be either 'deposit' or 'tranfer'
     async sumTransacted(type, date) {
         try {
