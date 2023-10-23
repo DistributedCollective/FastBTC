@@ -42,7 +42,7 @@ export default class Transaction extends BaseModel {
             return res.lastTxId;
         }
         catch (e) {
-            console.log("Failed to fetch last tx id");
+            console.error("Failed to fetch last tx id");
             console.error(e);
             throw e;
         }
