@@ -198,6 +198,10 @@ class DbCtrl {
         return await this.transactionRepository.findOne(criteria);
     }
 
+    async getLastDepositTxId() {
+        return await this.transactionRepository.getLastDepositTxId();
+    }
+
     async getDepositHistory(userWeb3Adr) {
         const sql = "select user.id, web3adr, btcadr, valueBtc, type, transactions.dateAdded, transactions.txHash, status"
             + " from user cross join transactions on user.label = transactions.userAdrLabel "
